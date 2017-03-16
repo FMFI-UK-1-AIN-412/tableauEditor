@@ -78,13 +78,15 @@ tblCell tcell =
 -- TODO real css from outside
 viewFormula t =
   let
-    formula = Formula.parseSigned (Tableau.node t).text
+    n = Tableau.node t
+    formula = Formula.parseSigned n.text
   in
     div [ title (toString formula) ]
       [ div [ style [("display", "flex")] ]
-        [ input
+        [ text <| "(" ++ (toString n.num) ++ ")"
+        , input
             [ type_ "text", placeholder "Formula"
-            , onInput <| Text (Tableau.node t).num
+            , onInput <| Text n.num
             , style
               [ ("background-color", errorColor formula)
               , ("flexGrow", "1")
@@ -94,7 +96,7 @@ viewFormula t =
             []
         , text " ["
         , input
-          [ type_ "text", placeholder "0", size 1, onInput <| Ref (Tableau.node t).num ]
+          [ type_ "text", placeholder "0", size 1, onInput <| Ref n.num ]
           []
         , text "]"
         ]
