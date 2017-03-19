@@ -87,6 +87,50 @@ betaExtender maxNum n =
     (Leaf { defNode | num = maxNum + 1 } Nothing)
     (Leaf { defNode | num = maxNum + 2 } Nothing)
 
+mapTableau : (Tableau -> Tableau) -> Tableau -> Tableau
+mapTableau f t =
+  case t of
+    Leaf _ _ -> f t
+    Alpha n st -> f (Alpha n (mapTableau f st))
+    Beta n lt rt -> f (Beta n (mapTableau f lt) (mapTableau f rt))
+
+leafMapper : (Node -> (Maybe Closed) -> Tableau) ->  Tableau -> Tableau
+leafMapper f t =
+  case t of
+    Leaf n mt -> f n mt
+    _ -> t
+mapLeaves : (Node -> (Maybe Closed) -> Tableau) -> Tableau -> Tableau
+mapLeaves f = mapTableau (leafMapper f)
+modifyLeaf : (Node -> (Maybe Closed) -> Tableau) -> Int -> Tableau -> Tableau
+modifyLeaf f num =
+  mapLeaves (\n mc -> if n.num == num then (f n mc) else (Leaf n mc))
+
+setPair1 : Int -> (a,a) -> a -> (a,a)
+setPair1 which p n =
+  let
+    (a,b) = p
+  in
+    case which of
+      0 -> (n,b)
+      _ -> (a,n)
+
+setClosed : Int -> Int -> Int -> Tableau -> Tableau
+setClosed which ref =
+  modifyLeaf (\n mc ->
+    case mc of
+      Just (a,b) -> Leaf n (Just (setPair1 which (a,b) ref))
+      _ -> Leaf n mc
+    )
+
+
+
+makeClosed : Int -> Tableau -> Tableau
+makeClosed =
+  modifyLeaf (\n mc -> case mc of
+    Nothing -> Leaf n (Just defClosed)
+    Just _ as closed -> Leaf n closed
+  )
+
 mapNode : (Node -> Node) -> Tableau -> Tableau
 mapNode f t =
   case t of

@@ -21,7 +21,10 @@ type Msg
   | Ref Int String
   | ExpandAlpha Int
   | ExpandBeta Int
-  | Close Int
+  | MakeClosed Int
+  | SetClosed1 Int String
+  | SetClosed2 Int String
+
 
 update : Msg -> Model -> Model
 update msg model =
@@ -33,7 +36,13 @@ update msg model =
         Err e -> model
     ExpandAlpha num -> { model | t = (Tableau.extendAlpha num model.t) }
     ExpandBeta num ->  { model | t = (Tableau.extendBeta num model.t) }
-    Close num -> model
+    MakeClosed num -> { model | t = (Tableau.makeClosed num model.t) }
+    SetClosed1 num ref -> case String.toInt ref of
+      Ok ref -> { model | t = (Tableau.setClosed 0 ref num model.t) }
+      Err e -> model
+    SetClosed2 num ref -> case String.toInt ref of
+      Ok ref -> { model | t = (Tableau.setClosed 1 ref num model.t) }
+      Err e -> model
 
 
 errorColor res =
@@ -48,6 +57,8 @@ view model =
     , pre []
       [ text (Tableau.indented 2 model.t)
       ]
+    , div []
+      [ text (toString model.t) ]
     ]
 
 
@@ -116,13 +127,21 @@ viewFormula t =
 
 expandControls t =
   case t of
-    Tableau.Leaf n _ -> [
-      div [style [("textAlign", "center")]]
-      [ button [ onClick (ExpandAlpha n.num) ] [ text "α" ]
-      , button [ onClick (ExpandBeta n.num) ] [ text "β" ]
-      , button [ onClick (Close n.num) ] [ text "*" ]
-      ]
-    ]
+    Tableau.Leaf n mc -> case mc of
+      Nothing ->
+        [ div [style [("textAlign", "center")]]
+          [ button [ onClick (ExpandAlpha n.num) ] [ text "α" ]
+          , button [ onClick (ExpandBeta n.num) ] [ text "β" ]
+          , button [ onClick (MakeClosed n.num) ] [ text "*" ]
+          ]
+        ]
+      Just (a,b) ->
+        [ div [style [("textAlign", "center")]]
+          [ text "* "
+          , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed1 n.num] []
+          , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed2 n.num] []
+          ]
+        ]
     Tableau.Alpha _ _ -> []
     Tableau.Beta _ _ _ -> []
 
