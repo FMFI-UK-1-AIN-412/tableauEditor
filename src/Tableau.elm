@@ -8,16 +8,20 @@ type alias Node =
   , text : String
   , ref : Int
   }
+defNode = { num = 1, text = "", ref = 1 }
+
+type alias Closed = (Int, Int)
+defClosed = (0, 0)
 
 type Tableau
-  = Leaf Node
+  = Leaf Node (Maybe Closed)
   | Alpha Node Tableau
   | Beta Node Tableau Tableau
 
 node : Tableau -> Node
 node t =
   case t of
-    Leaf n -> n
+    Leaf n _ -> n
     Alpha n _ -> n
     Beta n _ _ -> n
 
@@ -27,24 +31,29 @@ formula t =
   |> Formula.parseSigned
 
 
+depth : Tableau -> Int
+depth t = case t of
+  Leaf _ _ -> 1
+  Alpha _ t -> 1 + depth t
+  Beta _ lt rt -> 1 + depth lt + depth rt
 
-fLeaf text = Leaf { num = 1, text = text, ref = 1 }
+fLeaf text = Leaf { defNode | text = text } Nothing
 fAlpha text ct =
   let
     nt = mapNode (\n -> {n | num = n.num + 1}) ct
   in
-    Alpha { num = 1, text = text, ref = 1} nt
+    Alpha { defNode | text = text } nt
 fBeta text lt rt =
   let
     nlt = mapNode (\n -> {n | num = n.num + 1}) lt
     nrt = mapNode (\n -> {n | num = n.num + (maxNum nlt)}) rt
   in
-    Beta { num = 1, text = text, ref = 1} nlt nrt
+    Beta { defNode | text = text } nlt nrt
 
 maxNum : Tableau -> Int
 maxNum t =
   case t of
-    Leaf n -> n.num
+    Leaf n _ -> n.num
     Alpha n ct -> max n.num (maxNum ct)
     Beta n lt rt -> max n.num (max (maxNum lt) (maxNum rt))
 
@@ -60,7 +69,7 @@ doExtend extender num t =
         n
         ( doExtend extender num lt )
         ( doExtend extender num rt )
-    Leaf n -> if n.num == num then extender n else Leaf n
+    Leaf n _ -> if n.num == num then extender n else Leaf n Nothing
 
 extendAlpha = extend alphaExtender
 extendBeta = extend betaExtender
@@ -69,19 +78,19 @@ alphaExtender : Int -> Node -> Tableau
 alphaExtender maxNum n =
   Alpha
     n
-    (Leaf { num = maxNum + 1, text = "", ref = 0})
+    (Leaf { defNode | num = maxNum + 1 } Nothing)
 
 betaExtender : Int -> Node -> Tableau
 betaExtender maxNum n =
   Beta
     n
-    (Leaf { num = maxNum + 1, text = "", ref = 0})
-    (Leaf { num = maxNum + 2, text = "", ref = 0})
+    (Leaf { defNode | num = maxNum + 1 } Nothing)
+    (Leaf { defNode | num = maxNum + 2 } Nothing)
 
 mapNode : (Node -> Node) -> Tableau -> Tableau
 mapNode f t =
   case t of
-    Leaf n -> Leaf <| f n
+    Leaf n _ -> Leaf (f n) Nothing
     Alpha n ct -> Alpha (f n) (mapNode f ct)
     Beta n lt rt -> Beta (f n) (mapNode f lt) (mapNode f rt)
 
@@ -103,7 +112,7 @@ indentedNode ind n =
 
 indented ind t =
   case t of
-    Leaf n -> indentedNode ind n
+    Leaf n _ -> indentedNode ind n
     Alpha n ct ->
       (indentedNode ind n) ++ (indented (ind + 2) ct)
     Beta n lt rt ->
@@ -112,12 +121,12 @@ indented ind t =
 width : Tableau -> Int
 width t =
   case t of
-    Leaf _ -> 1
+    Leaf _ _ -> 1
     Alpha _ t -> width t
     Beta _ lt rt -> (width lt) + (width rt)
 
 type alias CellWidth = Int
-type alias Cell = (CellWidth, Tableau) -- the 'Node' at that point
+type alias Cell = (CellWidth, Maybe Tableau) -- the 'Node' at that point
 type alias Row = List Cell
 type alias Table = List Row
 asTable : Tableau -> Table
@@ -130,12 +139,12 @@ asTable t =
 asHeadedTable : Tableau -> (Cell, Table)
 asHeadedTable t =
   case t of
-    Leaf n -> ( (1, t), [] )
+    Leaf n _ -> ( (1, Just t), [] )
     Alpha n ct -> let
                     (top, table) = asHeadedTable ct
                     (topWidth, topElem) = top
                  in
-                    (  ( topWidth, t), [[top]] ++ table)
+                    (  ( topWidth, Just t), [[top]] ++ table)
 --
 -- TODO left needs to be extended with empty cells of correct widht if shorter
 --
@@ -146,7 +155,7 @@ asHeadedTable t =
         (rtop, rtable) = asHeadedTable rt
         (rtopWidth, rtopE) = rtop
       in
-         ( (ltopWidth + rtopWidth, t)
+         ( (ltopWidth + rtopWidth, Just t)
          , [[ltop, rtop]]  ++ (merge ltable rtable)
          )
 

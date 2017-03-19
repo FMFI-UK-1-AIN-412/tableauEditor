@@ -1,3 +1,4 @@
+module Editor exposing (..)
 import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
@@ -52,28 +53,38 @@ view model =
 
 
 viewTableau : Tableau.Tableau -> Html Msg
-viewTableau tblx=
+viewTableau tbl=
   let
-      t = Tableau.asTable tblx
+      t = Tableau.asTable tbl
   in
-     table [border "1"] (List.map tblRow t)
+--     table [border "1"] (List.map tblRow t)
+      table [] (List.map2 tblRow
+        (List.reverse <| List.range 1 (Tableau.depth tbl))
+        t
+      )
 
 border = attribute "border"
 valign = attribute "valign"
 
-tblRow : Tableau.Row -> (Html Msg)
-tblRow trow =
-  tr [] (List.map tblCell trow)
+tblRow : Int -> Tableau.Row -> (Html Msg)
+tblRow depth trow =
+  tr [] (List.map (tblCell depth) trow)
 
-tblCell : Tableau.Cell -> (Html Msg)
-tblCell tcell =
+tblCell : Int -> Tableau.Cell -> (Html Msg)
+tblCell depth tcell =
   let
-      (width, t) = tcell
+      (width, mt) = tcell
+      (content,height) = case mt of
+        Nothing -> ([],depth)
+        Just t ->
+          ( [ viewFormula t ] ++ expandControls t
+          , case t of
+            Tableau.Leaf _ _ -> depth + 1
+            _ -> 1
+          )
   in td
-    [ colspan (width), valign "top" ]
-    [ viewFormula t
-    , expandControls t
-    ]
+    [ colspan (width), rowspan height, valign "top" ]
+    content
 
 -- TODO real css from outside
 viewFormula t =
@@ -105,12 +116,13 @@ viewFormula t =
 
 expandControls t =
   case t of
-    Tableau.Leaf n ->
+    Tableau.Leaf n _ -> [
       div [style [("textAlign", "center")]]
       [ button [ onClick (ExpandAlpha n.num) ] [ text "α" ]
       , button [ onClick (ExpandBeta n.num) ] [ text "β" ]
       , button [ onClick (Close n.num) ] [ text "*" ]
       ]
-    Tableau.Alpha _ _ -> div [] []
-    Tableau.Beta _ _ _ -> div [] []
+    ]
+    Tableau.Alpha _ _ -> []
+    Tableau.Beta _ _ _ -> []
 
