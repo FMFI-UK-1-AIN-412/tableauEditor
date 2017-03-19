@@ -39,14 +39,12 @@ update msg model =
     MakeOpen    z -> { model | t = z |> Tableau.makeOpen       |> top }
     Delete      z -> { model | t = z |> Tableau.delete         |> topRenumbered }
     Text    z txt -> { model | t = z |> Tableau.setFormula txt |> top }
-    Ref     z ref ->
-      case String.toInt ref of
-        Ok ref -> { model | t = z |> Tableau.setRef ref |> top }
-        Err e -> model
-    SetClosed which z ref ->
-      case String.toInt ref of
-        Ok ref -> { model | t = z |> Tableau.setClosed which ref |> top }
-        Err e -> model
+    Ref     z ref -> { model | t = z |> Tableau.setRef (
+      ref |> String.toInt |> Result.withDefault 0
+    ) |> top }
+    SetClosed which z ref -> { model | t = z |> Tableau.setClosed which (
+      ref |> String.toInt |> Result.withDefault 0
+    ) |> top }
 
 
 errorColor res =

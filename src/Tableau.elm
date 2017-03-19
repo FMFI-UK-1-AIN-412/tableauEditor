@@ -8,7 +8,7 @@ type alias Node =
   , text : String
   , ref : Int
   }
-defNode = { num = 1, text = "", ref = 1 }
+defNode = { num = 1, text = "", ref = 0 }
 
 type alias Closed = (Int, Int)
 defClosed = (0, 0)
