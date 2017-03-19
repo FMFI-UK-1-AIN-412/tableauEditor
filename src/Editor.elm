@@ -17,32 +17,36 @@ model  : Model
 model = Model (Tableau.fLeaf "")
 
 type Msg
-  = Text Int String
-  | Ref Int String
-  | ExpandAlpha Int
-  | ExpandBeta Int
-  | MakeClosed Int
-  | SetClosed1 Int String
-  | SetClosed2 Int String
+  = Text Tableau.Zipper String
+  | Ref Tableau.Zipper String
+  | ExpandAlpha Tableau.Zipper
+  | ExpandBeta Tableau.Zipper
+  | MakeClosed Tableau.Zipper
+  | MakeOpen Tableau.Zipper
+  | SetClosed Int Tableau.Zipper String
+  | Delete Tableau.Zipper
 
+
+top = Tableau.top >> Tableau.zTableau
+topRenumbered = top >> Tableau.renumber
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Text num txt ->    { model | t = (Tableau.setFormula txt num model.t) }
-    Ref num ref ->
+    ExpandAlpha z -> { model | t = z |> Tableau.extendAlpha    |> topRenumbered }
+    ExpandBeta  z -> { model | t = z |> Tableau.extendBeta     |> topRenumbered }
+    MakeClosed  z -> { model | t = z |> Tableau.makeClosed     |> top }
+    MakeOpen    z -> { model | t = z |> Tableau.makeOpen       |> top }
+    Delete      z -> { model | t = z |> Tableau.delete         |> topRenumbered }
+    Text    z txt -> { model | t = z |> Tableau.setFormula txt |> top }
+    Ref     z ref ->
       case String.toInt ref of
-        Ok ref -> { model | t = (Tableau.setRef ref num model.t) }
+        Ok ref -> { model | t = z |> Tableau.setRef ref |> top }
         Err e -> model
-    ExpandAlpha num -> { model | t = (Tableau.extendAlpha num model.t) }
-    ExpandBeta num ->  { model | t = (Tableau.extendBeta num model.t) }
-    MakeClosed num -> { model | t = (Tableau.makeClosed num model.t) }
-    SetClosed1 num ref -> case String.toInt ref of
-      Ok ref -> { model | t = (Tableau.setClosed 0 ref num model.t) }
-      Err e -> model
-    SetClosed2 num ref -> case String.toInt ref of
-      Ok ref -> { model | t = (Tableau.setClosed 1 ref num model.t) }
-      Err e -> model
+    SetClosed which z ref ->
+      case String.toInt ref of
+        Ok ref -> { model | t = z |> Tableau.setClosed which ref |> top }
+        Err e -> model
 
 
 errorColor res =
@@ -70,7 +74,7 @@ viewTableau tbl=
   in
 --     table [border "1"] (List.map tblRow t)
       table [] (List.map2 tblRow
-        (List.reverse <| List.range 1 (Tableau.depth tbl))
+        (List.reverse <| List.range 1 (List.length t))
         t
       )
 
@@ -84,22 +88,26 @@ tblRow depth trow =
 tblCell : Int -> Tableau.Cell -> (Html Msg)
 tblCell depth tcell =
   let
-      (width, mt) = tcell
-      (content,height) = case mt of
+      (width, mz) = tcell
+      (content,height) = case mz of
         Nothing -> ([],depth)
-        Just t ->
-          ( [ viewFormula t ] ++ expandControls t
-          , case t of
-            Tableau.Leaf _ _ -> depth + 1
-            _ -> 1
+        Just z ->
+          ( [ viewFormula z ] ++ expandControls z
+          , let
+              (t, bs) = z
+            in
+              case t of
+                Tableau.Leaf _ _ -> depth + 1
+                _ -> 1
           )
   in td
     [ colspan (width), rowspan height, valign "top" ]
     content
 
 -- TODO real css from outside
-viewFormula t =
+viewFormula z =
   let
+    (t, bs) = z
     n = Tableau.node t
     formula = Formula.parseSigned n.text
   in
@@ -108,7 +116,7 @@ viewFormula t =
         [ text <| "(" ++ (toString n.num) ++ ")"
         , input
             [ type_ "text", placeholder "Formula"
-            , onInput <| Text n.num
+            , onInput <| Text z
             , style
               [ ("background-color", errorColor formula)
               , ("flexGrow", "1")
@@ -118,30 +126,35 @@ viewFormula t =
             []
         , text " ["
         , input
-          [ type_ "text", placeholder "0", size 1, onInput <| Ref n.num ]
+          [ type_ "text", placeholder "0", size 1, onInput <| Ref z ]
           []
         , text "]"
+        , button [ onClick (Delete z) ] [ text "x" ]
         ]
       ]
 
 
-expandControls t =
-  case t of
-    Tableau.Leaf n mc -> case mc of
-      Nothing ->
-        [ div [style [("textAlign", "center")]]
-          [ button [ onClick (ExpandAlpha n.num) ] [ text "α" ]
-          , button [ onClick (ExpandBeta n.num) ] [ text "β" ]
-          , button [ onClick (MakeClosed n.num) ] [ text "*" ]
+expandControls z =
+  let
+    (t, bs) = z
+  in
+    case t of
+      Tableau.Leaf n mc -> case mc of
+        Nothing ->
+          [ div [style [("textAlign", "center")]]
+            [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+            , button [ onClick (ExpandBeta  z) ] [ text "β" ]
+            , button [ onClick (MakeClosed  z) ] [ text "*" ]
+            ]
           ]
-        ]
-      Just (a,b) ->
-        [ div [style [("textAlign", "center")]]
-          [ text "* "
-          , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed1 n.num] []
-          , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed2 n.num] []
+        Just (a,b) ->
+          [ div [style [("textAlign", "center")]]
+            [ text "* "
+            , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed 0 z] []
+            , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed 1 z] []
+            , button [ onClick (MakeOpen z) ] [ text "x" ]
+            ]
           ]
-        ]
-    Tableau.Alpha _ _ -> []
-    Tableau.Beta _ _ _ -> []
+      Tableau.Alpha _ _ -> []
+      Tableau.Beta _ _ _ -> []
 

@@ -31,79 +31,154 @@ formula t =
   |> Formula.parseSigned
 
 
-depth : Tableau -> Int
-depth t = case t of
-  Leaf _ _ -> 1
-  Alpha _ t -> 1 + depth t
-  Beta _ lt rt -> 1 + depth lt + depth rt
-
-fLeaf text = Leaf { defNode | text = text } Nothing
-fAlpha text ct =
+--
+-- convert to table
+--
+type alias CellWidth = Int
+type alias Cell = (CellWidth, Maybe Zipper) -- the 'Node' at that point
+type alias Row = List Cell
+type alias Table = List Row
+asTable : Tableau -> Table
+asTable t =
   let
-    nt = mapNode (\n -> {n | num = n.num + 1}) ct
+    z = zipper t
+    (c, tbl) = asHeadedTable z
   in
-    Alpha { defNode | text = text } nt
-fBeta text lt rt =
-  let
-    nlt = mapNode (\n -> {n | num = n.num + 1}) lt
-    nrt = mapNode (\n -> {n | num = n.num + (maxNum nlt)}) rt
-  in
-    Beta { defNode | text = text } nlt nrt
+     [[c]] ++ tbl
 
-maxNum : Tableau -> Int
-maxNum t =
+asHeadedTable : Zipper -> (Cell, Table)
+asHeadedTable (t, bs) =
   case t of
-    Leaf n _ -> n.num
-    Alpha n ct -> max n.num (maxNum ct)
-    Beta n lt rt -> max n.num (max (maxNum lt) (maxNum rt))
-
-extend : (Int -> Node -> Tableau) -> Int -> Tableau -> Tableau
-extend extender num t = doExtend (extender (maxNum t)) num t
-
-doExtend : (Node -> Tableau) -> Int -> Tableau -> Tableau
-doExtend extender num t =
-  case t of
-    Alpha n t -> Alpha n <| doExtend extender num t
+    Leaf n _ -> ( (1, Just (t,bs)), [] )
+    Alpha n st -> let
+                    sz = (t, bs) |> down
+                    (top, table) = asHeadedTable sz
+                    (topWidth, topElem) = top
+                 in
+                    (  ( topWidth, Just (t, bs)), [[top]] ++ table)
     Beta n lt rt ->
-      Beta
-        n
-        ( doExtend extender num lt )
-        ( doExtend extender num rt )
-    Leaf n _ -> if n.num == num then extender n else Leaf n Nothing
+      let
+        lz = (t, bs) |> left
+        rz = (t, bs) |> right
+        (ltop, ltable) = asHeadedTable lz
+        (ltopWidth, ltopE) = ltop
+        (rtop, rtable) = asHeadedTable rz
+        (rtopWidth, rtopE) = rtop
+      in
+         ( (ltopWidth + rtopWidth, Just (t, bs))
+         , [[ltop, rtop]]  ++ (merge ltable rtable)
+         )
 
-extendAlpha = extend alphaExtender
-extendBeta = extend betaExtender
 
-alphaExtender : Int -> Node -> Tableau
-alphaExtender maxNum n =
-  Alpha
-    n
-    (Leaf { defNode | num = maxNum + 1 } Nothing)
+-- grr, no asymetric map2 ;(
+merge : (List (List a)) -> (List (List a)) -> List (List a)
+merge ll rl =
+  case (ll,rl) of
+    (lh::lt, rh::rt) -> (lh++rh) :: merge lt rt
+    ([], rh::rt) -> rh :: merge [] rt
+    (lh::lt, []) -> lh :: merge lt []
+    ([], []) -> []
 
-betaExtender : Int -> Node -> Tableau
-betaExtender maxNum n =
-  Beta
-    n
-    (Leaf { defNode | num = maxNum + 1 } Nothing)
-    (Leaf { defNode | num = maxNum + 2 } Nothing)
 
-mapTableau : (Tableau -> Tableau) -> Tableau -> Tableau
-mapTableau f t =
+--
+-- Zipper
+--
+
+type Crumb
+  = AlphaCrumb Node
+  | BetaLeftCrumb Node Tableau
+  | BetaRightCrumb Node Tableau
+
+type alias Breadcrumbs = List Crumb
+type alias Zipper = (Tableau, Breadcrumbs)
+
+zipper : Tableau -> Zipper
+zipper t = (t, [])
+
+down : Zipper -> Zipper
+down (t, bs) =
   case t of
-    Leaf _ _ -> f t
-    Alpha n st -> f (Alpha n (mapTableau f st))
-    Beta n lt rt -> f (Beta n (mapTableau f lt) (mapTableau f rt))
+    Alpha n st -> (st, (AlphaCrumb n) :: bs)
+    _ -> (t, bs)
 
-leafMapper : (Node -> (Maybe Closed) -> Tableau) ->  Tableau -> Tableau
-leafMapper f t =
+left : Zipper -> Zipper
+left (t, bs) =
   case t of
-    Leaf n mt -> f n mt
-    _ -> t
-mapLeaves : (Node -> (Maybe Closed) -> Tableau) -> Tableau -> Tableau
-mapLeaves f = mapTableau (leafMapper f)
-modifyLeaf : (Node -> (Maybe Closed) -> Tableau) -> Int -> Tableau -> Tableau
-modifyLeaf f num =
-  mapLeaves (\n mc -> if n.num == num then (f n mc) else (Leaf n mc))
+    Beta n lt rt -> (lt, (BetaLeftCrumb n rt) :: bs)
+    _ -> (t, bs)
+
+right : Zipper -> Zipper
+right (t, bs) =
+  case t of
+    Beta n lt rt -> (rt, (BetaRightCrumb n lt) :: bs)
+    _ -> (t, bs)
+
+up : Zipper -> Zipper
+up (t, bs) =
+  case bs of
+    (AlphaCrumb n) :: bss  -> (Alpha n t, bss)
+    (BetaLeftCrumb n rt) :: bss -> (Beta n t rt, bss)
+    (BetaRightCrumb n lt) :: bss -> (Beta n lt t, bss)
+    [] -> (t, bs)
+
+
+top : Zipper -> Zipper
+top (t, bs) =
+  case bs of
+    [] -> (t, bs)
+    _ -> top (up (t, bs))
+
+modify : (Tableau -> Tableau) -> Zipper -> Zipper
+modify f (t, bs) =
+  (f t, bs)
+
+modifyNode : (Node -> Node) -> Zipper -> Zipper
+modifyNode f =
+  modify (\t ->
+    case t of
+      Leaf n mc -> Leaf (f n) mc
+      Alpha n st -> Alpha (f n) st
+      Beta n lt rt -> Beta (f n) lt rt
+  )
+
+zTableau : Zipper -> Tableau
+zTableau (t, bs) = t
+
+zNode : Zipper -> Node
+zNode = zTableau >> node
+
+zFormula : Zipper -> Result Parser.Error (Signed Formula)
+zFormula = zTableau >> formula
+
+
+--
+-- Actions
+--
+
+setFormula : String -> Zipper -> Zipper
+setFormula text =
+  modifyNode (\n -> { n | text = text })
+
+-- TODO find where it points
+setRef : Int -> Zipper -> Zipper
+setRef ref =
+  modifyNode (\n -> { n | ref = ref })
+
+makeClosed : Zipper -> Zipper
+makeClosed =
+  modify (\t ->
+    case t of
+      Leaf n Nothing -> Leaf n (Just defClosed)
+      _ -> t
+  )
+
+makeOpen : Zipper -> Zipper
+makeOpen =
+  modify (\t ->
+    case t of
+      Leaf n (Just p) -> Leaf n Nothing
+      _ -> t
+  )
 
 setPair1 : Int -> (a,a) -> a -> (a,a)
 setPair1 which p n =
@@ -114,37 +189,63 @@ setPair1 which p n =
       0 -> (n,b)
       _ -> (a,n)
 
-setClosed : Int -> Int -> Int -> Tableau -> Tableau
 setClosed which ref =
-  modifyLeaf (\n mc ->
-    case mc of
-      Just (a,b) -> Leaf n (Just (setPair1 which (a,b) ref))
-      _ -> Leaf n mc
-    )
-
-
-
-makeClosed : Int -> Tableau -> Tableau
-makeClosed =
-  modifyLeaf (\n mc -> case mc of
-    Nothing -> Leaf n (Just defClosed)
-    Just _ as closed -> Leaf n closed
+  modify (\t ->
+    case t of
+      Leaf n (Just p) -> Leaf n (Just (setPair1 which p ref))
+      _ -> t
   )
 
-mapNode : (Node -> Node) -> Tableau -> Tableau
-mapNode f t =
+
+extendAlpha : Zipper -> Zipper
+extendAlpha =
+  modify (\t ->
+    case t of
+      Leaf n mc ->
+        Alpha n
+          (Leaf defNode mc)
+      _ -> t
+  )
+
+extendBeta : Zipper -> Zipper
+extendBeta =
+  modify (\t ->
+    case t of
+      Leaf n mc ->
+        Beta n
+          (Leaf defNode mc)
+          (Leaf defNode mc)
+      _ -> t
+  )
+
+delete : Zipper -> Zipper
+delete =
+  modify (\t -> Leaf defNode Nothing)
+
+
+renumber : Tableau -> Tableau
+renumber t =
+  renumber2 t 0 |> Tuple.first
+renumber2 : Tableau -> Int -> (Tableau, Int)
+renumber2 t num =
   case t of
-    Leaf n _ -> Leaf (f n) Nothing
-    Alpha n ct -> Alpha (f n) (mapNode f ct)
-    Beta n lt rt -> Beta (f n) (mapNode f lt) (mapNode f rt)
+    Leaf n mc -> (Leaf { n | num = num + 1 } mc, num + 1)
+    Alpha n st ->
+      let
+        (nst, num1) = renumber2 st ( num + 1)
+      in
+        (Alpha { n | num = num + 1 } nst, num1)
+    Beta n lt rt ->
+      let
+        (nlt, num1) = renumber2 lt ( num + 1)
+        (nrt, num2) = renumber2 rt num1
+      in
+        (Beta {n | num = num + 1 } nlt nrt, num2)
 
-modifyNode : (Node -> Node) -> Int -> Tableau -> Tableau
-modifyNode f num =
-  mapNode (\n -> if n.num == num then f n else n)
 
-setFormula frm = modifyNode (\x -> {x | text = frm})
-setRef ref = modifyNode (\x -> {x | ref = ref})
-
+--
+-- debug print funcs
+--
 
 indentedNode ind n =
   let
@@ -175,49 +276,44 @@ width t =
     Alpha _ t -> width t
     Beta _ lt rt -> (width lt) + (width rt)
 
-type alias CellWidth = Int
-type alias Cell = (CellWidth, Maybe Tableau) -- the 'Node' at that point
-type alias Row = List Cell
-type alias Table = List Row
-asTable : Tableau -> Table
-asTable t =
+
+--
+-- debug funcs
+--
+
+depth : Tableau -> Int
+depth t = case t of
+  Leaf _ _ -> 1
+  Alpha _ t -> 1 + depth t
+  Beta _ lt rt -> 1 + depth lt + depth rt
+
+fLeaf text = Leaf { defNode | text = text } Nothing
+fAlpha text ct =
   let
-    (c, tbl) = asHeadedTable t
+    nt = mapNode (\n -> {n | num = n.num + 1}) ct
   in
-     [[c]] ++ tbl
+    Alpha { defNode | text = text } nt
+fBeta text lt rt =
+  let
+    nlt = mapNode (\n -> {n | num = n.num + 1}) lt
+    nrt = mapNode (\n -> {n | num = n.num + (maxNum nlt)}) rt
+  in
+    Beta { defNode | text = text } nlt nrt
 
-asHeadedTable : Tableau -> (Cell, Table)
-asHeadedTable t =
+maxNum : Tableau -> Int
+maxNum t =
   case t of
-    Leaf n _ -> ( (1, Just t), [] )
-    Alpha n ct -> let
-                    (top, table) = asHeadedTable ct
-                    (topWidth, topElem) = top
-                 in
-                    (  ( topWidth, Just t), [[top]] ++ table)
---
--- TODO left needs to be extended with empty cells of correct widht if shorter
---
-    Beta n lt rt ->
-      let
-        (ltop, ltable) = asHeadedTable lt
-        (ltopWidth, ltopE) = ltop
-        (rtop, rtable) = asHeadedTable rt
-        (rtopWidth, rtopE) = rtop
-      in
-         ( (ltopWidth + rtopWidth, Just t)
-         , [[ltop, rtop]]  ++ (merge ltable rtable)
-         )
+    Leaf n _ -> n.num
+    Alpha n ct -> max n.num (maxNum ct)
+    Beta n lt rt -> max n.num (max (maxNum lt) (maxNum rt))
 
 
--- grr, no asymetric map2 ;(
-merge : (List (List a)) -> (List (List a)) -> List (List a)
-merge ll rl =
-  case (ll,rl) of
-    (lh::lt, rh::rt) -> (lh++rh) :: merge lt rt
-    ([], rh::rt) -> rh :: merge [] rt
-    (lh::lt, []) -> lh :: merge lt []
-    ([], []) -> []
+mapNode : (Node -> Node) -> Tableau -> Tableau
+mapNode f t =
+  case t of
+    Leaf n _ -> Leaf (f n) Nothing
+    Alpha n ct -> Alpha (f n) (mapNode f ct)
+    Beta n lt rt -> Beta (f n) (mapNode f lt) (mapNode f rt)
 
 tl =
   fAlpha "T(a&b)"
@@ -233,3 +329,5 @@ tt =
       (fLeaf "Ta")
     )
     (fLeaf "Fc")
+
+
