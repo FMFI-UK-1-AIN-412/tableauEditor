@@ -108,15 +108,21 @@ indentedNode ind n =
       Ok f -> Formula.strSigned f
       Err e -> toString e
   in
-    (String.repeat ind " ") ++ parsedFrm ++ " [" ++ (toString n.ref) ++ "]\n"
+    (String.repeat ind " ") ++ "(" ++ toString n.num ++ ")"
+    ++ parsedFrm ++ " [" ++ (toString n.ref) ++ "]"
+
+indentedClosed mc =
+  case mc of
+    Nothing -> ""
+    Just (a,b) -> "*(" ++ toString a ++ "," ++ toString b ++ ")"
 
 indented ind t =
   case t of
-    Leaf n _ -> indentedNode ind n
+    Leaf n mc -> indentedNode ind n ++ " " ++ indentedClosed mc ++ "\n"
     Alpha n ct ->
-      (indentedNode ind n) ++ (indented (ind + 2) ct)
+      (indentedNode ind n) ++ "\n" ++ (indented (ind + 2) ct)
     Beta n lt rt ->
-      (indentedNode ind n) ++ (indented (ind + 2) lt) ++ (indented (ind + 2) rt)
+      (indentedNode ind n) ++ "\n" ++ (indented (ind + 2) lt) ++ (indented (ind + 2) rt)
 
 width : Tableau -> Int
 width t =
