@@ -159,9 +159,20 @@ setFormula : String -> Zipper -> Zipper
 setFormula text =
   modifyNode (\n -> { n | text = text })
 
--- TODO find where it points
+getReffed : Int -> Zipper -> Maybe Int
+getReffed ref (t, bs) =
+  if (node t).num == ref
+    then Just 0
+    else case bs of
+      a::bbs ->  Maybe.map ((+) 1) ((t, bs) |> up |> getReffed ref)
+      [] -> Nothing
+
 setRef : Int -> Zipper -> Zipper
-setRef ref =
+setRef ref z =
+  z |> modifyRef (z |> getReffed ref |> Maybe.withDefault 0)
+
+modifyRef : Int -> Zipper -> Zipper
+modifyRef ref =
   modifyNode (\n -> { n | ref = ref })
 
 makeClosed : Zipper -> Zipper
@@ -189,10 +200,11 @@ setPair1 which p n =
       0 -> (n,b)
       _ -> (a,n)
 
-setClosed which ref =
-  modify (\t ->
+setClosed which ref z =
+  z |> modify (\t ->
     case t of
-      Leaf n (Just p) -> Leaf n (Just (setPair1 which p ref))
+      Leaf n (Just p) ->
+        Leaf n (Just (setPair1 which p (z |> getReffed ref |> Maybe.withDefault 0)))
       _ -> t
   )
 
