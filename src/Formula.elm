@@ -54,13 +54,10 @@ formula =
         |. keyword "-"
         |. spaces
         |= lazy (\_ -> formula)
-    , lazy (\_ -> binary "&" Conj)
-    , lazy (\_ -> binary "|" Disj)
-    , lazy (\_ -> binary "->" Impl)
+    , lazy (\_ -> binary ["&", "∧"] Conj)
+    , lazy (\_ -> binary ["|", "∨"] Disj)
+    , lazy (\_ -> binary ["->", "→"] Impl)
     ]
-
-conjunction = lazy (\_ -> binary "&" Conj)
-disjunction = lazy (\_ -> binary "|" Conj)
 
 binary conn constructor =
   delayedCommitMap constructor
@@ -70,7 +67,7 @@ binary conn constructor =
      |= lazy (\_ -> formula)
      |. spaces
   ) <| succeed identity
-  |. symbol conn
+  |. oneOf (List.map symbol conn)
   |. spaces
   |= lazy (\_ -> formula)
   |. spaces
