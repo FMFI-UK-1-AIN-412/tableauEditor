@@ -127,6 +127,11 @@ up (t, bs) =
     (BetaRightCrumb n lt) :: bss -> (Beta n lt t, bss)
     [] -> (t, bs)
 
+above : Int -> Zipper -> Zipper
+above n z =
+  case n of
+    0 -> z
+    n -> above (n - 1) (up z)
 
 top : Zipper -> Zipper
 top (t, bs) =
