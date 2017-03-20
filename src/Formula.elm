@@ -57,6 +57,12 @@ formula =
     , lazy (\_ -> binary ["&", "∧"] Conj)
     , lazy (\_ -> binary ["|", "∨"] Disj)
     , lazy (\_ -> binary ["->", "→"] Impl)
+    , succeed identity
+        |. symbol "("
+        |. spaces
+        |= lazy (\_ -> formula)
+        |. spaces
+        |. symbol ")"
     ]
 
 binary conn constructor =
