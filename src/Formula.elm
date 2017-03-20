@@ -94,3 +94,11 @@ strFormula f =
     Disj lf rf -> "(" ++ (strFormula lf) ++ "∨" ++ (strFormula rf) ++ ")"
     Impl lf rf -> "(" ++ (strFormula lf) ++ "→" ++ (strFormula rf) ++ ")"
 
+--
+-- helper funcs
+--
+
+sf : String -> (Signed Formula)
+sf = parseSigned >> Result.withDefault (T FF)
+f : String -> Formula
+f = parse >> Result.withDefault FF
