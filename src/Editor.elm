@@ -1,5 +1,5 @@
 module Editor exposing (..)
-import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre)
+import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import Result
@@ -25,6 +25,7 @@ type Msg
   | MakeOpen Tableau.Zipper
   | SetClosed Int Tableau.Zipper String
   | Delete Tableau.Zipper
+  | Prettify
 
 
 top = Tableau.top >> Tableau.zTableau
@@ -45,6 +46,7 @@ update msg model =
     SetClosed which z ref -> { model | t = z |> Tableau.setClosed which (
       ref |> String.toInt |> Result.withDefault 0
     ) |> top }
+    Prettify -> { model | t = Tableau.prettify model.t }
 
 
 errorColor res =
@@ -56,6 +58,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ viewTableau model.t
+    , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , pre []
       [ text (Tableau.indented 2 model.t)
       ]
@@ -114,6 +117,7 @@ viewFormula z =
         [ text <| "(" ++ (toString n.num) ++ ")"
         , input
             [ type_ "text", placeholder "Formula"
+            , value n.text
             , onInput <| Text z
             , style
               [ ("background-color", errorColor formula)

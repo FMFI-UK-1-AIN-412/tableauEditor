@@ -30,6 +30,12 @@ formula t =
   (node t).text
   |> Formula.parseSigned
 
+mapNode : (Node -> Node) -> Tableau -> Tableau
+mapNode f t =
+  case t of
+    Leaf n mc -> Leaf (f n) mc
+    Alpha n ct -> Alpha (f n) (mapNode f ct)
+    Beta n lt rt -> Beta (f n) (mapNode f lt) (mapNode f rt)
 
 --
 -- convert to table
@@ -255,6 +261,15 @@ renumber2 t num =
         (Beta {n | num = num + 1 } nlt nrt, num2)
 
 
+prettify : Tableau -> Tableau
+prettify =
+  mapNode (\n ->
+    { n | text = case Formula.parseSigned n.text of
+      Ok f -> Formula.strSigned f
+      Err e -> n.text
+    }
+  )
+
 --
 -- debug print funcs
 --
@@ -319,13 +334,6 @@ maxNum t =
     Alpha n ct -> max n.num (maxNum ct)
     Beta n lt rt -> max n.num (max (maxNum lt) (maxNum rt))
 
-
-mapNode : (Node -> Node) -> Tableau -> Tableau
-mapNode f t =
-  case t of
-    Leaf n _ -> Leaf (f n) Nothing
-    Alpha n ct -> Alpha (f n) (mapNode f ct)
-    Beta n lt rt -> Beta (f n) (mapNode f lt) (mapNode f rt)
 
 tl =
   fAlpha "T(a&b)"
