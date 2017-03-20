@@ -10,22 +10,82 @@ import Parser exposing
   )
 import Parser.LanguageKit exposing (variable, sequence, whitespace)
 
-
 type Formula
   = Atom String
-  | FF
-  | FT
   | Neg Formula
   | Disj Formula Formula
   | Conj Formula Formula
   | Impl Formula Formula
+  | FF
+  | FT
 
+subformulas : Formula -> (List Formula)
+subformulas f =
+  case f of
+    Neg sf -> [sf]
+    Disj lf rf -> [lf, rf]
+    Conj lf rf -> [lf, rf]
+    Impl lf rf -> [lf, rf]
+    _ -> []
 
+isSubformulaOf : Formula -> Formula -> Bool
+isSubformulaOf a b =
+  List.member a (subformulas b)
+
+--
+-- Signed formulas
+--
 type Signed a
   = T a
   | F a
 
+type SignedType
+  = Alpha
+  | Beta
 
+negType : SignedType -> SignedType
+negType t =
+  case t of
+    Alpha -> Beta
+    Beta -> Alpha
+
+
+negSigned : (Signed Formula) -> (Signed Formula)
+negSigned sf =
+  case sf of
+    T f -> F f
+    F f -> T f
+
+signedType : (Signed Formula) -> SignedType
+signedType sf =
+  case sf of
+    T FF -> Alpha
+    T FT -> Alpha
+    T (Atom _) -> Alpha
+    T (Neg _) -> Alpha
+    T (Conj _ _) -> Alpha
+    T (Disj _ _) -> Beta
+    T (Impl _ _) -> Beta
+    F f -> negType <| signedType <| T f
+
+signedSubformulas : (Signed Formula) -> (List (Signed Formula))
+signedSubformulas sf =
+  case sf of
+    T (Neg f) -> [F f]
+    T (Conj l r) -> [T l, T r]
+    T (Disj l r) -> [T l, T r]
+    T (Impl l r) -> [F l, T r]
+    T _ -> []
+    F f -> T f |> signedSubformulas |> List.map negSigned
+
+isSignedSubformulaOf : (Signed Formula) -> (Signed Formula) -> Bool
+isSignedSubformulaOf a b =
+  List.member a (signedSubformulas b)
+
+
+--
+-- Parsing
+--
 parseSigned = Parser.run (succeed identity |. spaces |= signedFormula |. spaces |. end)
 
 signedFormula =
