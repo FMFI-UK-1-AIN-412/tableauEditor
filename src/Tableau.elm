@@ -3,15 +3,22 @@ import Formula exposing (Formula, Signed (T, F))
 import Result exposing (Result (Ok, Err))
 import Parser
 
+type alias Ref =
+  { str : String
+  , up : Maybe Int
+  }
+defRef = { str = "", up = Nothing }
+
+
 type alias Node =
   { num : Int
   , text : String
-  , ref : Int
+  , ref : Ref
   }
-defNode = { num = 1, text = "", ref = 0 }
+defNode = { num = 1, text = "", ref = defRef }
 
-type alias Closed = (Int, Int)
-defClosed = (0, 0)
+type alias Closed = (Ref, Ref)
+defClosed = (defRef, defRef)
 
 type Tableau
   = Leaf Node (Maybe Closed)
@@ -161,6 +168,12 @@ zNode = zTableau >> node
 zFormula : Zipper -> Result Parser.Error (Signed Formula)
 zFormula = zTableau >> formula
 
+zWalkPost : (Zipper -> Zipper) -> Zipper -> Zipper
+zWalkPost f ((t, bs) as z) =
+  case t of
+    Leaf _ _ -> z |> f
+    Alpha n st -> z |> down |> zWalkPost f |> up |> f
+    Beta n lt rt -> z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
 --
 -- Actions
@@ -170,19 +183,34 @@ setFormula : String -> Zipper -> Zipper
 setFormula text =
   modifyNode (\n -> { n | text = text })
 
-getReffed : Int -> Zipper -> Maybe Int
-getReffed ref (t, bs) =
+findAbove : Int -> Zipper -> Maybe Int
+findAbove ref (t, bs) =
   if (node t).num == ref
     then Just 0
     else case bs of
-      a::bbs ->  Maybe.map ((+) 1) ((t, bs) |> up |> getReffed ref)
+      a::bbs ->  Maybe.map ((+) 1) ((t, bs) |> up |> findAbove ref)
       [] -> Nothing
 
-setRef : Int -> Zipper -> Zipper
-setRef ref z =
-  z |> modifyRef (z |> getReffed ref |> Maybe.withDefault 0)
+getRef : String -> Zipper -> Ref
+getRef ref z =
+  { str = ref
+  , up =
+    ref
+    |> String.toInt
+    |> Result.toMaybe
+    |> Maybe.andThen ((flip findAbove) z)
+  }
 
-modifyRef : Int -> Zipper -> Zipper
+setRef : String -> Zipper -> Zipper
+setRef ref z =
+  z |> modifyRef (getRef ref z)
+
+getReffed : Zipper -> Ref -> Maybe Zipper
+getReffed z r =
+  r.up
+  |> Maybe.map ((flip above) z)
+
+modifyRef : Ref -> Zipper -> Zipper
 modifyRef ref =
   modifyNode (\n -> { n | ref = ref })
 
@@ -211,11 +239,12 @@ setPair1 which p n =
       0 -> (n,b)
       _ -> (a,n)
 
+setClosed : Int -> String -> Zipper -> Zipper
 setClosed which ref z =
   z |> modify (\t ->
     case t of
       Leaf n (Just p) ->
-        Leaf n (Just (setPair1 which p (z |> getReffed ref |> Maybe.withDefault 0)))
+        Leaf n (Just (setPair1 which p (z |> getRef ref)))
       _ -> t
   )
 
@@ -248,7 +277,36 @@ delete =
 
 renumber : Tableau -> Tableau
 renumber t =
-  renumber2 t 0 |> Tuple.first
+  renumber2 t 0
+  |> Tuple.first
+  |> zipper
+  |> fixRefs
+  |> top
+  |> zTableau
+
+fixRefs : Zipper -> Zipper
+fixRefs = zWalkPost (fixNodeRef >> fixClosedRefs)
+
+fixedRef : Ref -> Zipper -> Ref
+fixedRef ({str, up} as ref) z =
+  case up of
+    Nothing -> { ref | str = "" } -- invalid refs might become valid, better explicitely clean them up...
+    Just n -> { ref | str = z |> above n |> zNode |> .num |> toString }
+
+fixNodeRef : Zipper -> Zipper
+fixNodeRef z =
+  z |> modifyNode (\n -> { n | ref = fixedRef n.ref z })
+
+fixClosedRefs : Zipper -> Zipper
+fixClosedRefs z =
+  z |> modify (\t ->
+    case t of
+      Leaf n (Just (a,b)) -> Leaf n (Just (fixedRef a z, fixedRef b z))
+      _ -> t
+  )
+
+
+
 renumber2 : Tableau -> Int -> (Tableau, Int)
 renumber2 t num =
   case t of

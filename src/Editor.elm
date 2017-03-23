@@ -34,19 +34,15 @@ topRenumbered = top >> Tableau.renumber
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    ExpandAlpha z -> { model | t = z |> Tableau.extendAlpha    |> topRenumbered }
-    ExpandBeta  z -> { model | t = z |> Tableau.extendBeta     |> topRenumbered }
-    MakeClosed  z -> { model | t = z |> Tableau.makeClosed     |> top }
-    MakeOpen    z -> { model | t = z |> Tableau.makeOpen       |> top }
-    Delete      z -> { model | t = z |> Tableau.delete         |> topRenumbered }
-    Text    z txt -> { model | t = z |> Tableau.setFormula txt |> top }
-    Ref     z ref -> { model | t = z |> Tableau.setRef (
-      ref |> String.toInt |> Result.withDefault 0
-    ) |> top }
-    SetClosed which z ref -> { model | t = z |> Tableau.setClosed which (
-      ref |> String.toInt |> Result.withDefault 0
-    ) |> top }
-    Prettify -> { model | t = Tableau.prettify model.t }
+    ExpandAlpha     z -> { model | t = z |> Tableau.extendAlpha     |> topRenumbered }
+    ExpandBeta      z -> { model | t = z |> Tableau.extendBeta      |> topRenumbered }
+    MakeClosed      z -> { model | t = z |> Tableau.makeClosed      |> top }
+    MakeOpen        z -> { model | t = z |> Tableau.makeOpen        |> top }
+    Delete          z -> { model | t = z |> Tableau.delete          |> topRenumbered }
+    Text        z txt -> { model | t = z |> Tableau.setFormula txt  |> top }
+    Ref         z ref -> { model | t = z |> Tableau.setRef ref      |> top }
+    SetClosed w z ref -> { model | t = z |> Tableau.setClosed w ref |> top }
+    Prettify          -> { model | t = Tableau.prettify model.t }
 
 
 errorColor res =
@@ -128,7 +124,7 @@ viewFormula z =
             []
         , text " ["
         , input
-          [ type_ "text", placeholder "0", size 1, onInput <| Ref z ]
+          [ type_ "text", placeholder "0", size 1, value n.ref.str, onInput <| Ref z ]
           []
         , text "]"
         , button [ onClick (Delete z) ] [ text "x" ]
@@ -152,8 +148,8 @@ expandControls z =
         Just (a,b) ->
           [ div [style [("textAlign", "center")]]
             [ text "* "
-            , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed 0 z] []
-            , input [ type_ "text", placeholder "0", size 1, onInput <| SetClosed 1 z] []
+            , input [ type_ "text", placeholder "0", size 1, value a.str, onInput <| SetClosed 0 z] []
+            , input [ type_ "text", placeholder "0", size 1, value b.str, onInput <| SetClosed 1 z] []
             , button [ onClick (MakeOpen z) ] [ text "x" ]
             ]
           ]
