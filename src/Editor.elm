@@ -45,11 +45,6 @@ update msg model =
     Prettify          -> { model | t = Tableau.prettify model.t }
 
 
-errorColor res =
-  case res of
-    Err e -> if e.source /= "" then "lightpink" else "white"
-    Ok _ -> "white"
-
 view : Model -> Html Msg
 view model =
   div []
@@ -69,14 +64,10 @@ viewTableau tbl=
   let
       t = Tableau.asTable tbl
   in
---     table [border "1"] (List.map tblRow t)
-      table [] (List.map2 tblRow
+      table [class "tableau"] (List.map2 tblRow
         (List.reverse <| List.range 1 (List.length t))
         t
       )
-
-border = attribute "border"
-valign = attribute "valign"
 
 tblRow : Int -> Tableau.Row -> (Html Msg)
 tblRow depth trow =
@@ -98,61 +89,59 @@ tblCell depth tcell =
                 _ -> 1
           )
   in td
-    [ colspan (width), rowspan height, valign "top" ]
+    [ colspan width, rowspan height ]
     content
 
--- TODO real css from outside
 viewFormula z =
   let
     (t, bs) = z
     n = Tableau.node t
     formula = Formula.parseSigned n.text
   in
-    div [ title (toString formula) ]
-      [ div [ style [("display", "flex")] ]
-        [ text <| "(" ++ (toString n.num) ++ ")"
-        , input
-            [ type_ "text", placeholder "Formula"
-            , value n.text
-            , onInput <| Text z
-            , style
-              [ ("background-color", errorColor formula)
-              , ("flexGrow", "1")
-              , ("textAlign", "center")
-              ]
-            ]
-            []
-        , text " ["
-        , input
-          [ type_ "text", placeholder "0", size 1, value n.ref.str, onInput <| Ref z ]
-          []
-        , text "]"
-        , button [ onClick (Delete z) ] [ text "x" ]
+    div
+      [ class "formula", title (toString formula) ]
+      [ text <| "(" ++ (toString n.num) ++ ")"
+      , input
+        [ class "formulaEdit"
+        , type_ "text"
+        , placeholder "Formula"
+        , value n.text
+        , onInput <| Text z
         ]
+        []
+      , text " ["
+      , input
+        [ class "refEdit"
+        , type_ "text"
+        , placeholder "0"
+        , size 1
+        , value n.ref.str
+        , onInput <| Ref z
+        ]
+        []
+      , text "]"
+      , button [ onClick (Delete z) ] [ text "x" ]
       ]
-
 
 expandControls z =
   let
     (t, bs) = z
   in
-    case t of
-      Tableau.Leaf n mc -> case mc of
-        Nothing ->
-          [ div [style [("textAlign", "center")]]
+    [ div [ class "expandControls"]
+      (case t of
+        Tableau.Leaf n mc -> case mc of
+          Nothing ->
             [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
             , button [ onClick (ExpandBeta  z) ] [ text "β" ]
             , button [ onClick (MakeClosed  z) ] [ text "*" ]
             ]
-          ]
-        Just (a,b) ->
-          [ div [style [("textAlign", "center")]]
+          Just (a,b) ->
             [ text "* "
             , input [ type_ "text", placeholder "0", size 1, value a.str, onInput <| SetClosed 0 z] []
             , input [ type_ "text", placeholder "0", size 1, value b.str, onInput <| SetClosed 1 z] []
             , button [ onClick (MakeOpen z) ] [ text "x" ]
             ]
-          ]
-      Tableau.Alpha _ _ -> []
-      Tableau.Beta _ _ _ -> []
-
+        Tableau.Alpha _ _ -> []
+        Tableau.Beta _ _ _ -> []
+      )
+    ]

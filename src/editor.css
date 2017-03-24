@@ -1,3 +1,19 @@
-table {
+.tableau {
   width: 100%;
+}
+
+.tableau tr {
+  vertical-align: top;
+}
+
+.formula {
+  display: flex;
+}
+
+.formulaEdit {
+  flex-grow: 1;
+  text-align: center;
+}
+.expandControls {
+  text-align: center;
 }
