@@ -108,6 +108,13 @@ type alias Zipper = (Tableau, Breadcrumbs)
 zipper : Tableau -> Zipper
 zipper t = (t, [])
 
+children : Zipper -> List Zipper
+children ((t, bs) as z) =
+  case t of
+    Leaf _ _ -> []
+    Alpha _ _ -> [ down z ]
+    Beta _ _ _ -> [ left z, right z]
+
 down : Zipper -> Zipper
 down (t, bs) =
   case t of
@@ -209,6 +216,11 @@ getReffed : Zipper -> Ref -> Maybe Zipper
 getReffed z r =
   r.up
   |> Maybe.map ((flip above) z)
+
+getReffedFormula : Zipper -> Ref -> Maybe (Signed Formula)
+getReffedFormula z r =
+  getReffed z r
+  |> Maybe.andThen (zFormula >> Result.toMaybe)
 
 modifyRef : Ref -> Zipper -> Zipper
 modifyRef ref =

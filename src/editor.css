@@ -17,3 +17,6 @@
 .expandControls {
   text-align: center;
 }
+
+.syntaxProblem    { background-color: lightpink; }
+.semanticsProblem { background-color: rgb(255, 211, 131); }

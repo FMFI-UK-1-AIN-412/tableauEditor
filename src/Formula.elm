@@ -82,6 +82,12 @@ isSignedSubformulaOf : (Signed Formula) -> (Signed Formula) -> Bool
 isSignedSubformulaOf a b =
   List.member a (signedSubformulas b)
 
+isSignedComplementary : (Signed Formula) -> (Signed Formula) -> Bool
+isSignedComplementary a b =
+  case (a,b) of
+    (T x, F y) -> x == y
+    (F x, T y) -> x == y
+    _ -> False
 
 --
 -- Parsing
@@ -104,6 +110,10 @@ signedFormula =
 
 -- parse = Parser.run formula
 parse = Parser.run (succeed identity |. spaces |= formula |. spaces |. end)
+
+errorString : Parser.Error  -> String
+errorString e = "Invalid formula: " ++ (toString e)
+
 
 formula : Parser Formula
 formula =

@@ -1,9 +1,11 @@
 module Editor exposing (..)
-import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p)
+import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p, ul, li)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import Result
 import Tableau
+import Validate exposing
+  (validate, validateNodeRef, validateRef, validateRule, validateFormula, validateClosedCompl)
 
 import Formula exposing (Formula)
 
@@ -55,9 +57,40 @@ view model =
       ]
     , div []
       [ text (toString model.t) ]
+    , div []
+      [ p [] [text "Problems"]
+      , problemList <| validate <| Tableau.zipper <| model.t
+      ]
     ]
 
 
+problemList : (List Validate.Problem) -> Html Msg
+problemList pl = ul [ class "problemList" ] (List.map problemItem pl)
+
+problemItem : Validate.Problem -> Html Msg
+problemItem p = li [ class (problemClass p) ]
+  [ text "("
+  , text <| toString <| .num <| Tableau.zNode <| p.zip
+  , text ") "
+  , text <| p.msg
+  ]
+
+problemsClass : (List Validate.Problem) -> String
+problemsClass pl =
+  case pl of
+    [] -> ""
+    p::_ -> problemClass p
+
+problemClass { typ } =
+  case typ of
+    Validate.Syntax    -> "syntaxProblem"
+    Validate.Semantics -> "semanticsProblem"
+
+problemColor : Validate.Problem -> String
+problemColor p =
+  case p.typ of
+    Validate.Syntax -> "lightpink"
+    Validate.Semantics -> "yellow"
 
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl=
@@ -102,7 +135,9 @@ viewFormula z =
       [ class "formula", title (toString formula) ]
       [ text <| "(" ++ (toString n.num) ++ ")"
       , input
-        [ class "formulaEdit"
+        [ class ("formulaEdit " ++
+            problemsClass (validateFormula z ++ validateRule z)
+          )
         , type_ "text"
         , placeholder "Formula"
         , value n.text
@@ -111,9 +146,10 @@ viewFormula z =
         []
       , text " ["
       , input
-        [ class "refEdit"
+        [ class ("refEdit " ++
+            problemsClass (validateNodeRef z)
+          )
         , type_ "text"
-        , placeholder "0"
         , size 1
         , value n.ref.str
         , onInput <| Ref z
@@ -135,12 +171,17 @@ expandControls z =
             , button [ onClick (ExpandBeta  z) ] [ text "β" ]
             , button [ onClick (MakeClosed  z) ] [ text "*" ]
             ]
-          Just (a,b) ->
-            [ text "* "
-            , input [ type_ "text", placeholder "0", size 1, value a.str, onInput <| SetClosed 0 z] []
-            , input [ type_ "text", placeholder "0", size 1, value b.str, onInput <| SetClosed 1 z] []
-            , button [ onClick (MakeOpen z) ] [ text "x" ]
-            ]
+          Just (r1,r2) ->
+            let
+              compl = validateClosedCompl z r1 r2
+              ref1Cls = problemsClass <| (validateRef "Invalid close ref. #1" z r1) ++ compl
+              ref2Cls = problemsClass <| (validateRef "Invalid close ref. #1" z r2) ++ compl
+            in
+              [ text "* "
+              , input [ class ref1Cls, type_ "text", size 1, value r1.str, onInput <| SetClosed 0 z] []
+              , input [ class ref2Cls, type_ "text", size 1, value r2.str, onInput <| SetClosed 1 z] []
+              , button [ onClick (MakeOpen z) ] [ text "x" ]
+              ]
         Tableau.Alpha _ _ -> []
         Tableau.Beta _ _ _ -> []
       )
