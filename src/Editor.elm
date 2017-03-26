@@ -52,14 +52,17 @@ view model =
   div []
     [ viewTableau model.t
     , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
-    , pre []
-      [ text (Tableau.indented 2 model.t)
-      ]
-    , div []
-      [ text (toString model.t) ]
     , div []
       [ p [] [text "Problems"]
       , problemList <| validate <| Tableau.zipper <| model.t
+      ]
+    , div []
+      [ p [] [text "Debug"]
+      , pre []
+        [ text (Tableau.indented 2 model.t)
+        ]
+      , div []
+        [ text (toString model.t) ]
       ]
     ]
 
