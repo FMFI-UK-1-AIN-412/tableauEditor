@@ -224,7 +224,7 @@ viewFormula z =
         ]
         []
       , text "]"
-      , button [ onClick (Delete z) ] [ text "x" ]
+      , button [ class "delete", onClick (Delete z) ] [ text "x" ]
       ]
 
 expandControls z =
@@ -250,7 +250,7 @@ expandControls z =
                 , placeholder "Ref", size 1, value r1.str, onInput <| SetClosed 0 z] []
               , input [ class ("refEdit " ++ ref2Cls), type_ "text"
                 , placeholder "Ref", size 1, value r2.str, onInput <| SetClosed 1 z] []
-              , button [ onClick (MakeOpen z) ] [ text "x" ]
+              , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
               ]
         Tableau.Alpha _ _ -> []
         Tableau.Beta _ _ _ -> []

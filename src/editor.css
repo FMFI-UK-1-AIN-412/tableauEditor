@@ -43,6 +43,19 @@
   text-align: center;
 }
 
+/** delete button */
+button.delete {
+  padding: 0 0.3em;
+  margin-left: 0.5em;
+  border: thin solid lightgray;
+  background-color: inherit;
+  color: gray;
+  height: 100%;
+}
+button.delete:hover {
+  background-color: lightpink;
+}
+
 .premise { background-color: #def; }
 
 .syntaxProblem    { background-color: lightpink; }
