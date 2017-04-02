@@ -11,6 +11,8 @@ import Help
 
 import Formula exposing (Formula)
 
+enableDebug = False
+
 main = Html.beginnerProgram { model = model, view = view, update = update }
 
 type alias Model =
@@ -58,7 +60,7 @@ view model =
     , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , Help.help
     , div []
-      ( if False
+      ( if enableDebug
         then
           [ p [] [text "Debug"]
           , pre []
