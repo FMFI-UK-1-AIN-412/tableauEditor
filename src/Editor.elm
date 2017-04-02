@@ -144,6 +144,16 @@ problemColor p =
     Validate.Syntax -> "lightpink"
     Validate.Semantics -> "yellow"
 
+isPremise z =
+  case z |> zNode |> .ref |> .up of
+    Just 0 -> True
+    _ -> False
+
+isBeta (t, _) =
+  case t of
+    Beta _ _ _ -> True
+    _ -> False
+
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl=
   let
@@ -162,8 +172,8 @@ tblCell : Int -> Tableau.Cell -> (Html Msg)
 tblCell depth tcell =
   let
       (width, mz) = tcell
-      (content,height,ttl) = case mz of
-        Nothing -> ([],depth,"")
+      (content,height,clss,ttl) = case mz of
+        Nothing -> ([],depth,[],"")
         Just z ->
           ( [ viewFormula z ] ++ expandControls z
           , let
@@ -172,12 +182,14 @@ tblCell depth tcell =
               case t of
                 Tableau.Leaf _ _ -> depth + 1
                 _ -> 1
+          , [ ("premise", isPremise z), ("beta", isBeta z) ]
           , ( z |> isCorrectNode |> Errors.errors
               |> List.map .msg |> String.join " \n "
             )
           )
   in td
-    [ colspan width, rowspan height
+    [ classList clss
+    , colspan width, rowspan height
     , title ttl
     ]
     content

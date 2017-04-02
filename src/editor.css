@@ -1,9 +1,22 @@
 .tableau {
   width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
 }
 
 .tableau tr {
   vertical-align: top;
+}
+
+.tableau td {
+  padding: 0.2em 0.5em;
+}
+
+.tableau td:not(:first-child) {
+  border-left: thin solid black;
+}
+.tableau td.beta {
+  border-bottom: thin solid black;
 }
 
 .formula {
@@ -12,11 +25,25 @@
 
 .formulaEdit {
   flex-grow: 1;
-  text-align: center;
 }
+
+.formulaEdit, .refEdit {
+  text-align: center;
+  background-color: inherit;
+  border: 0;
+  border-bottom: thin dashed lightgray;
+  outline: 0;
+}
+
+.expandControls .refEdit {
+  margin: 0 0.2em;
+}
+
 .expandControls {
   text-align: center;
 }
+
+.premise { background-color: #def; }
 
 .syntaxProblem    { background-color: lightpink; }
 .semanticsProblem { background-color: rgb(255, 211, 131); }
