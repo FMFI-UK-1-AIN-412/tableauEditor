@@ -218,6 +218,7 @@ viewFormula z =
       , input
         [ class ("refEdit " ++ errorClass (isValidNodeRef z))
         , type_ "text"
+        , placeholder "Ref"
         , size 1
         , value n.ref.str
         , onInput <| Ref z
