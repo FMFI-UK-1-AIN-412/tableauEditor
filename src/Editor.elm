@@ -90,9 +90,9 @@ verdict t =
 
   in
     if List.isEmpty ass
-      then div [] [ p [] [ text "This tableau doesn't prove anything." ] ]
+      then div [ class "verdict" ] [ p [] [ text "This tableau doesn't prove anything." ] ]
       else
-        div []
+        div [ class "verdict" ]
         [ p []
           [ text "This tableau "
           , text (textVerdict <| Tableau.zipper t)
