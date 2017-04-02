@@ -51,11 +51,11 @@ view : Model -> Html Msg
 view model =
   div []
     [ viewTableau model.t
-    , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , div []
       [ p [] [text "Problems"]
       , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
       ]
+    , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , div []
       ( if False
         then
