@@ -52,6 +52,10 @@ view : Model -> Html Msg
 view model =
   div []
     [ viewTableau model.t
+    , p []
+      [ text "To enter a premise / assumption (which you want to prove), make it reference itself"
+      , text """ (i.e. "(1) F ... [1]")."""
+      ]
     , verdict model.t
     , div []
       [ p [] [text "Problems"]
