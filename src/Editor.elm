@@ -17,7 +17,7 @@ type alias Model =
   }
 
 model  : Model
-model = Model (Tableau.fLeaf "")
+model = Model ( Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing )
 
 type Msg
   = Text Tableau.Zipper String
