@@ -57,7 +57,9 @@ view model =
     [ viewTableau model.t
     , verdict model.t
     , problems model.t
-    , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
+    , p [ class "actions" ]
+      [ button [ onClick Prettify ] [text "Prettify formulas"]
+      ]
     , Help.help
     , div []
       ( if enableDebug

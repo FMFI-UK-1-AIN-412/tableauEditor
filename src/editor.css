@@ -43,6 +43,10 @@
   text-align: center;
 }
 
+.actions button {
+  margin: 0 0.5em;
+}
+
 /** delete button */
 button.delete {
   padding: 0 0.3em;
