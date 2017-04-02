@@ -54,10 +54,7 @@ view model =
   div []
     [ viewTableau model.t
     , verdict model.t
-    , div []
-      [ p [] [text "Problems"]
-      , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
-      ]
+    , problems model.t
     , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , Help.help
     , div []
@@ -109,6 +106,19 @@ textVerdict t =
     Ok True -> "proves"
     Ok False -> "does not prove"
     Err _ -> "might be proving (once correct)"
+
+problems t =
+  let
+    errors = Errors.errors <| isCorectTableau <| Tableau.zipper <| t
+  in
+    if List.isEmpty errors
+    then
+      div [class "problems"] []
+    else
+      div [class "problems"]
+      [ p [] [text "Problems"]
+      , problemList <| errors
+      ]
 
 problemList : (List Validate.Problem) -> Html Msg
 problemList pl = ul [ class "problemList" ] (List.map problemItem pl)
