@@ -57,13 +57,18 @@ view model =
       , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
       ]
     , div []
-      [ p [] [text "Debug"]
-      , pre []
-        [ text (Tableau.indented 2 model.t)
-        ]
-      , div []
-        [ text (toString model.t) ]
-      ]
+      ( if False
+        then
+          [ p [] [text "Debug"]
+          , pre []
+            [ text (Tableau.indented 2 model.t)
+            ]
+          , p []
+            [ text (toString model.t) ]
+          ]
+        else
+        []
+      )
     ]
 
 
