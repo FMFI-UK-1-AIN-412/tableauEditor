@@ -7,6 +7,7 @@ import Tableau exposing (..)
 import Validate exposing (..)
 import Tableau.Closed exposing (isClosed, assumptions)
 import Errors
+import Help
 
 import Formula exposing (Formula)
 
@@ -52,16 +53,13 @@ view : Model -> Html Msg
 view model =
   div []
     [ viewTableau model.t
-    , p []
-      [ text "To enter a premise / assumption (which you want to prove), make it reference itself"
-      , text """ (i.e. "(1) F ... [1]")."""
-      ]
     , verdict model.t
     , div []
       [ p [] [text "Problems"]
       , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
       ]
     , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
+    , Help.help
     , div []
       ( if False
         then
