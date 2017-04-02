@@ -178,3 +178,5 @@ sf : String -> (Signed Formula)
 sf = parseSigned >> Result.withDefault (T FF)
 f : String -> Formula
 f = parse >> Result.withDefault FF
+
+{- vim: set sw=2 ts=2 sts=2 et : -}
