@@ -1,5 +1,5 @@
 module Editor exposing (..)
-import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p, ul, li)
+import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p, ul, li, a)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import Result
@@ -8,6 +8,8 @@ import Validate exposing (..)
 import Tableau.Closed exposing (isClosed, assumptions)
 import Errors
 import Help
+import Tableau.Json.Encode
+import Http
 
 import Formula exposing (Formula)
 
@@ -60,6 +62,7 @@ view model =
     , p [ class "actions" ]
       [ button [ onClick Prettify ] [text "Prettify formulas"]
       , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+      , jsonExportControl model.t
       ]
     , Help.help
     , div []
@@ -270,5 +273,17 @@ expandControls z =
         Tableau.Beta _ _ _ -> []
       )
     ]
+
+jsonDataUri json =
+  "data:application/json;charset=utf-8," ++ Http.encodeUri json
+
+jsonExportControl t =
+  a
+      [ type_ "button"
+      , href <| jsonDataUri <| Tableau.Json.Encode.encode 2 t
+      , downloadAs "tableau.json"
+      ]
+      [ button [] [ text "Export as JSON" ] ]
+
 
 {- vim: set sw=2 ts=2 sts=2 et : -}
