@@ -59,6 +59,7 @@ view model =
     , problems model.t
     , p [ class "actions" ]
       [ button [ onClick Prettify ] [text "Prettify formulas"]
+      , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
       ]
     , Help.help
     , div []

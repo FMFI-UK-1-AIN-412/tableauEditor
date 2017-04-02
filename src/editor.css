@@ -72,5 +72,24 @@ button.delete:hover {
   vertical-align: top;
 }
 
+/**
+ * Print style.
+ * Hide everything except the tableau.
+ */
+
+@media print {
+  body > div > *:not(.tableau):not(.verdict):not(.problems),
+  button.delete
+  {
+    display: none;
+  }
+  .formulaEdit, .refEdit {
+    border-bottom: none;
+  }
+  /* Print color backgrounds for webkit browsers */
+  body {
+    -webkit-print-color-adjust: exact;
+  }
+}
 
 /* vim: set sw=2 ts=2 sts=2 et : */
