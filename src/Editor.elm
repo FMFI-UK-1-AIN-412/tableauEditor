@@ -5,6 +5,7 @@ import Html.Events exposing (onInput, onClick)
 import Result
 import Tableau exposing (..)
 import Validate exposing (..)
+import Tableau.Closed exposing (isClosed, assumptions)
 import Errors
 
 import Formula exposing (Formula)
@@ -51,6 +52,7 @@ view : Model -> Html Msg
 view model =
   div []
     [ viewTableau model.t
+    , verdict model.t
     , div []
       [ p [] [text "Problems"]
       , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
@@ -71,6 +73,40 @@ view model =
       )
     ]
 
+verdict t =
+  let
+    ass = t |> Tableau.zipper |> assumptions
+    (premises, conclusions) =
+      List.partition
+        (\sf ->
+          case sf of
+            Formula.T _ -> True
+            Formula.F _ -> False
+        )
+        ass
+
+  in
+    if List.isEmpty ass
+      then div [] [ p [] [ text "This tableau doesn't prove anything." ] ]
+      else
+        div []
+        [ p []
+          [ text "This tableau "
+          , text (textVerdict <| Tableau.zipper t)
+          , text ":"
+          ]
+        , p []
+          [ text (premises |> List.map (Formula.signedGetFormula >>  Formula.strFormula) |> String.join " , ")
+          , text " ⊦ "
+          , text (conclusions |> List.map (Formula.signedGetFormula >>  Formula.strFormula) |> String.join " , ")
+          ]
+        ]
+
+textVerdict t =
+  case isClosed t of
+    Ok True -> "proves"
+    Ok False -> "does not prove"
+    Err _ -> "might be proving (once correct)"
 
 problemList : (List Validate.Problem) -> Html Msg
 problemList pl = ul [ class "problemList" ] (List.map problemItem pl)

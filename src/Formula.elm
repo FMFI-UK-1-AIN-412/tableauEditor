@@ -89,6 +89,12 @@ isSignedComplementary a b =
     (F x, T y) -> x == y
     _ -> False
 
+signedGetFormula : (Signed Formula) -> Formula
+signedGetFormula sf =
+  case sf of
+    T f -> f
+    F f -> f
+
 --
 -- Parsing
 --
