@@ -3,9 +3,9 @@ import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, 
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import Result
-import Tableau
-import Validate exposing
-  (validate, validateNodeRef, validateRef, validateRule, validateFormula, validateClosedCompl)
+import Tableau exposing (..)
+import Validate exposing (..)
+import Errors
 
 import Formula exposing (Formula)
 
@@ -54,7 +54,7 @@ view model =
     , p [] [ button [ onClick Prettify ] [text "Prettify formulas"] ]
     , div []
       [ p [] [text "Problems"]
-      , problemList <| validate <| Tableau.zipper <| model.t
+      , problemList <| Errors.errors <| isCorectTableau <| Tableau.zipper <| model.t
       ]
     , div []
       [ p [] [text "Debug"]
@@ -71,11 +71,11 @@ problemList : (List Validate.Problem) -> Html Msg
 problemList pl = ul [ class "problemList" ] (List.map problemItem pl)
 
 problemItem : Validate.Problem -> Html Msg
-problemItem p = li [ class (problemClass p) ]
+problemItem pi = li [ class (problemClass pi) ]
   [ text "("
-  , text <| toString <| .num <| Tableau.zNode <| p.zip
+  , text <| toString <| .num <| Tableau.zNode <| pi.zip
   , text ") "
-  , text <| p.msg
+  , text <| pi.msg
   ]
 
 problemsClass : (List Validate.Problem) -> String
@@ -83,6 +83,10 @@ problemsClass pl =
   case pl of
     [] -> ""
     p::_ -> problemClass p
+
+errorClass : Result (List Validate.Problem) a -> String
+errorClass =
+  Errors.errors >> problemsClass
 
 problemClass { typ } =
   case typ of
@@ -113,8 +117,8 @@ tblCell : Int -> Tableau.Cell -> (Html Msg)
 tblCell depth tcell =
   let
       (width, mz) = tcell
-      (content,height) = case mz of
-        Nothing -> ([],depth)
+      (content,height,ttl) = case mz of
+        Nothing -> ([],depth,"")
         Just z ->
           ( [ viewFormula z ] ++ expandControls z
           , let
@@ -123,9 +127,14 @@ tblCell depth tcell =
               case t of
                 Tableau.Leaf _ _ -> depth + 1
                 _ -> 1
+          , ( z |> isCorrectNode |> Errors.errors
+              |> List.map .msg |> String.join " \n "
+            )
           )
   in td
-    [ colspan width, rowspan height ]
+    [ colspan width, rowspan height
+    , title ttl
+    ]
     content
 
 viewFormula z =
@@ -135,12 +144,13 @@ viewFormula z =
     formula = Formula.parseSigned n.text
   in
     div
-      [ class "formula", title (toString formula) ]
+      [ class "formula"
+      ]
       [ text <| "(" ++ (toString n.num) ++ ")"
       , input
-        [ class ("formulaEdit " ++
-            problemsClass (validateFormula z ++ validateRule z)
-          )
+        [ class ("formulaEdit "
+            ++ errorClass (isCorrectFormula z)
+            )
         , type_ "text"
         , placeholder "Formula"
         , value n.text
@@ -149,9 +159,7 @@ viewFormula z =
         []
       , text " ["
       , input
-        [ class ("refEdit " ++
-            problemsClass (validateNodeRef z)
-          )
+        [ class ("refEdit " ++ errorClass (isValidNodeRef z))
         , type_ "text"
         , size 1
         , value n.ref.str
@@ -176,13 +184,15 @@ expandControls z =
             ]
           Just (r1,r2) ->
             let
-              compl = validateClosedCompl z r1 r2
-              ref1Cls = problemsClass <| (validateRef "Invalid close ref. #1" z r1) ++ compl
-              ref2Cls = problemsClass <| (validateRef "Invalid close ref. #1" z r2) ++ compl
+              compl = Errors.errors <| areCloseRefsComplementary r1 r2 z
+              ref1Cls = problemsClass <| (validateRef "Invalid close ref. #1" r1 z) ++ compl
+              ref2Cls = problemsClass <| (validateRef "Invalid close ref. #1" r2 z) ++ compl
             in
               [ text "* "
-              , input [ class ref1Cls, type_ "text", size 1, value r1.str, onInput <| SetClosed 0 z] []
-              , input [ class ref2Cls, type_ "text", size 1, value r2.str, onInput <| SetClosed 1 z] []
+              , input [ class ("refEdit " ++ ref1Cls), type_ "text"
+                , placeholder "Ref", size 1, value r1.str, onInput <| SetClosed 0 z] []
+              , input [ class ("refEdit " ++ ref2Cls), type_ "text"
+                , placeholder "Ref", size 1, value r2.str, onInput <| SetClosed 1 z] []
               , button [ onClick (MakeOpen z) ] [ text "x" ]
               ]
         Tableau.Alpha _ _ -> []

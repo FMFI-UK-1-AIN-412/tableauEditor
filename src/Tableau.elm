@@ -212,14 +212,15 @@ setRef : String -> Zipper -> Zipper
 setRef ref z =
   z |> modifyRef (getRef ref z)
 
-getReffed : Zipper -> Ref -> Maybe Zipper
-getReffed z r =
+getReffed : Ref -> Zipper -> Maybe Zipper
+getReffed r z =
   r.up
   |> Maybe.map ((flip above) z)
 
-getReffedFormula : Zipper -> Ref -> Maybe (Signed Formula)
-getReffedFormula z r =
-  getReffed z r
+getReffedFormula : Ref -> Zipper -> Maybe (Signed Formula)
+getReffedFormula r z =
+  z
+  |> getReffed r
   |> Maybe.andThen (zFormula >> Result.toMaybe)
 
 modifyRef : Ref -> Zipper -> Zipper
