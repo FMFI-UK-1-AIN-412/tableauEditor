@@ -78,6 +78,11 @@ button.delete:hover {
   vertical-align: top;
 }
 
+p code {
+  background-color: lightgray;
+  padding: 0 0.2em;
+}
+
 /**
  * Print style.
  * Hide everything except the tableau.
