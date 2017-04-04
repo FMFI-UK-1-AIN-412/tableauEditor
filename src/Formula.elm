@@ -136,8 +136,8 @@ formula =
         |. keyword "-"
         |. spaces
         |= lazy (\_ -> formula)
-    , lazy (\_ -> binary ["&", "∧"] Conj)
-    , lazy (\_ -> binary ["|", "∨"] Disj)
+    , lazy (\_ -> binary ["&", "∧", "/\\"] Conj)
+    , lazy (\_ -> binary ["|", "∨", "\\/"] Disj)
     , lazy (\_ -> binary ["->", "→"] Impl)
     , succeed identity
         |. symbol "("
