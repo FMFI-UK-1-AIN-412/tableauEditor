@@ -118,7 +118,7 @@ view model =
             [ text (Tableau.indented 2 model.t)
             ]
           , p []
-            [ text (toString model.t) ]
+            [ text (toString model) ]
           ]
         else
         []
