@@ -9,7 +9,34 @@
   <body>
   </body>
   <script type="text/javascript">
-    Elm.Editor.fullscreen();
+    /* https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding */
+    function b64DecodeUnicode(str) {
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+    var app = Elm.Editor.fullscreen();
+    app.ports.fileSelected.subscribe(function (id) {
+      var node = document.getElementById(id);
+      if (node === null) {
+        return;
+      }
+      var file = node.files[0];
+      if (!file)
+        return;
+      var reader = new FileReader();
+      reader.onload = (function(event) {
+        var dataUri = event.target.result;
+        var base64encoded = dataUri.replace(/^[^,]*,/,"");
+        var data = b64DecodeUnicode(base64encoded);
+        var portData = {
+          contents: data,
+          filename: file.name
+        };
+        app.ports.fileContentRead.send(portData);
+      });
+      reader.readAsDataURL(file);
+    });
   </script>
 </html>
 <!-- vim: set sw=2 ts=2 sts=2 et : -->

@@ -1,7 +1,8 @@
-module Editor exposing (..)
-import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre, p, ul, li, a)
+port module Editor exposing (..)
+import Html exposing
+  (Html, Attribute, div, input, button, table, tr, td, text, pre, p, ul, li, a, span, label)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onClick)
+import Html.Events exposing (onInput, onClick, on)
 import Result
 import Tableau exposing (..)
 import Validate exposing (..)
@@ -9,20 +10,37 @@ import Tableau.Closed exposing (isClosed, assumptions)
 import Errors
 import Help
 import Tableau.Json.Encode
+import Tableau.Json.Decode
 import Http
+import Json.Decode
 
 import Formula exposing (Formula)
 
 enableDebug = False
 
-main = Html.beginnerProgram { model = model, view = view, update = update }
+main =
+  Html.program
+    { init = init
+    , update = update
+    , view = view
+    , subscriptions = subscriptions
+    }
 
 type alias Model =
   { t : Tableau.Tableau
+  , jsonImporting : Bool
+  , jsonImportError : String
+  , jsonImportId : String
   }
 
-model  : Model
-model = Model ( Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing )
+init =
+  ( { t = Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing
+    , jsonImporting = False
+    , jsonImportError = ""
+    , jsonImportId = "importJson"
+    }
+  , Cmd.none
+  )
 
 type Msg
   = Text Tableau.Zipper String
@@ -34,13 +52,25 @@ type Msg
   | SetClosed Int Tableau.Zipper String
   | Delete Tableau.Zipper
   | Prettify
+  | JsonSelected
+  | JsonRead FileReaderPortData
 
+
+type alias FileReaderPortData =
+  { contents : String
+  , filename : String
+  }
+port fileSelected : String -> Cmd msg
+port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
+subscriptions : Model -> Sub Msg
+subscriptions model =
+ fileContentRead JsonRead
 
 top = Tableau.top >> Tableau.zTableau
 topRenumbered = top >> Tableau.renumber
 
-update : Msg -> Model -> Model
-update msg model =
+simpleUpdate : Msg -> Model -> Model
+simpleUpdate msg model =
   case msg of
     ExpandAlpha     z -> { model | t = z |> Tableau.extendAlpha     |> topRenumbered }
     ExpandBeta      z -> { model | t = z |> Tableau.extendBeta      |> topRenumbered }
@@ -51,6 +81,19 @@ update msg model =
     Ref         z ref -> { model | t = z |> Tableau.setRef ref      |> top }
     SetClosed w z ref -> { model | t = z |> Tableau.setClosed w ref |> top }
     Prettify          -> { model | t = Tableau.prettify model.t }
+    JsonSelected -> model -- actually handled upstairs
+    JsonRead {contents} ->
+      case contents |> Tableau.Json.Decode.decode of
+        Ok  t -> { model | jsonImporting = False, t = t }
+        Err e -> { model | jsonImporting = False, jsonImportError = toString e }
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    JsonSelected ->
+      ( { model | jsonImportError = "", jsonImporting = True }, fileSelected model.jsonImportId)
+    _ ->
+      (simpleUpdate msg { model | jsonImportError = "" }, Cmd.none)
 
 
 view : Model -> Html Msg
@@ -63,7 +106,9 @@ view model =
       [ button [ onClick Prettify ] [text "Prettify formulas"]
       , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
       , jsonExportControl model.t
+      , jsonImportControl model
       ]
+    , jsonImportError model
     , Help.help
     , div []
       ( if enableDebug
@@ -285,5 +330,44 @@ jsonExportControl t =
       ]
       [ button [] [ text "Export as JSON" ] ]
 
+{-
+  Note: selecting the same file on the file input won't
+  trigger a change evet. So we remove the whole input while
+  loading, so it gets re-added as empty...
+  (which actually gives a nice "loading..." message)
+  Ideally we should block all interaction while loading... but...
+-}
+jsonImportControl : Model -> Html Msg
+jsonImportControl model =
+  case model.jsonImporting of
+    True -> text "Loading file..."
+    False ->
+        label [ for model.jsonImportId ]
+        [ button
+          {- This is really ugly, but:
+            - we really need the buton and onClick, if we want it to look like a button
+              (embedding the label in a button or vice versa works in webkit but not in firefox)
+            - Adding another Msg / Cmd just for this...
+          -}
+          [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
+          [ text "Import from JSON"
+          ]
+        , input
+          [ type_ "file"
+          , id model.jsonImportId
+          , accept "application/json"
+          , on "change"
+            (Json.Decode.succeed JsonSelected)
+          ]
+          []
+        ]
+
+jsonImportError model =
+  case model.jsonImportError of
+    "" -> div [] []
+    _ ->
+      p
+      [ class "jsonImportError" ]
+      [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]
 
 {- vim: set sw=2 ts=2 sts=2 et : -}

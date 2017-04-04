@@ -47,6 +47,10 @@
   margin: 0 0.5em;
 }
 
+.actions #importJson {
+  display: none;
+}
+
 /** delete button */
 button.delete {
   padding: 0 0.3em;
@@ -64,6 +68,8 @@ button.delete:hover {
 
 .syntaxProblem    { background-color: lightpink; }
 .semanticsProblem { background-color: rgb(255, 211, 131); }
+
+.jsonImportError { background-color: lightpink; }
 
 .rulesHelp .rule {
   display: inline-block;
