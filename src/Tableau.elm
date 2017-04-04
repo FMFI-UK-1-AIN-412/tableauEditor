@@ -350,6 +350,9 @@ prettify =
 -- debug print funcs
 --
 
+indentedRef r =
+  "[" ++ r.str ++ "]"
+
 indentedNode ind n =
   let
     parsedFrm = if n.text == "" then "" else case (Formula.parseSigned n.text) of
@@ -357,12 +360,12 @@ indentedNode ind n =
       Err e -> toString e
   in
     (String.repeat ind " ") ++ "(" ++ toString n.num ++ ")"
-    ++ parsedFrm ++ " [" ++ (toString n.ref) ++ "]"
+    ++ parsedFrm ++ " " ++ indentedRef n.ref
 
 indentedClosed mc =
   case mc of
     Nothing -> ""
-    Just (a,b) -> "*(" ++ toString a ++ "," ++ toString b ++ ")"
+    Just (a,b) -> "*(" ++ a.str ++ "," ++ b.str ++ ")"
 
 indented ind t =
   case t of
