@@ -68,6 +68,12 @@ signedType sf =
     T (Impl _ _) -> Beta
     F f -> negType <| signedType <| T f
 
+isAlpha : (Signed Formula) -> Bool
+isAlpha x = Alpha == signedType x
+
+isBeta : (Signed Formula) -> Bool
+isBeta x = Beta == signedType x
+
 signedSubformulas : (Signed Formula) -> (List (Signed Formula))
 signedSubformulas sf =
   case sf of

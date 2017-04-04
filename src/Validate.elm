@@ -147,18 +147,32 @@ resultFromBool a x b =
     then Ok a
     else Err x
 
+{- Check the value using a predicate.
+   Pass the value along if predicate returns true,
+   return the give error otherwise
+-}
+checkPredicate : (a -> Bool) -> x -> a -> Result x a
+checkPredicate pred x a =
+  if pred a
+    then Ok a
+    else Err x
+
 validateAlphaRule : Zipper -> Result (List Problem) Zipper
 validateAlphaRule z =
   getReffed (zNode z).ref z
   |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
   |> Result.andThen validateReffedFormula
-  |> Result.map2 Formula.isSignedSubformulaOf (checkFormula "Formula" z)
-  |> Result.andThen (resultFromBool z (semanticsProblem z
+  |> Result.andThen (checkPredicate Formula.isAlpha
+      (semanticsProblem z "Referenced formula is not α")
+    )
+  |> Result.map2 (,) (checkFormula "Formula" z)
+  |> Result.andThen (checkPredicate (uncurry Formula.isSignedSubformulaOf) (semanticsProblem z
       ( "Is not an α-subformula of ("
       ++ toString (getReffed (zNode z).ref z |> Maybe.map (zNode >> .num) |> Maybe.withDefault 0)
       ++ ")."
       )
     ))
+  |> Result.map (always z)
 
 validateBetaRuleLeft  z = validateBeta z (z |> up |> right)
 validateBetaRuleRight z = validateBeta z (z |> up |> left)
@@ -177,6 +191,9 @@ validateBeta this other =
       |> getReffed (zNode this).ref
       |> Result.fromMaybe (semanticsProblem this "Invalid reference")
       |> Result.andThen validateReffedFormula
+      |> Result.andThen (checkPredicate Formula.isBeta
+          (semanticsProblem this "Referenced formula is not β")
+        )
       |> Result.map Formula.signedSubformulas
       |> Result.map (List.sortBy Formula.strSigned)
   in
