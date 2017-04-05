@@ -80,3 +80,20 @@ binary conn constructor =
 spaces : Parser ()
 spaces =
   ignore zeroOrMore (\char -> char == ' ')
+
+
+strSigned sf =
+  case sf of
+    T f -> "T " ++ (strFormula f)
+    F f -> "F " ++ (strFormula f)
+
+strFormula f =
+  case f of
+    FT -> "True"
+    FF -> "False"
+    Atom a -> a
+    Neg f -> "¬" ++ (strFormula f)
+    Conj lf rf -> "(" ++ (strFormula lf) ++ "∧" ++ (strFormula rf) ++ ")"
+    Disj lf rf -> "(" ++ (strFormula lf) ++ "∨" ++ (strFormula rf) ++ ")"
+    Impl lf rf -> "(" ++ (strFormula lf) ++ "→" ++ (strFormula rf) ++ ")"
+
