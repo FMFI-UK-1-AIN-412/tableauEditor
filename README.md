@@ -1,0 +1,2 @@
+Propositional tableau editor
+============================
