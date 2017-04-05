@@ -272,6 +272,7 @@ viewFormula z =
         , type_ "text"
         , placeholder "Formula"
         , value n.text
+        , size ((String.length n.text) * 3 // 4 + 1)
         , onInput <| Text z
         ]
         []
