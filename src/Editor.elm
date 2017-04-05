@@ -1,8 +1,7 @@
-import Html exposing (Html, Attribute, div, input, table, tr, td, text)
+import Html exposing (Html, Attribute, div, input, button, table, tr, td, text, pre)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onClick)
 import Result
-import Parser
 import Tableau
 
 import Formula exposing (Formula)
@@ -10,19 +9,30 @@ import Formula exposing (Formula)
 main = Html.beginnerProgram { model = model, view = view, update = update }
 
 type alias Model =
-  { formulaTxt : String
+  { t : Tableau.Tableau
   }
 
 model  : Model
-model = Model ""
+model = Model (Tableau.fLeaf "")
+
 type Msg
-  = FChanged String
+  = Text Int String
+  | Ref Int String
+  | ExpandAlpha Int
+  | ExpandBeta Int
+  | Close Int
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    FChanged formulaTxt ->
-      { model | formulaTxt = formulaTxt }
+    Text num txt ->    { model | t = (Tableau.setFormula txt num model.t) }
+    Ref num ref ->
+      case String.toInt ref of
+        Ok ref -> { model | t = (Tableau.setRef ref num model.t) }
+        Err e -> model
+    ExpandAlpha num -> { model | t = (Tableau.extendAlpha num model.t) }
+    ExpandBeta num ->  { model | t = (Tableau.extendBeta num model.t) }
+    Close num -> model
 
 
 errorColor res =
@@ -32,18 +42,14 @@ errorColor res =
 
 view : Model -> Html Msg
 view model =
-  let
-    formula = Formula.parse model.formulaTxt
-  in
-    div []
-      [ input
-          [ type_ "text", placeholder "Formula", onInput FChanged
-          , style[("background-color", errorColor formula)]
-          ]
-          []
-      , div [] [text (toString formula) ]
-      , viewTableau Tableau.tt
+  div []
+    [ viewTableau model.t
+    , pre []
+      [ text (Tableau.indented 2 model.t)
       ]
+    ]
+
+
 
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tblx=
@@ -53,6 +59,7 @@ viewTableau tblx=
      table [border "1"] (List.map tblRow t)
 
 border = attribute "border"
+valign = attribute "valign"
 
 tblRow : Tableau.Row -> (Html Msg)
 tblRow trow =
@@ -60,4 +67,48 @@ tblRow trow =
 
 tblCell : Tableau.Cell -> (Html Msg)
 tblCell tcell =
-  td [ colspan (Tuple.first tcell) ] [text (Tableau.node (Tuple.second tcell)).text ]
+  let
+      (width, t) = tcell
+  in td
+    [ colspan (width), valign "top" ]
+    [ viewFormula t
+    , expandControls t
+    ]
+
+-- TODO real css from outside
+viewFormula t =
+  let
+    formula = Formula.parseSigned (Tableau.node t).text
+  in
+    div [ title (toString formula) ]
+      [ div [ style [("display", "flex")] ]
+        [ input
+            [ type_ "text", placeholder "Formula"
+            , onInput <| Text (Tableau.node t).num
+            , style
+              [ ("background-color", errorColor formula)
+              , ("flexGrow", "1")
+              , ("textAlign", "center")
+              ]
+            ]
+            []
+        , text " ["
+        , input
+          [ type_ "text", placeholder "0", size 1, onInput <| Ref (Tableau.node t).num ]
+          []
+        , text "]"
+        ]
+      ]
+
+
+expandControls t =
+  case t of
+    Tableau.Leaf n ->
+      div [style [("textAlign", "center")]]
+      [ button [ onClick (ExpandAlpha n.num) ] [ text "α" ]
+      , button [ onClick (ExpandBeta n.num) ] [ text "β" ]
+      , button [ onClick (Close n.num) ] [ text "*" ]
+      ]
+    Tableau.Alpha _ _ -> div [] []
+    Tableau.Beta _ _ _ -> div [] []
+
