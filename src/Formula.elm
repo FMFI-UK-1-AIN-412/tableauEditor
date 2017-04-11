@@ -62,7 +62,9 @@ signedType sf =
     T FF -> Alpha
     T FT -> Alpha
     T (Atom _) -> Alpha
+    F (Atom _) -> Alpha
     T (Neg _) -> Alpha
+    F (Neg _) -> Alpha
     T (Conj _ _) -> Alpha
     T (Disj _ _) -> Beta
     T (Impl _ _) -> Beta
