@@ -31,3 +31,16 @@ $(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm)
 $(OUT_DIR)/%: $(SRC_DIR)/$*
 	mkdir -p $(OUT_DIR)
 	cp -av $(SRC_DIR)/$* $@
+
+
+.PHONY: ghpublish commitGhPages
+ghpublish: GITR=$(shell git log -1 --oneline)
+ghpublish: GITB=$(shell git symbolic-ref HEAD | sed -e "s,refs/heads/,,")
+ghpublish: build
+	git checkout gh-pages
+	$(MAKE) GITR="$(GITR)" commitGhPages ; r=$? ; git checkout $(GITB) ; exit $r
+commitGhPages:
+	git --work-tree=$(OUT_DIR) add -A
+	git --work-tree=$(OUT_DIR) commit -e -m "Build $(GITR)"
+	git reset --hard
+	git push origin gh-pages
