@@ -10261,9 +10261,16 @@ var _aaa$bbb$Formula$signedType = function (sf) {
 				return _aaa$bbb$Formula$Beta;
 		}
 	} else {
-		return _aaa$bbb$Formula$negType(
-			_aaa$bbb$Formula$signedType(
-				_aaa$bbb$Formula$T(_p17._0)));
+		switch (_p17._0.ctor) {
+			case 'Atom':
+				return _aaa$bbb$Formula$Alpha;
+			case 'Neg':
+				return _aaa$bbb$Formula$Alpha;
+			default:
+				return _aaa$bbb$Formula$negType(
+					_aaa$bbb$Formula$signedType(
+						_aaa$bbb$Formula$T(_p17._0)));
+		}
 	}
 };
 var _aaa$bbb$Formula$isBeta = function (x) {
