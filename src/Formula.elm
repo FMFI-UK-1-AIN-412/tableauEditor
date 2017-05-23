@@ -135,7 +135,7 @@ formula =
     [ succeed Atom
         |= variable Char.isLower Char.isLower (Set.fromList [])
     , succeed Neg
-        |. keyword "-"
+        |. oneOfSymbols ["-", "¬", "~"]
         |. spaces
         |= lazy (\_ -> formula)
     , lazy (\_ -> binary ["&", "∧", "/\\"] Conj)
@@ -157,12 +157,14 @@ binary conn constructor =
      |= lazy (\_ -> formula)
      |. spaces
   ) <| succeed identity
-  |. oneOf (List.map symbol conn)
+  |. oneOfSymbols conn
   |. spaces
   |= lazy (\_ -> formula)
   |. spaces
   |. symbol ")"
 
+oneOfSymbols syms =
+  oneOf (List.map symbol syms)
 
 spaces : Parser ()
 spaces =
