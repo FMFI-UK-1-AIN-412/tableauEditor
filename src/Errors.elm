@@ -1,5 +1,4 @@
 module Errors exposing (..)
-import Result
 
 {-| Like `Result.map2` but merges errors (which must be lists).
 -}
@@ -31,5 +30,13 @@ map f result =
     case result of
       Ok v -> Ok v
       Err es -> Err (List.map f es)
+
+{-| An instance of Haskell's mapM for Result.
+    Maps an operation that can fail over elements of a list,
+    returning either the left-most error or the list of good results.
+-}
+mapResult : (a -> Result x b) -> List a -> Result x (List b)
+mapResult f =
+  List.foldr (Result.map2 (::) << f) (Ok [])
 
 {- vim: set sw=2 ts=2 sts=2 et : -}
