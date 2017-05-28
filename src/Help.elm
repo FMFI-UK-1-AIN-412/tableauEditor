@@ -5,8 +5,8 @@ import Formula exposing (..)
 import Markdown
 
 
-fA = Atom "A"
-fB = Atom "B"
+fA = Atom "A" []
+fB = Atom "B" []
 
 alphas =
   [ T (Conj fA fB)

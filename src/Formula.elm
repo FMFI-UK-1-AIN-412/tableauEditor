@@ -10,12 +10,18 @@ import Parser exposing
   )
 import Parser.LanguageKit exposing (variable, sequence, whitespace)
 
+type Term
+  = Var String
+  | Fun String (List Term)
+
 type Formula
-  = Atom String
+  = Atom String (List Term)
   | Neg Formula
   | Disj Formula Formula
   | Conj Formula Formula
   | Impl Formula Formula
+  | ForAll String Formula
+  | Exists String Formula
   | FF
   | FT
 
@@ -26,6 +32,8 @@ subformulas f =
     Disj lf rf -> [lf, rf]
     Conj lf rf -> [lf, rf]
     Impl lf rf -> [lf, rf]
+    ForAll _ sf -> [sf]
+    Exists _ sf -> [sf]
     _ -> []
 
 isSubformulaOf : Formula -> Formula -> Bool
@@ -42,13 +50,16 @@ type Signed a
 type SignedType
   = Alpha
   | Beta
+  | Gamma
+  | Delta
 
 negType : SignedType -> SignedType
 negType t =
   case t of
     Alpha -> Beta
     Beta -> Alpha
-
+    Gamma -> Delta
+    Delta -> Gamma
 
 negSigned : (Signed Formula) -> (Signed Formula)
 negSigned sf =
@@ -61,13 +72,15 @@ signedType sf =
   case sf of
     T FF -> Alpha
     T FT -> Alpha
-    T (Atom _) -> Alpha
-    F (Atom _) -> Alpha
+    T (Atom _ _) -> Alpha
+    F (Atom _ _) -> Alpha
     T (Neg _) -> Alpha
     F (Neg _) -> Alpha
     T (Conj _ _) -> Alpha
     T (Disj _ _) -> Beta
     T (Impl _ _) -> Beta
+    T (ForAll _ _) -> Gamma
+    T (Exists _ _) -> Delta
     F f -> negType <| signedType <| T f
 
 isAlpha : (Signed Formula) -> Bool
@@ -76,6 +89,12 @@ isAlpha x = Alpha == signedType x
 isBeta : (Signed Formula) -> Bool
 isBeta x = Beta == signedType x
 
+isGamma : (Signed Formula) -> Bool
+isGamma x = Gamma == signedType x
+
+isDelta : (Signed Formula) -> Bool
+isDelta x = Delta == signedType x
+
 signedSubformulas : (Signed Formula) -> (List (Signed Formula))
 signedSubformulas sf =
   case sf of
@@ -83,6 +102,8 @@ signedSubformulas sf =
     T (Conj l r) -> [T l, T r]
     T (Disj l r) -> [T l, T r]
     T (Impl l r) -> [F l, T r]
+    T (ForAll _ f) -> [T f]
+    T (Exists _ f) -> [T f]
     T _ -> []
     F f -> T f |> signedSubformulas |> List.map negSigned
 
@@ -133,7 +154,12 @@ formula : Parser Formula
 formula =
   oneOf
     [ succeed Atom
-        |= variable Char.isLower Char.isLower (Set.fromList [])
+        |= variable Char.isLower isIdentChar (Set.fromList [])
+        |. spaces
+        |= oneOf
+            [ inContext "predicate arguments" args
+            , succeed []
+            ]
     , succeed Neg
         |. oneOfSymbols ["-", "¬", "~"]
         |. spaces
@@ -163,8 +189,48 @@ binary conn constructor =
   |. spaces
   |. symbol ")"
 
+args : Parser (List Term)
+args =
+  succeed (::)
+    |. symbol "("
+    |. spaces
+    |= lazy (\_ -> term)
+    |. spaces
+    |= lazy (\_ -> repeat zeroOrMore nextArg)
+    |. symbol ")"
+
+nextArg : Parser Term
+nextArg =
+  succeed identity
+    |. symbol ","
+    |. spaces
+    |= term
+    |. spaces
+
+term : Parser Term
+term =
+  variable isLetter isIdentChar Set.empty |>
+    Parser.andThen (\name ->
+      oneOf
+        [ succeed (\args -> Fun name args)
+            |= lazy (\_ -> inContext "function arguments" args)
+        , succeed (Var name)
+        ]
+    )
+
 oneOfSymbols syms =
   oneOf (List.map symbol syms)
+
+isLetter : Char -> Bool
+isLetter char =
+  Char.isLower char
+  || Char.isUpper char
+
+isIdentChar : Char -> Bool
+isIdentChar char =
+  isLetter char
+  || Char.isDigit char
+  || char == '_'
 
 spaces : Parser ()
 spaces =
@@ -180,11 +246,23 @@ strFormula f =
   case f of
     FT -> "True"
     FF -> "False"
-    Atom a -> a
+    Atom p ts -> if List.isEmpty ts then
+                   p
+                 else
+                   p ++ strArgs ts
     Neg f -> "¬" ++ (strFormula f)
     Conj lf rf -> "(" ++ (strFormula lf) ++ "∧" ++ (strFormula rf) ++ ")"
     Disj lf rf -> "(" ++ (strFormula lf) ++ "∨" ++ (strFormula rf) ++ ")"
     Impl lf rf -> "(" ++ (strFormula lf) ++ "→" ++ (strFormula rf) ++ ")"
+    ForAll bv rf -> "∀" ++ bv ++ (strFormula rf)
+    Exists bv rf -> "∃" ++ bv ++ (strFormula rf)
+
+strArgs ts = "(" ++ (String.join "," <| List.map strTerm ts) ++ ")"
+
+strTerm t =
+  case t of
+    Var v -> v
+    Fun f ts -> f ++ strArgs ts
 
 --
 -- helper funcs
