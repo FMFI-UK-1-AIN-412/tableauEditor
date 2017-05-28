@@ -1,14 +1,18 @@
 module Formula exposing (..)
 
 import Char
-import Set
+import Set exposing (Set)
+import Dict exposing (Dict)
 import Parser exposing
   (
     Parser, (|.), (|=), succeed, symbol,
-    float, ignore, zeroOrMore, oneOf, lazy,
-    keyword, delayedCommitMap, end, oneOrMore
+    float, ignore, repeat, zeroOrMore, oneOf, lazy,
+    keyword, delayedCommit, delayedCommitMap, end, oneOrMore,
+    inContext
   )
 import Parser.LanguageKit exposing (variable, sequence, whitespace)
+import Result as R
+import Errors
 
 type Term
   = Var String
@@ -25,6 +29,9 @@ type Formula
   | FF
   | FT
 
+type alias Substitution
+  = Dict String Term
+
 subformulas : Formula -> (List Formula)
 subformulas f =
   case f of
@@ -39,6 +46,152 @@ subformulas f =
 isSubformulaOf : Formula -> Formula -> Bool
 isSubformulaOf a b =
   List.member a (subformulas b)
+
+--
+-- First-order syntactic operations
+--
+
+freeTermA : Term -> Set String -> Set String
+freeTermA t fvs =
+  case t of
+    Var x -> Set.insert x fvs
+    Fun _ ts -> List.foldl freeTermA fvs ts
+
+freeTerm : Term -> Set String
+freeTerm t = freeTermA t Set.empty
+
+freeFormula : Formula -> Set String
+freeFormula f =
+  let
+    freeFormulaA : Formula -> Set String -> Set String
+    freeFormulaA f fvs =
+      case f of
+        Atom _ ts -> List.foldl freeTermA fvs ts
+        ForAll x sf -> Set.remove x <| freeFormulaA sf fvs
+        Exists x sf -> Set.remove x <| freeFormulaA sf fvs
+        _ -> List.foldl freeFormulaA fvs <| subformulas f
+  in
+    freeFormulaA f Set.empty
+
+substTerm : Substitution -> Term -> Term
+substTerm sigma t =
+  case t of
+    Var x -> case Dict.get x sigma of
+      Just xt -> xt
+      Nothing -> t
+    Fun f ts -> Fun f <| List.map (substTerm sigma) ts
+
+unsafeSubstFormula : Substitution -> Formula -> Formula
+unsafeSubstFormula sigma f =
+  let
+    subst = unsafeSubstFormula sigma
+  in
+    case f of
+      Atom p ts -> Atom p (List.map (substTerm sigma) ts)
+      ForAll x sf -> ForAll x (unsafeSubstFormula (Dict.remove x sigma) sf)
+      Exists x sf -> Exists x (unsafeSubstFormula (Dict.remove x sigma) sf)
+      Disj lf rf -> Disj (subst lf) (subst rf)
+      Conj lf rf -> Conj (subst lf) (subst rf)
+      Impl lf rf -> Impl (subst lf) (subst rf)
+      Neg sf -> Neg (subst sf)
+      _ -> f
+
+substFormula : Substitution -> Formula -> Result String Formula
+substFormula σ f =
+  let
+    canSubst x t bound =
+      let
+        clashing = Set.intersect bound (freeTerm t)
+        strVars xs = String.join ", " xs
+        varsToBe xs =
+          "variable" ++ (if Set.size xs == 1 then "" else "s") ++
+          " " ++ strVars (Set.toList xs) ++
+          (if Set.size xs == 1 then " is" else " are")
+      in
+        if Set.isEmpty clashing then
+          Ok t
+        else
+          Err <| String.join " "
+            [ "Cannot substitute", strTerm t, "for", x ++ ";"
+            , varsToBe clashing, "bound"
+            ]
+    substT : Substitution -> Set String -> Term -> Result String Term
+    substT σ bound t =
+      let
+        subst t =
+          case t of
+            Var x -> case Dict.get x σ of
+              Just xt -> canSubst x xt bound
+              Nothing -> Ok t
+            Fun f ts ->
+              R.map (Fun f) <| substTs σ bound ts
+      in
+        subst t
+    substTs σ bound = Errors.mapResult (substT σ bound)
+    substF : Substitution -> Set String -> Formula -> Result String Formula
+    substF σ bound f =
+      let
+        subst = substF σ bound
+      in
+        case f of
+          Atom p ts ->
+            R.map (Atom p) (substTs σ bound ts)
+          ForAll x sf ->
+            R.map (ForAll x)
+                  (substF (Dict.remove x σ) (Set.insert x bound) sf)
+          Exists x sf ->
+            R.map (Exists x)
+                  (substF (Dict.remove x σ) (Set.insert x bound) sf)
+          Disj lf rf ->
+            R.map2 Disj (subst lf) (subst rf)
+          Conj lf rf ->
+            R.map2 Conj (subst lf) (subst rf)
+          Impl lf rf ->
+            R.map2 Impl (subst lf) (subst rf)
+          Neg sf ->
+            R.map Neg (subst sf)
+          _ ->
+            Ok f
+  in
+    substF σ Set.empty f
+
+predicates : Formula -> Set String
+predicates f =
+  let
+    predicatesA f ps =
+      case f of
+        Atom p _ -> Set.insert p ps
+        _ -> List.foldl predicatesA ps <| subformulas f
+  in
+    predicatesA f Set.empty
+
+functions : Formula -> Set String
+functions f =
+  let
+    functionsTA t fs =
+      case t of
+        Fun f ts -> Set.insert f <| List.foldl functionsTA fs ts
+        _ -> fs
+    functionsA f fs =
+      case f of
+        Atom p ts -> List.foldl functionsTA fs ts
+        _ -> List.foldl functionsA fs <| subformulas f
+  in
+    functionsA f Set.empty
+
+variables : Formula -> Set String
+variables f =
+  let
+    variablesTA t vs =
+      case t of
+        Fun _ ts -> List.foldl variablesTA vs ts
+        Var x -> Set.insert x vs
+    variablesA f vs =
+      case f of
+        Atom p ts -> List.foldl variablesTA vs ts
+        _ -> List.foldl variablesA vs <| subformulas f
+  in
+    variablesA f Set.empty
 
 --
 -- Signed formulas
