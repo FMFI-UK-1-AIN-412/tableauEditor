@@ -307,7 +307,7 @@ formula : Parser Formula
 formula =
   oneOf
     [ succeed Atom
-        |= variable Char.isLower isIdentChar (Set.fromList [])
+        |= identifier
         |. spaces
         |= oneOf
             [ inContext "predicate arguments" args
@@ -362,7 +362,7 @@ nextArg =
 
 term : Parser Term
 term =
-  variable isLetter isIdentChar Set.empty |>
+  identifier |>
     Parser.andThen (\name ->
       oneOf
         [ succeed (\args -> Fun name args)
@@ -370,6 +370,8 @@ term =
         , succeed (Var name)
         ]
     )
+
+identifier = variable isLetter isIdentChar Set.empty
 
 oneOfSymbols syms =
   oneOf (List.map symbol syms)
