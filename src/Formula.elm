@@ -313,6 +313,9 @@ formula =
             [ inContext "predicate arguments" args
             , succeed []
             ]
+    , lazy (\_ -> quantified ["∀", "\\A", "\\forall", "\\a"] ForAll)
+    -- keep \exists before \e
+    , lazy (\_ -> quantified ["∃", "\\E", "\\exists", "\\e"] Exists)
     , succeed Neg
         |. oneOfSymbols ["-", "¬", "~"]
         |. spaces
@@ -341,6 +344,14 @@ binary conn constructor =
   |= lazy (\_ -> formula)
   |. spaces
   |. symbol ")"
+
+quantified symbols constructor =
+  succeed constructor
+    |. oneOfSymbols symbols
+    |. spaces
+    |= lazy (\_ -> identifier)
+    |. spaces
+    |= lazy (\_ -> formula)
 
 args : Parser (List Term)
 args =
