@@ -396,21 +396,26 @@ strSigned sf =
     F f -> "F " ++ (strFormula f)
 
 strFormula f =
-  case f of
-    FT -> "True"
-    FF -> "False"
-    Atom p ts -> if List.isEmpty ts then
-                   p
-                 else
-                   p ++ strArgs ts
-    Neg f -> "¬" ++ (strFormula f)
-    Conj lf rf -> "(" ++ (strFormula lf) ++ "∧" ++ (strFormula rf) ++ ")"
-    Disj lf rf -> "(" ++ (strFormula lf) ++ "∨" ++ (strFormula rf) ++ ")"
-    Impl lf rf -> "(" ++ (strFormula lf) ++ "→" ++ (strFormula rf) ++ ")"
-    ForAll bv rf -> "∀" ++ bv ++ (strFormula rf)
-    Exists bv rf -> "∃" ++ bv ++ (strFormula rf)
+  let
+    strBinF lf c rf = "(" ++ strFormula lf ++ c ++ strFormula rf ++ ")"
+    strQF q bv f = q ++ bv ++ atomSpace f ++ strFormula f
+    atomSpace f = case f of
+        Atom _ _ -> " "
+        _ -> ""
+  in
+    case f of
+      FT -> "True"
+      FF -> "False"
+      Atom p [] -> p
+      Atom p ts -> p ++ strArgs ts
+      Neg f -> "¬" ++ strFormula f
+      Conj lf rf -> strBinF lf "∧" rf
+      Disj lf rf -> strBinF lf "∨" rf
+      Impl lf rf -> strBinF lf "→" rf
+      ForAll bv f -> strQF "∀" bv f
+      Exists bv f -> strQF "∃" bv f
 
-strArgs ts = "(" ++ (String.join "," <| List.map strTerm ts) ++ ")"
+strArgs ts = "(" ++ String.join "," (List.map strTerm ts) ++ ")"
 
 strTerm t =
   case t of
