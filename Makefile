@@ -44,3 +44,6 @@ commitGhPages:
 	git --work-tree=$(OUT_DIR) commit -e -m "Build $(GITR)"
 	git reset --hard
 	git push origin gh-pages
+
+test:
+	elm-test
