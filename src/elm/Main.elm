@@ -33,8 +33,9 @@ init =
 
 type Msg
     = ChangeText String String
-    | ExpandInput
+    | ExpandAlpha
     | ChangeRef String String
+    | Delete Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -54,7 +55,7 @@ update msg model =
             in
                 ( { model | nodes = nodes }, Cmd.none )
 
-        ExpandInput ->
+        ExpandAlpha ->
             let
                 lastNodeList =
                     List.drop ((List.length model.nodes) - 1) model.nodes
@@ -94,6 +95,13 @@ update msg model =
             in
                 ( { model | nodes = nodes }, Cmd.none )
 
+        Delete id ->
+            let
+                nodes =
+                    List.filter (\n -> n.id /= id) model.nodes
+            in
+                ( { model | nodes = nodes }, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
@@ -102,7 +110,7 @@ view model =
             (List.map
                 (\n ->
                     div [ class "form-row" ]
-                        [ div [ class "col-md-8 left" ]
+                        [ div [ class "col-md-9 left" ]
                             [ p [ class "id" ] [ text (toString n.id) ]
                             , input [ class "form-control", type_ "text", onInput <| ChangeText (toString n.id) ] []
                             ]
@@ -111,10 +119,10 @@ view model =
                             ]
                         , p [ class "valueValue" ] [ text n.value ]
                         , p [ class "referenceValue" ] [ text (toString n.reference) ]
-                        , button [ class "btn btn-primary" ] [ text "delete" ]
+                        , button [ class "btn btn-primary", onClick <| Delete n.id ] [ text "delete" ]
                         ]
                 )
                 model.nodes
             )
-        , button [ type_ "button", onClick ExpandInput ] [ text "New Input" ]
+        , button [ type_ "button", onClick ExpandAlpha ] [ text "New Input" ]
         ]
