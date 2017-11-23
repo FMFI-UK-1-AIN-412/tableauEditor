@@ -1,63 +1,120 @@
 module Main exposing (..)
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing ( onClick )
-
--- component import example
-import Components.Hello exposing ( hello )
+import Html.Events exposing (..)
+import Parser
 
 
--- APP
-main : Program Never Int Msg
 main =
-  Html.beginnerProgram { model = model, view = view, update = update }
+    Html.program
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = always Sub.none
+        }
 
 
--- MODEL
-type alias Model = Int
-
-model : number
-model = 0
+type alias Node =
+    { id : Int, value : String, reference : Int }
 
 
--- UPDATE
-type Msg = NoOp | Increment
+type alias Model =
+    { nodes : List Node
+    }
 
-update : Msg -> Model -> Model
+
+init =
+    ( { nodes = [ { id = 1, value = "", reference = 1 } ]
+      }
+    , Cmd.none
+    )
+
+
+type Msg
+    = ChangeText String String
+    | ExpandInput
+    | ChangeRef String String
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    NoOp -> model
-    Increment -> model + 1
+    case msg of
+        ChangeText id new ->
+            let
+                nodes =
+                    List.map
+                        (\n ->
+                            if (toString n.id) == id then
+                                { n | value = new }
+                            else
+                                n
+                        )
+                        model.nodes
+            in
+                ( { model | nodes = nodes }, Cmd.none )
+
+        ExpandInput ->
+            let
+                lastNodeList =
+                    List.drop ((List.length model.nodes) - 1) model.nodes
+
+                maybeLastNode =
+                    List.head lastNodeList
+
+                lastNodeId =
+                    case maybeLastNode of
+                        Just node ->
+                            node.id
+
+                        Nothing ->
+                            2
+
+                nodes =
+                    List.append model.nodes
+                        [ { id = lastNodeId + 1
+                          , value = ""
+                          , reference = 0
+                          }
+                        ]
+            in
+                ( { model | nodes = nodes }, Cmd.none )
+
+        ChangeRef id newRef ->
+            let
+                nodes =
+                    List.map
+                        (\n ->
+                            if (toString n.id) == id then
+                                { n | reference = Result.withDefault 0 (String.toInt newRef) }
+                            else
+                                n
+                        )
+                        model.nodes
+            in
+                ( { model | nodes = nodes }, Cmd.none )
 
 
--- VIEW
--- Html is defined as: elem [ attribs ][ children ]
--- CSS can be applied via class names or inline style attrib
 view : Model -> Html Msg
 view model =
-  div [ class "container", style [("margin-top", "30px"), ( "text-align", "center" )] ][    -- inline CSS (literal)
-    div [ class "row" ][
-      div [ class "col-xs-12" ][
-        div [ class "jumbotron" ][
-          img [ src "static/img/elm.jpg", style styles.img ] []                             -- inline CSS (via var)
-          , hello model                                                                     -- ext 'hello' component (takes 'model' as arg)
-          , p [] [ text ( "Elm Webpack Starter" ) ]
-          , button [ class "btn btn-primary btn-lg", onClick Increment ] [                  -- click handler
-            span[ class "glyphicon glyphicon-star" ][]                                      -- glyphicon
-            , span[][ text "FTW!" ]
-          ]
+    div []
+        [ div [ class "container" ]
+            (List.map
+                (\n ->
+                    div [ class "form-row" ]
+                        [ div [ class "col-md-8 left" ]
+                            [ p [ class "id" ] [ text (toString n.id) ]
+                            , input [ class "form-control", type_ "text", onInput <| ChangeText (toString n.id) ] []
+                            ]
+                        , div [ class "col-md-2 right" ]
+                            [ input [ class "form-control", type_ "text", onInput <| ChangeRef (toString n.id) ] []
+                            ]
+                        , p [ class "valueValue" ] [ text n.value ]
+                        , p [ class "referenceValue" ] [ text (toString n.reference) ]
+                        , button [ class "btn btn-primary" ] [ text "delete" ]
+                        ]
+                )
+                model.nodes
+            )
+        , button [ type_ "button", onClick ExpandInput ] [ text "New Input" ]
         ]
-      ]
-    ]
-  ]
-
-
--- CSS STYLES
-styles : { img : List ( String, String ) }
-styles =
-  {
-    img =
-      [ ( "width", "33%" )
-      , ( "border", "4px solid #337AB7")
-      ]
-  }
