@@ -1,13 +1,27 @@
-module Main exposing (..)
+module Editor exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Parser
+import Tableau exposing (..)
 import Zipper exposing (..)
+import HelpersView exposing (..)
 import Errors
 
 
+main :
+    Program Never
+        { tableau :
+            { ext : Extension
+            , node :
+                { id : Int
+                , reference : { str : String, up : Maybe Int }
+                , value : String
+                }
+            }
+        }
+        Msg
 main =
     Html.program
         { init = init
@@ -22,6 +36,7 @@ type alias Model =
     }
 
 
+init : ( Model, Cmd msg )
 init =
     ( { tableau = { node = { id = 1, value = "", reference = { str = "1", up = Just 0 } }, ext = Open } }
     , Cmd.none
@@ -37,10 +52,12 @@ type Msg
     | MakeClosed Zipper.Zipper
 
 
+top : Zipper.Zipper -> Tableau
 top =
     Zipper.top >> Zipper.zTableau
 
 
+topRenumbered : Zipper.Zipper -> Tableau
 topRenumbered =
     top >> Zipper.renumber
 
@@ -67,50 +84,17 @@ update msg model =
             ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
 
 
-
---view : Model -> Html Msg
---view model =
---    table [ class "tableau" ]
---        [ viewNode (Zipper.zipper model.tableau)
---        ]
-
-
 view : Model -> Html Msg
 view model =
     div []
         [ viewTableau model.tableau ]
 
 
-
--- view helpers
-
-
-viewNode : Zipper.Zipper -> Html Msg
-viewNode z =
-    let
-        ( tableau, bs ) =
-            z
-    in
-        div [ class "formula" ]
-            --            text |< --> todo
-            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
-            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
-            , text "["
-            , input
-                [ class "refEdit "
-                , value (Zipper.zNode z).reference.str
-                , size ((String.length tableau.node.value) * 3 // 4 + 1)
-                ]
-                []
-            , text "]"
-            ]
-
-
-viewTableau : Zipper.Tableau -> Html Msg
+viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl =
     let
         t =
-            Zipper.asTable tbl
+            HelpersView.asTable tbl
     in
         table [ class "tableau" ]
             (List.map2 tblRow
@@ -119,22 +103,12 @@ viewTableau tbl =
             )
 
 
-tblRow : Int -> Zipper.Row -> Html Msg
+tblRow : Int -> HelpersView.Row -> Html Msg
 tblRow depth trow =
     tr [] (List.map (tblCell depth) trow)
 
 
-isBeta : Zipper.Zipper -> Bool
-isBeta ( t, _ ) =
-    case t.ext of
-        Beta tl tr ->
-            True
-
-        _ ->
-            False
-
-
-tblCell : Int -> Zipper.Cell -> Html Msg
+tblCell : Int -> HelpersView.Cell -> Html Msg
 tblCell depth tcell =
     let
         ( width, mz ) =
@@ -152,7 +126,7 @@ tblCell depth tcell =
                             z
                       in
                         case t.ext of
-                            Zipper.Open ->
+                            Tableau.Open ->
                                 depth + 1
 
                             _ ->
@@ -176,6 +150,29 @@ tblCell depth tcell =
             content
 
 
+viewNode : Zipper.Zipper -> Html Msg
+viewNode z =
+    let
+        ( tableau, bs ) =
+            z
+    in
+        div [ class "formula" ]
+            --            text |< --> todo
+            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
+            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
+            , text "["
+            , input
+                [ class "refEdit "
+                , value (Zipper.zNode z).reference.str
+                , size ((String.length tableau.node.value) * 3 // 4 + 1)
+                ]
+                []
+            , text "]"
+            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+            ]
+
+
+expandControls : Zipper.Zipper -> List (Html Msg)
 expandControls z =
     let
         ( t, bs ) =
@@ -183,32 +180,19 @@ expandControls z =
     in
         [ div [ class "expandControls" ]
             (case t.ext of
-                Zipper.Open ->
+                Tableau.Open ->
                     [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
                     , button [ onClick (ExpandBeta z) ] [ text "β" ]
                     , button [ onClick (MakeClosed z) ] [ text "*" ]
                     ]
 
-                Zipper.Alpha _ ->
+                Tableau.Alpha _ ->
                     []
 
-                Zipper.Beta _ _ ->
+                Tableau.Beta _ _ ->
                     []
 
-                Zipper.Closed _ _ ->
+                Tableau.Closed _ _ ->
                     []
             )
         ]
-
-
-
---view helpers
-
-
-isPremise z =
-    case z |> zNode |> .reference |> .up of
-        Just 0 ->
-            True
-
-        _ ->
-            False
