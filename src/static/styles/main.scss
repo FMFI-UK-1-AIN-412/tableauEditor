@@ -1,6 +1,6 @@
-$icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
-@import '~bootstrap-sass/assets/stylesheets/bootstrap/_mixins.scss';
-@import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
+//$icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
+//@import '~bootstrap-sass/assets/stylesheets/bootstrap/_mixins.scss';
+//@import '~bootstrap-sass/assets/stylesheets/_bootstrap.scss';
 
 // can add Boostrap overrides, additional Sass/CSS below...
 
@@ -28,3 +28,112 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 .value {
 	width: 1100px;
 }
+
+//TABLEAU EDITOR
+
+.tableau {
+	width: 100%;
+	border-spacing: 0;
+	border-collapse: collapse;
+}
+
+.tableau tr {
+	vertical-align: top;
+}
+
+.tableau td {
+	padding: 0.2em 0.5em;
+}
+
+.tableau td:not(:first-child) {
+	border-left: thin solid black;
+}
+.tableau td.beta {
+	border-bottom: thin solid black;
+}
+
+.formula {
+	display: flex;
+}
+
+.formulaEdit {
+	flex-grow: 1;
+}
+
+.formulaEdit, .refEdit {
+	text-align: center;
+	background-color: inherit;
+	border: 0;
+	border-bottom: thin dashed lightgray;
+	outline: 0;
+}
+
+.expandControls .refEdit {
+	margin: 0 0.2em;
+}
+
+.expandControls {
+	text-align: center;
+}
+
+.actions button {
+	margin: 0 0.5em;
+}
+
+.actions #importJson {
+	display: none;
+}
+
+/** delete button */
+button.delete {
+	padding: 0 0.3em;
+	margin-left: 0.5em;
+	border: thin solid lightgray;
+	background-color: inherit;
+	color: gray;
+	height: 100%;
+}
+button.delete:hover {
+	background-color: lightpink;
+}
+
+.premise { background-color: #def; }
+
+.syntaxProblem    { background-color: lightpink; }
+.semanticsProblem { background-color: rgb(255, 211, 131); }
+
+.jsonImportError { background-color: lightpink; }
+
+.rulesHelp .rule {
+	display: inline-block;
+	padding: 0.5em;
+	text-align: center;
+	vertical-align: top;
+}
+
+p code {
+	background-color: lightgray;
+	padding: 0 0.2em;
+}
+
+/**
+ * Print style.
+ * Hide everything except the tableau.
+ */
+
+@media print {
+	body > div > *:not(.tableau):not(.verdict):not(.problems),
+	button.delete
+	{
+		display: none;
+	}
+	.formulaEdit, .refEdit {
+		border-bottom: none;
+	}
+	/* Print color backgrounds for webkit browsers */
+	body {
+		-webkit-print-color-adjust: exact;
+	}
+}
+
+/* vim: set sw=2 ts=2 sts=2 et : */

@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Parser
+import Zipper exposing (..)
 
 
 main =
@@ -15,114 +16,199 @@ main =
         }
 
 
-type alias Node =
-    { id : Int, value : String, reference : Int }
-
-
 type alias Model =
-    { nodes : List Node
+    { tableau : Tableau
     }
 
 
 init =
-    ( { nodes = [ { id = 1, value = "", reference = 1 } ]
-      }
+    ( { tableau = { node = { id = 1, value = "", reference = { str = "1", up = Just 0 } }, ext = Open } }
     , Cmd.none
     )
 
 
 type Msg
-    = ChangeText String String
-    | ExpandAlpha
-    | ChangeRef String String
-    | Delete Int
+    = ChangeText Zipper.Zipper String
+    | ChangeRef Zipper.Zipper String
+    | ExpandAlpha Zipper.Zipper
+    | ExpandBeta Zipper.Zipper
+    | Delete Zipper.Zipper
+    | MakeClosed Zipper.Zipper
+
+
+top =
+    Zipper.top >> Zipper.zTableau
+
+
+topRenumbered =
+    top >> Zipper.renumber
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ChangeText id new ->
-            let
-                nodes =
-                    List.map
-                        (\n ->
-                            if (toString n.id) == id then
-                                { n | value = new }
-                            else
-                                n
-                        )
-                        model.nodes
-            in
-                ( { model | nodes = nodes }, Cmd.none )
+        ChangeText z new ->
+            ( { model | tableau = (z |> Zipper.setFormula new |> top) }, Cmd.none )
 
-        ExpandAlpha ->
-            let
-                lastNodeList =
-                    List.drop ((List.length model.nodes) - 1) model.nodes
+        ExpandAlpha z ->
+            ( { model | tableau = (z |> Zipper.extendAlpha |> topRenumbered) }, Cmd.none )
 
-                maybeLastNode =
-                    List.head lastNodeList
+        ExpandBeta z ->
+            ( { model | tableau = (z |> Zipper.extendBeta |> topRenumbered) }, Cmd.none )
 
-                lastNodeId =
-                    case maybeLastNode of
-                        Just node ->
-                            node.id
+        ChangeRef z new ->
+            ( { model | tableau = (z |> Zipper.setRef new |> top) }, Cmd.none )
 
-                        Nothing ->
-                            2
+        Delete z ->
+            ( { model | tableau = (z |> Zipper.delete |> topRenumbered) }, Cmd.none )
 
-                nodes =
-                    List.append model.nodes
-                        [ { id = lastNodeId + 1
-                          , value = ""
-                          , reference = 0
-                          }
-                        ]
-            in
-                ( { model | nodes = nodes }, Cmd.none )
-
-        ChangeRef id newRef ->
-            let
-                nodes =
-                    List.map
-                        (\n ->
-                            if (toString n.id) == id then
-                                { n | reference = Result.withDefault 0 (String.toInt newRef) }
-                            else
-                                n
-                        )
-                        model.nodes
-            in
-                ( { model | nodes = nodes }, Cmd.none )
-
-        Delete id ->
-            let
-                nodes =
-                    List.filter (\n -> n.id /= id) model.nodes
-            in
-                ( { model | nodes = nodes }, Cmd.none )
+        MakeClosed z ->
+            ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div [ class "container" ]
-            (List.map
-                (\n ->
-                    div [ class "form-row" ]
-                        [ div [ class "col-md-9 left" ]
-                            [ p [ class "id" ] [ text (toString n.id) ]
-                            , input [ class "form-control", type_ "text", onInput <| ChangeText (toString n.id) ] []
-                            ]
-                        , div [ class "col-md-2 right" ]
-                            [ input [ class "form-control", type_ "text", onInput <| ChangeRef (toString n.id) ] []
-                            ]
-                        , p [ class "valueValue" ] [ text n.value ]
-                        , p [ class "referenceValue" ] [ text (toString n.reference) ]
-                        , button [ class "btn btn-primary", onClick <| Delete n.id ] [ text "delete" ]
-                        ]
-                )
-                model.nodes
-            )
-        , button [ type_ "button", onClick ExpandAlpha ] [ text "New Input" ]
+    div [ class "tableau" ]
+        [ div
+            [ class "container" ]
+            [ text "Tableau:"
+            , viewNode (Zipper.zipper model.tableau)
+            ]
         ]
+
+
+viewNode : Zipper.Zipper -> Html Msg
+viewNode z =
+    let
+        ( tableau, bs ) =
+            z
+    in
+        div
+            [ class "formula" ]
+            --            text |< --> todo
+            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
+            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
+            , input
+                [ class "refEdit "
+                , value (Zipper.zNode z).reference.str
+                , size ((String.length tableau.node.value) * 3 // 4 + 1)
+                ]
+                []
+            , viewChildren z
+            ]
+
+
+viewChildren : Zipper.Zipper -> Html Msg
+viewChildren z =
+    case (Zipper.zTableau z).ext of
+        Zipper.Open ->
+            viewOpen z
+
+        Zipper.Closed r1 r2 ->
+            div [] [ text "*" ]
+
+        Zipper.Alpha t ->
+            div [] [ viewAlpha (Zipper.down z) ]
+
+        --            div [] [ viewNode (Zipper.down z) ]
+        Zipper.Beta lt rt ->
+            div [] [ viewBeta z ]
+
+
+
+--            div [] [ viewNode (Zipper.left z), viewNode (Zipper.right z) ]
+
+
+viewOpen : Zipper.Zipper -> Html Msg
+viewOpen z =
+    div []
+        [ text (Zipper.zNode z).value
+        , expandControls z
+        ]
+
+
+
+--viewClosed
+
+
+viewAlpha : Zipper.Zipper -> Html Msg
+viewAlpha z =
+    table []
+        [ tr []
+            [ td []
+                [ viewNode z ]
+            ]
+        ]
+
+
+viewBeta : Zipper.Zipper -> Html Msg
+viewBeta z =
+    table []
+        [ tr []
+            [ td [ class "beta" ]
+                [ viewNode (Zipper.left z) ]
+            , td [ class "beta" ]
+                [ viewNode (Zipper.right z) ]
+            ]
+        ]
+
+
+expandControls z =
+    let
+        ( t, bs ) =
+            z
+    in
+        --        [ div [ class "expandControls" ]
+        (case t.ext of
+            Zipper.Open ->
+                div [ class "expandControls" ]
+                    [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+                    , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                    , button [ onClick (MakeClosed z) ] [ text "*" ]
+                    ]
+
+            --                        Just ( r1, r2 ) ->
+            --                            let
+            --                                compl =
+            --                                    Errors.errors <| areCloseRefsComplementary r1 r2 z
+            --
+            --                                ref1Cls =
+            --                                    problemsClass <| (validateRef "Invalid close ref. #1" r1 z) ++ compl
+            --
+            --                                ref2Cls =
+            --                                    problemsClass <| (validateRef "Invalid close ref. #1" r2 z) ++ compl
+            --                            in
+            --                                [ text "* "
+            --                                , input
+            --                                    [ class ("refEdit " ++ ref1Cls)
+            --                                    , type_ "text"
+            --                                    , placeholder "Ref"
+            --                                    , size 1
+            --                                    , value r1.str
+            --                                    , onInput <| SetClosed 0 z
+            --                                    ]
+            --                                    []
+            --                                , input
+            --                                    [ class ("refEdit " ++ ref2Cls)
+            --                                    , type_ "text"
+            --                                    , placeholder "Ref"
+            --                                    , size 1
+            --                                    , value r2.str
+            --                                    , onInput <| SetClosed 1 z
+            --                                    ]
+            --                                    []
+            --                                , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+            --                                ]
+            Zipper.Alpha _ ->
+                p [] []
+
+            Zipper.Beta _ _ ->
+                p [] []
+
+            Zipper.Closed _ _ ->
+                p [] []
+        )
+
+
+
+--        ]
