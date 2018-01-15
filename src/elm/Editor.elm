@@ -10,18 +10,7 @@ import HelpersView exposing (..)
 import Errors
 
 
-main :
-    Program Never
-        { tableau :
-            { ext : Extension
-            , node :
-                { id : Int
-                , reference : { str : String, up : Maybe Int }
-                , value : String
-                }
-            }
-        }
-        Msg
+main : Program Never Model Msg
 main =
     Html.program
         { init = init
@@ -64,30 +53,33 @@ topRenumbered =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        ChangeText z new ->
-            ( { model | tableau = (z |> Zipper.setFormula new |> top) }, Cmd.none )
+    let
+        _ =
+            Debug.log "model" model
+    in
+        case msg of
+            ChangeText z new ->
+                ( { model | tableau = (z |> Zipper.setFormula new |> top) }, Cmd.none )
 
-        ExpandAlpha z ->
-            ( { model | tableau = (z |> Zipper.extendAlpha |> topRenumbered) }, Cmd.none )
+            ExpandAlpha z ->
+                ( { model | tableau = (z |> Zipper.extendAlpha |> topRenumbered) }, Cmd.none )
 
-        ExpandBeta z ->
-            ( { model | tableau = (z |> Zipper.extendBeta |> topRenumbered) }, Cmd.none )
+            ExpandBeta z ->
+                ( { model | tableau = (z |> Zipper.extendBeta |> topRenumbered) }, Cmd.none )
 
-        ChangeRef z new ->
-            ( { model | tableau = (z |> Zipper.setRef new |> top) }, Cmd.none )
+            ChangeRef z new ->
+                ( { model | tableau = (z |> Zipper.setRef new |> top) }, Cmd.none )
 
-        Delete z ->
-            ( { model | tableau = (z |> Zipper.delete |> topRenumbered) }, Cmd.none )
+            Delete z ->
+                ( { model | tableau = (z |> Zipper.delete |> topRenumbered) }, Cmd.none )
 
-        MakeClosed z ->
-            ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
+            MakeClosed z ->
+                ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ viewTableau model.tableau ]
+    viewTableau model.tableau
 
 
 viewTableau : Tableau.Tableau -> Html Msg
@@ -132,7 +124,7 @@ tblCell depth tcell =
                             _ ->
                                 1
                     , [ ( "premise", isPremise z ), ( "beta", isBeta z ) ]
-                    , ""
+                    , "sdjfhgskdhgksdhkldsfjhg"
                       --                    , (z
                       --                        |> isCorrectNode
                       --                        |> Errors.errors
@@ -165,6 +157,7 @@ viewNode z =
                 [ class "refEdit "
                 , value (Zipper.zNode z).reference.str
                 , size ((String.length tableau.node.value) * 3 // 4 + 1)
+                , onInput <| ChangeRef z
                 ]
                 []
             , text "]"

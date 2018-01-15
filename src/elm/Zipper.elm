@@ -1,6 +1,7 @@
 module Zipper exposing (..)
 
 import Tableau exposing (..)
+import Debug exposing (log)
 
 
 --crumb hovori o tom, kto je podo mnou
@@ -48,8 +49,8 @@ children z =
 down : Zipper -> Zipper
 down ( t, bs ) =
     case t.ext of
-        Alpha t ->
-            ( t, (AlphaCrumb t.node) :: bs )
+        Alpha subt ->
+            ( subt, (AlphaCrumb t.node) :: bs )
 
         _ ->
             ( t, bs )
@@ -134,29 +135,33 @@ zNode z =
     (zTableau z).node
 
 
+
+-- "Aplikuje" funkciu f na kazdy vrchol v zipperi
+
+
 zWalkPost : (Zipper -> Zipper) -> Zipper -> Zipper
 zWalkPost f (( t, bs ) as z) =
-    let
-        ext =
-            t.ext
-    in
-        case ext of
-            Open ->
-                f z
+    case t.ext of
+        Open ->
+            f z
 
-            Closed _ _ ->
-                f z
+        Closed _ _ ->
+            f z
 
-            Alpha t ->
-                z |> down |> zWalkPost f |> up |> f
+        Alpha t ->
+            z |> down |> zWalkPost f |> up |> f
 
-            Beta tl tr ->
-                z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
+        Beta tl tr ->
+            z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
 
 fixRefs : Zipper -> Zipper
 fixRefs =
     zWalkPost (fixNodeRef >> fixClosedRefs)
+
+
+
+-- Na kazdy vrchol zavolame najskor fixNodeRef a potom fixCloseRefs
 
 
 getFixedRef : Ref -> Zipper -> Ref
@@ -233,11 +238,8 @@ renumber2 tableau num =
 
                 node =
                     tableau.node
-
-                new_ext =
-                    new_tableau.ext
             in
-                ( Tableau { node | id = num + 1 } new_ext, num1 )
+                ( Tableau { node | id = num + 1 } (Alpha new_tableau), num1 )
 
         Beta lt rt ->
             let
@@ -319,18 +321,18 @@ setRef new z =
 
 
 extendAlpha : Zipper -> Zipper
-extendAlpha (( t, bs ) as z) =
-    modifyNode
-        (\tableau ->
-            case tableau.ext of
-                Open ->
-                    Tableau tableau.node (Alpha (Tableau defNode Open))
+extendAlpha z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau tableau.node (Alpha (Tableau defNode Open))
 
-                _ ->
-                    --tuto dopisat v pripade extendovania nie len pod leafs
-                    tableau
-        )
-        z
+                    _ ->
+                        --tuto dopisat v pripade extendovania nie len pod leafs
+                        tableau
+            )
 
 
 extendBeta : Zipper -> Zipper
