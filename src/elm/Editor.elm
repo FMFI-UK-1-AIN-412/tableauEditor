@@ -97,7 +97,11 @@ viewTableau tbl =
 
 tblRow : Int -> HelpersView.Row -> Html Msg
 tblRow depth trow =
-    tr [] (List.map (tblCell depth) trow)
+    tr []
+        (List.map
+            (tblCell depth)
+            trow
+        )
 
 
 tblCell : Int -> HelpersView.Cell -> Html Msg
