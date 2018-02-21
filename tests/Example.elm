@@ -116,6 +116,75 @@ zipperOnlyAlphaOfRightBetaRenumbered =
     ( onlyAlphaOfRightBetaRenumbered, [] )
 
 
+zipperZWalkPostExample =
+    zipperExample |> extendAlpha |> down |> extendBeta |> left |> extendAlpha |> up |> right |> extendBeta |> left |> extendAlpha |> top |> topRenumbered |> zipper
+
+
+zipperZWalkPostResult =
+    zipper
+        { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    }
+                , ext =
+                    Beta
+                        { node =
+                            { id = 3
+                            , value = ""
+                            , reference = { str = "", up = Nothing }
+                            }
+                        , ext =
+                            Alpha
+                                { node =
+                                    { id = 4
+                                    , value = ""
+                                    , reference = { str = "", up = Nothing }
+                                    }
+                                , ext = Open
+                                }
+                        }
+                        { node =
+                            { id = 5
+                            , value = ""
+                            , reference = { str = "", up = Nothing }
+                            }
+                        , ext =
+                            Beta
+                                { node =
+                                    { id = 6
+                                    , value = ""
+                                    , reference = { str = "", up = Nothing }
+                                    }
+                                , ext =
+                                    Alpha
+                                        { node =
+                                            { id = 7
+                                            , value = ""
+                                            , reference = { str = "", up = Nothing }
+                                            }
+                                        , ext = Open
+                                        }
+                                }
+                                { node =
+                                    { id = 8
+                                    , value = ""
+                                    , reference = { str = "", up = Nothing }
+                                    }
+                                , ext = Open
+                                }
+                        }
+                }
+        }
+
+
 suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
@@ -137,4 +206,11 @@ suiteZipper =
                     (zipperExample |> extendBeta |> right |> extendAlpha |> down |> top |> topRenumbered |> zipper)
                     zipperOnlyAlphaOfRightBetaRenumbered
             )
+        , test "renumber another" (\() -> compareZippers zipperZWalkPostExample zipperZWalkPostResult)
         ]
+
+
+
+-- todo tests:
+-- extend on other than open
+-- implementovat kvantifikatory
