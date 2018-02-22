@@ -77,73 +77,17 @@ update msg model =
                 ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
 
 
+
+--view : Model -> Html Msg
+--view model =
+--    viewTableau model.tableau
+
+
 view : Model -> Html Msg
 view model =
-    viewTableau model.tableau
-
-
-viewTableau : Tableau.Tableau -> Html Msg
-viewTableau tbl =
-    let
-        t =
-            HelpersView.asTable tbl
-    in
-        table [ class "tableau" ]
-            (List.map2 tblRow
-                (List.reverse <| List.range 1 (List.length t))
-                t
-            )
-
-
-tblRow : Int -> HelpersView.Row -> Html Msg
-tblRow depth trow =
-    tr []
-        (List.map
-            (tblCell depth)
-            trow
-        )
-
-
-tblCell : Int -> HelpersView.Cell -> Html Msg
-tblCell depth tcell =
-    let
-        ( width, mz ) =
-            tcell
-
-        ( content, height, clss, ttl ) =
-            case mz of
-                Nothing ->
-                    ( [], depth, [], "" )
-
-                Just z ->
-                    ( [ viewNode z ] ++ expandControls z
-                    , let
-                        ( t, bs ) =
-                            z
-                      in
-                        case t.ext of
-                            Tableau.Open ->
-                                depth + 1
-
-                            _ ->
-                                1
-                    , [ ( "premise", isPremise z ), ( "beta", isBeta z ) ]
-                    , "sdjfhgskdhgksdhkldsfjhg"
-                      --                    , (z
-                      --                        |> isCorrectNode
-                      --                        |> Errors.errors
-                      --                        |> List.map .msg
-                      --                        |> String.join " \n "
-                      --                      )
-                    )
-    in
-        td
-            [ classList clss
-            , colspan width
-            , rowspan height
-            , title ttl
-            ]
-            content
+    div [ class "tableau" ]
+        [ viewNode (Zipper.zipper model.tableau)
+        ]
 
 
 viewNode : Zipper.Zipper -> Html Msg
@@ -152,30 +96,158 @@ viewNode z =
         ( tableau, bs ) =
             z
     in
-        div [ class "formula" ]
-            --            text |< --> todo
-            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
-            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
+        div
+            [ class "formula" ]
+            [ input
+                [ class "formulaId"
+                , value ((Zipper.zNode z).id |> toString)
+
+                --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
+                ]
+                []
+            , input [ class "formulaInput ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
             , text "["
             , input
-                [ class "refEdit "
+                [ class "formulaReference"
                 , value (Zipper.zNode z).reference.str
-                , size ((String.length tableau.node.value) * 3 // 4 + 1)
-                , onInput <| ChangeRef z
+
+                --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
                 ]
                 []
             , text "]"
-            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+            , viewChildren z
             ]
 
 
-expandControls : Zipper.Zipper -> List (Html Msg)
+viewChildren : Zipper.Zipper -> Html Msg
+viewChildren z =
+    case (Zipper.zTableau z).ext of
+        Tableau.Open ->
+            viewOpen z
+
+        Tableau.Closed r1 r2 ->
+            div [] [ text "*" ]
+
+        Tableau.Alpha t ->
+            viewAlpha z
+
+        Tableau.Beta lt rt ->
+            viewBeta z
+
+
+viewAlpha : Zipper.Zipper -> Html Msg
+viewAlpha z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewBeta : Zipper.Zipper -> Html Msg
+viewBeta z =
+    div [ class "beta" ]
+        [ viewNode (Zipper.left z)
+        , viewNode (Zipper.right z)
+        ]
+
+
+viewOpen : Zipper.Zipper -> Html Msg
+viewOpen z =
+    div [ class "open" ]
+        [ expandControls z
+        ]
+
+
+
+--viewTableau : Tableau.Tableau -> Html Msg
+--viewTableau tbl =
+--    let
+--        t =
+--            HelpersView.asTable tbl
+--    in
+--        table [ class "tableau" ]
+--            (List.map2 tblRow
+--                (List.reverse <| List.range 1 (List.length t))
+--                t
+--            )
+--
+--
+--tblRow : Int -> HelpersView.Row -> Html Msg
+--tblRow depth trow =
+--    tr []
+--        (List.map
+--            (tblCell depth)
+--            trow
+--        )
+--
+--
+--tblCell : Int -> HelpersView.Cell -> Html Msg
+--tblCell depth tcell =
+--    let
+--        ( width, mz ) =
+--            tcell
+--
+--        ( content, height, clss, ttl ) =
+--            case mz of
+--                Nothing ->
+--                    ( [], depth, [], "" )
+--
+--                Just z ->
+--                    ( [ viewNode z ] ++ expandControls z
+--                    , let
+--                        ( t, bs ) =
+--                            z
+--                      in
+--                        case t.ext of
+--                            Tableau.Open ->
+--                                depth + 1
+--
+--                            _ ->
+--                                1
+--                    , [ ( "premise", isPremise z ), ( "beta", isBeta z ) ]
+--                    , "sdjfhgskdhgksdhkldsfjhg"
+--                      --                    , (z
+--                      --                        |> isCorrectNode
+--                      --                        |> Errors.errors
+--                      --                        |> List.map .msg
+--                      --                        |> String.join " \n "
+--                      --                      )
+--                    )
+--    in
+--        td
+--            [ classList clss
+--            , colspan width
+--            , rowspan height
+--            , title ttl
+--            ]
+--            content
+--viewNode : Zipper.Zipper -> Html Msg
+--viewNode z =
+--    let
+--        ( tableau, bs ) =
+--            z
+--    in
+--        div [ class "formula" ]
+--            --            text |< --> todo
+--            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
+--            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
+--            , text "["
+--            , input
+--                [ class "refEdit "
+--                , value (Zipper.zNode z).reference.str
+--                , size ((String.length tableau.node.value) * 3 // 4 + 1)
+--                , onInput <| ChangeRef z
+--                ]
+--                []
+--            , text "]"
+--            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+--            ]
+
+
+expandControls : Zipper.Zipper -> Html Msg
 expandControls z =
     let
         ( t, bs ) =
             z
     in
-        [ div [ class "expandControls" ]
+        div [ class "expandControls" ]
             (case t.ext of
                 Tableau.Open ->
                     [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
@@ -192,4 +264,3 @@ expandControls z =
                 Tableau.Closed _ _ ->
                     []
             )
-        ]

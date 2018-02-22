@@ -10,30 +10,37 @@
 	border-collapse: collapse;
 }
 
-.tableau tr {
-	vertical-align: top;
-}
-
-.tableau td {
-	padding: 0.2em 0.5em;
-}
-
-.tableau td:not(:first-child) {
-	border-left: thin solid black;
-}
-.tableau td.beta {
-	border-bottom: thin solid black;
-}
-
 .formula {
-	display: flex;
+	display: block;
 }
 
-.formulaEdit {
+.beta {
+	width: 100%;
+}
+
+.formula > .beta {
+	display: inline-flex;
+}
+
+.formula > .beta > .formula {
+	display: inline-block;
+	width: 50%;
+}
+
+.formulaId {
+	width: 20px;
+}
+
+.formulaInput {
 	flex-grow: 1;
+	width: calc(100% - 65px);
 }
 
-.formulaEdit, .refEdit {
+.formulaReference {
+	width: 20px;
+}
+
+.formulaInput, .formulaReference {
 	text-align: center;
 	background-color: inherit;
 	border: 0;
@@ -41,12 +48,13 @@
 	outline: 0;
 }
 
-.expandControls .refEdit {
+.expandControls .formulaReference {
 	margin: 0 0.2em;
 }
 
 .expandControls {
 	text-align: center;
+	display: block;
 }
 
 .actions button {
