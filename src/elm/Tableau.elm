@@ -1,12 +1,15 @@
 module Tableau exposing (..)
 
+import Formula
+import Parser
+
 
 type alias Tableau =
     { node : Node, ext : Extension }
 
 
 type alias Node =
-    { id : Int, value : String, reference : Ref }
+    { id : Int, value : String, reference : Ref, formula : Result Parser.Error (Formula.Signed Formula.Formula) }
 
 
 type alias Ref =
@@ -25,4 +28,4 @@ defRef =
 
 
 defNode =
-    { id = 1, value = "", reference = defRef }
+    { id = 1, value = "", reference = defRef, formula = Formula.parseSigned "" }

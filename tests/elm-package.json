@@ -6,7 +6,8 @@
     "source-directories": [
         "../src/elm",
         "../src/elm/Helpers",
-        "."
+        ".",
+        "../tableau-parser/src"
     ],
     "exposed-modules": [],
     "dependencies": {

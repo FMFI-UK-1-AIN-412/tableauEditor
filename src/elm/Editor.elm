@@ -8,6 +8,7 @@ import Tableau exposing (..)
 import Zipper exposing (..)
 import HelpersView exposing (..)
 import Errors
+import Formula
 
 
 main : Program Never Model Msg
@@ -27,7 +28,16 @@ type alias Model =
 
 init : ( Model, Cmd msg )
 init =
-    ( { tableau = { node = { id = 1, value = "", reference = { str = "1", up = Just 0 } }, ext = Open } }
+    ( { tableau =
+            { node =
+                { id = 1
+                , value = ""
+                , reference = { str = "1", up = Just 0 }
+                , formula = Formula.parseSigned ""
+                }
+            , ext = Open
+            }
+      }
     , Cmd.none
     )
 
@@ -53,11 +63,8 @@ topRenumbered =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "model" model
-    in
-        case msg of
+    Debug.log "model"
+        (case msg of
             ChangeText z new ->
                 ( { model | tableau = (z |> Zipper.setFormula new |> top) }, Cmd.none )
 
@@ -75,6 +82,7 @@ update msg model =
 
             MakeClosed z ->
                 ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
+        )
 
 
 

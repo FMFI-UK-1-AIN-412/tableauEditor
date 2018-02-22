@@ -2,6 +2,7 @@ module Zipper exposing (..)
 
 import Tableau exposing (..)
 import Debug exposing (log)
+import Formula
 
 
 --crumb hovori o tom, kto je podo mnou
@@ -311,7 +312,7 @@ setFormula text =
                 oldNode =
                     tableau.node
             in
-                { tableau | node = { oldNode | value = text } }
+                { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
         )
 
 

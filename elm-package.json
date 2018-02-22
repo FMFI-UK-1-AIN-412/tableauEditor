@@ -5,7 +5,8 @@
     "license": "MIT",
     "source-directories": [
         "src/elm",
-				"src/elm/Helpers"
+        "src/elm/Helpers",
+        "../tablueau-parser/src"
     ],
     "exposed-modules": [],
     "dependencies": {
