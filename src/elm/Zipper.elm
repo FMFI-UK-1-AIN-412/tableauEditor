@@ -172,7 +172,7 @@ getFixedRef ({ str, up } as ref) z =
             { ref | str = "" }
 
         Just n ->
-            { ref | str = z |> above n |> zNode |> .id |> toString }
+            { ref | str = (z |> above n |> zNode |> .id |> toString) }
 
 
 fixNodeRef : Zipper -> Zipper
@@ -180,10 +180,10 @@ fixNodeRef z =
     modifyNode
         (\t ->
             let
-                node =
+                nodetmp =
                     t.node
             in
-                { t | node = { node | reference = (getFixedRef node.reference z) } }
+                { t | node = { nodetmp | reference = (getFixedRef nodetmp.reference z) } }
         )
         z
 
@@ -232,10 +232,10 @@ renumber2 tableau num =
             in
                 ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-        Alpha tableau ->
+        Alpha t ->
             let
                 ( new_tableau, num1 ) =
-                    renumber2 tableau (num + 1)
+                    renumber2 t (num + 1)
 
                 node =
                     tableau.node
@@ -264,10 +264,10 @@ modifyRef ref z =
     modifyNode
         (\tableau ->
             let
-                node =
+                nodetmp =
                     tableau.node
             in
-                { tableau | node = { node | reference = ref } }
+                { tableau | node = { nodetmp | reference = ref } }
         )
         z
 

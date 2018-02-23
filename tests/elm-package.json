@@ -7,7 +7,7 @@
         "../src/elm",
         "../src/elm/Helpers",
         ".",
-        "../tableau-parser/src"
+        "../../tablueau-parser/src"
     ],
     "exposed-modules": [],
     "dependencies": {

@@ -6,6 +6,7 @@ import Test exposing (..)
 import Zipper exposing (..)
 import Tableau exposing (..)
 import Editor exposing (topRenumbered)
+import Formula
 
 
 passedTest : Test
@@ -31,7 +32,8 @@ tableauExample =
     { node =
         { id = 1
         , value = ""
-        , reference = { str = "", up = Nothing }
+        , reference = { str = "1", up = Just 0 }
+        , formula = Formula.parseSigned ""
         }
     , ext = Open
     }
@@ -45,7 +47,8 @@ tableauWithAlpha =
     { node =
         { id = 1
         , value = ""
-        , reference = { str = "", up = Nothing }
+        , reference = { str = "1", up = Just 0 }
+        , formula = Formula.parseSigned ""
         }
     , ext =
         Alpha
@@ -53,6 +56,7 @@ tableauWithAlpha =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
+                , formula = Formula.parseSigned ""
                 }
             , ext = Open
             }
@@ -64,32 +68,63 @@ zipperWithAlpha =
 
 
 zipperWithAplhaDown =
-    ( tableauExample, [ AlphaCrumb { id = 1, value = "", reference = { str = "", up = Nothing } } ] )
+    ( { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            , formula = Formula.parseSigned ""
+            }
+      , ext = Open
+      }
+    , [ AlphaCrumb
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            }
+      ]
+    )
 
 
 zipperWithAlphaDownBetaLeft =
-    ( tableauExample
-    , [ BetaLeftCrumb { id = 1, value = "", reference = { str = "", up = Nothing } }
+    ( { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            , formula = Formula.parseSigned ""
+            }
+      , ext = Open
+      }
+    , [ BetaLeftCrumb { id = 1, value = "", reference = { str = "", up = Nothing }, formula = Formula.parseSigned "" }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
+                , formula = Formula.parseSigned ""
                 }
             , ext = Open
             }
-      , AlphaCrumb { id = 1, value = "", reference = { str = "", up = Nothing } }
+      , AlphaCrumb { id = 1, value = "", reference = { str = "1", up = Just 0 }, formula = Formula.parseSigned "" }
       ]
     )
 
 
 zipperOnlyAlphaOfRightBeta =
-    ( tableauExample
-    , [ AlphaCrumb { id = 1, value = "", reference = { str = "", up = Nothing } }
-      , BetaRightCrumb { id = 1, value = "", reference = { str = "", up = Nothing } }
+    ( { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            , formula = Formula.parseSigned ""
+            }
+      , ext = Open
+      }
+    , [ AlphaCrumb { id = 1, value = "", reference = { str = "", up = Nothing }, formula = Formula.parseSigned "" }
+      , BetaRightCrumb { id = 1, value = "", reference = { str = "1", up = Just 0 }, formula = Formula.parseSigned "" }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
+                , formula = Formula.parseSigned ""
                 }
             , ext = Open
             }
@@ -98,16 +133,38 @@ zipperOnlyAlphaOfRightBeta =
 
 
 onlyAlphaOfRightBetaRenumbered =
-    { node = { id = 1, value = "", reference = { str = "", up = Nothing } }
+    { node =
+        { id = 1
+        , value = ""
+        , reference = { str = "1", up = Just 0 }
+        , formula = Formula.parseSigned ""
+        }
     , ext =
         Beta
-            { node = { id = 2, value = "", reference = { str = "", up = Nothing } }
+            { node =
+                { id = 2
+                , value = ""
+                , reference = { str = "", up = Nothing }
+                , formula = Formula.parseSigned ""
+                }
             , ext = Open
             }
-            { node = { id = 3, value = "", reference = { str = "", up = Nothing } }
+            { node =
+                { id = 3
+                , value = ""
+                , reference = { str = "", up = Nothing }
+                , formula = Formula.parseSigned ""
+                }
             , ext =
                 Alpha
-                    { node = { id = 4, value = "", reference = { str = "", up = Nothing } }, ext = Open }
+                    { node =
+                        { id = 4
+                        , value = ""
+                        , reference = { str = "", up = Nothing }
+                        , formula = Formula.parseSigned ""
+                        }
+                    , ext = Open
+                    }
             }
     }
 
@@ -125,7 +182,8 @@ zipperZWalkPostResult =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
             }
         , ext =
             Alpha
@@ -133,6 +191,7 @@ zipperZWalkPostResult =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
                     }
                 , ext =
                     Beta
@@ -140,6 +199,7 @@ zipperZWalkPostResult =
                             { id = 3
                             , value = ""
                             , reference = { str = "", up = Nothing }
+                            , formula = Formula.parseSigned ""
                             }
                         , ext =
                             Alpha
@@ -147,6 +207,7 @@ zipperZWalkPostResult =
                                     { id = 4
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
+                                    , formula = Formula.parseSigned ""
                                     }
                                 , ext = Open
                                 }
@@ -155,6 +216,7 @@ zipperZWalkPostResult =
                             { id = 5
                             , value = ""
                             , reference = { str = "", up = Nothing }
+                            , formula = Formula.parseSigned ""
                             }
                         , ext =
                             Beta
@@ -162,6 +224,7 @@ zipperZWalkPostResult =
                                     { id = 6
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
+                                    , formula = Formula.parseSigned ""
                                     }
                                 , ext =
                                     Alpha
@@ -169,6 +232,7 @@ zipperZWalkPostResult =
                                             { id = 7
                                             , value = ""
                                             , reference = { str = "", up = Nothing }
+                                            , formula = Formula.parseSigned ""
                                             }
                                         , ext = Open
                                         }
@@ -177,10 +241,78 @@ zipperZWalkPostResult =
                                     { id = 8
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
+                                    , formula = Formula.parseSigned ""
                                     }
                                 , ext = Open
                                 }
                         }
+                }
+        }
+
+
+testReferenceRewriting =
+    zipperExample
+
+
+testReferenceRewritingResult =
+    zipper
+        { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
+                    }
+                , ext = Open
+                }
+        }
+
+
+fixRefsTest =
+    zipper
+        { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
+                    }
+                , ext = Open
+                }
+        }
+
+
+fixRefsTestResult =
+    zipper
+        { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
+                    }
+                , ext = Open
                 }
         }
 
@@ -207,6 +339,12 @@ suiteZipper =
                     zipperOnlyAlphaOfRightBetaRenumbered
             )
         , test "renumber another" (\() -> compareZippers zipperZWalkPostExample zipperZWalkPostResult)
+        , test "reference rewriting"
+            (\() ->
+                compareZippers testReferenceRewritingResult
+                    (testReferenceRewriting |> Zipper.extendAlpha |> Editor.top |> Zipper.renumber |> zipper)
+            )
+        , test "reference rewriting 2" (\() -> compareZippers (fixRefs fixRefsTest) fixRefsTestResult)
         ]
 
 

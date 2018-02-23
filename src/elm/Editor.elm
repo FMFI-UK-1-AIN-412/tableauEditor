@@ -113,11 +113,21 @@ viewNode z =
                 --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
                 ]
                 []
-            , input [ class "formulaInput ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
+            , input
+                [ classList
+                    [ ( "formulaInput", True )
+                    , ( "premise", ((Zipper.zNode z).id |> toString) == (Zipper.zNode z).reference.str )
+                    ]
+                , value (Zipper.zNode z).value
+                , type_ "text"
+                , onInput <| ChangeText z
+                ]
+                []
             , text "["
             , input
                 [ class "formulaReference"
                 , value (Zipper.zNode z).reference.str
+                , onInput <| ChangeRef z
 
                 --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
                 ]
@@ -260,7 +270,7 @@ expandControls z =
                 Tableau.Open ->
                     [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
                     , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                    , button [ onClick (MakeClosed z) ] [ text "*" ]
+                    , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
                     ]
 
                 Tableau.Alpha _ ->
