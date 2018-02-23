@@ -33,7 +33,7 @@
 
 .formulaInput {
 	flex-grow: 1;
-	width: calc(100% - 65px);
+	width: calc(100% - 80px);
 }
 
 .formulaReference {
@@ -63,11 +63,9 @@
 /** delete button */
 button.delete {
 	padding: 0 0.3em;
-	margin-left: 0.5em;
 	border: thin solid lightgray;
 	background-color: inherit;
 	color: gray;
-	height: 100%;
 }
 button.delete:hover {
 	background-color: lightpink;

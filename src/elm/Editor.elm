@@ -6,9 +6,10 @@ import Html.Events exposing (..)
 import Parser
 import Tableau exposing (..)
 import Zipper exposing (..)
-import HelpersView exposing (..)
+import Rules exposing (..)
 import Errors
 import Formula
+import Helper
 
 
 main : Program Never Model Msg
@@ -85,16 +86,11 @@ update msg model =
         )
 
 
-
---view : Model -> Html Msg
---view model =
---    viewTableau model.tableau
-
-
 view : Model -> Html Msg
 view model =
     div [ class "tableau" ]
         [ viewNode (Zipper.zipper model.tableau)
+        , Rules.help
         ]
 
 
@@ -106,17 +102,12 @@ viewNode z =
     in
         div
             [ class "formula" ]
-            [ input
-                [ class "formulaId"
-                , value ((Zipper.zNode z).id |> toString)
-
-                --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
-                ]
-                []
+            [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
             , input
                 [ classList
                     [ ( "formulaInput", True )
-                    , ( "premise", ((Zipper.zNode z).id |> toString) == (Zipper.zNode z).reference.str )
+                    , ( "premise", Helper.isPremise z )
+                    , ( "semanticsProblem", Helper.hasReference z )
                     ]
                 , value (Zipper.zNode z).value
                 , type_ "text"
@@ -133,6 +124,7 @@ viewNode z =
                 ]
                 []
             , text "]"
+            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
             , viewChildren z
             ]
 
@@ -171,92 +163,6 @@ viewOpen z =
     div [ class "open" ]
         [ expandControls z
         ]
-
-
-
---viewTableau : Tableau.Tableau -> Html Msg
---viewTableau tbl =
---    let
---        t =
---            HelpersView.asTable tbl
---    in
---        table [ class "tableau" ]
---            (List.map2 tblRow
---                (List.reverse <| List.range 1 (List.length t))
---                t
---            )
---
---
---tblRow : Int -> HelpersView.Row -> Html Msg
---tblRow depth trow =
---    tr []
---        (List.map
---            (tblCell depth)
---            trow
---        )
---
---
---tblCell : Int -> HelpersView.Cell -> Html Msg
---tblCell depth tcell =
---    let
---        ( width, mz ) =
---            tcell
---
---        ( content, height, clss, ttl ) =
---            case mz of
---                Nothing ->
---                    ( [], depth, [], "" )
---
---                Just z ->
---                    ( [ viewNode z ] ++ expandControls z
---                    , let
---                        ( t, bs ) =
---                            z
---                      in
---                        case t.ext of
---                            Tableau.Open ->
---                                depth + 1
---
---                            _ ->
---                                1
---                    , [ ( "premise", isPremise z ), ( "beta", isBeta z ) ]
---                    , "sdjfhgskdhgksdhkldsfjhg"
---                      --                    , (z
---                      --                        |> isCorrectNode
---                      --                        |> Errors.errors
---                      --                        |> List.map .msg
---                      --                        |> String.join " \n "
---                      --                      )
---                    )
---    in
---        td
---            [ classList clss
---            , colspan width
---            , rowspan height
---            , title ttl
---            ]
---            content
---viewNode : Zipper.Zipper -> Html Msg
---viewNode z =
---    let
---        ( tableau, bs ) =
---            z
---    in
---        div [ class "formula" ]
---            --            text |< --> todo
---            [ input [ size ((String.length tableau.node.value) * 3 // 4 + 1), value ((Zipper.zNode z).id |> toString) ] []
---            , input [ class "formulaEdit ", value (Zipper.zNode z).value, type_ "text", onInput <| ChangeText z ] []
---            , text "["
---            , input
---                [ class "refEdit "
---                , value (Zipper.zNode z).reference.str
---                , size ((String.length tableau.node.value) * 3 // 4 + 1)
---                , onInput <| ChangeRef z
---                ]
---                []
---            , text "]"
---            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
---            ]
 
 
 expandControls : Zipper.Zipper -> Html Msg
