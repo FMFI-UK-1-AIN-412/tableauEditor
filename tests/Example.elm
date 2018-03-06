@@ -317,6 +317,28 @@ fixRefsTestResult =
         }
 
 
+gammaExampleResult =
+    zipper
+        { node =
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 1
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
+                    }
+                , ext = Open
+                }
+                { what = "x", forWhat = "" }
+        }
+
+
 suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
@@ -345,6 +367,11 @@ suiteZipper =
                     (testReferenceRewriting |> Zipper.extendAlpha |> Editor.top |> Zipper.renumber |> zipper)
             )
         , test "reference rewriting 2" (\() -> compareZippers (fixRefs fixRefsTest) fixRefsTestResult)
+        , test "gamma what test"
+            (\() ->
+                compareZippers gammaExampleResult
+                    (zipperExample |> Zipper.extendGamma |> Zipper.changeVariable "x")
+            )
         ]
 
 

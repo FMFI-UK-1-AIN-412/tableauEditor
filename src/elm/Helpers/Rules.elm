@@ -30,6 +30,14 @@ betas =
     ]
 
 
+gammas =
+    [ F (ForAll "x" fA), T (Exists "x" fB) ]
+
+
+deltas =
+    [ T (ForAll "x" fA), F (Exists "x" fB) ]
+
+
 renderAlpha : Signed Formula -> Html msg
 renderAlpha a =
     div [ class "rule" ]
@@ -63,6 +71,40 @@ renderBeta b =
         ]
 
 
+renderGamma g =
+    div [ class "rule" ]
+        [ table [ class "tableau" ]
+            ([ tr []
+                [ td [ class "alpha" ]
+                    [ text <| strSigned g ]
+                ]
+             ]
+                ++ List.map
+                    (\f ->
+                        tr [] [ td [] [ text <| strSigned f ] ]
+                    )
+                    (signedSubformulas g)
+            )
+        ]
+
+
+renderDelta d =
+    div [ class "rule" ]
+        [ table [ class "tableau" ]
+            ([ tr []
+                [ td [ class "alpha" ]
+                    [ text <| strSigned d ]
+                ]
+             ]
+                ++ List.map
+                    (\f ->
+                        tr [] [ td [] [ text <| strSigned f ] ]
+                    )
+                    (signedSubformulas d)
+            )
+        ]
+
+
 help =
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
@@ -82,6 +124,10 @@ To write first order logic terms use '∀', '\\A', '\\forall', '\\a' and '∃', 
         , div [] (List.map renderAlpha alphas)
         , h3 [] [ text "β-rules" ]
         , div [] (List.map renderBeta betas)
+        , h3 [] [ text "γ-rules" ]
+        , div [] (List.map renderGamma gammas)
+        , h3 [] [ text "δ-rules" ]
+        , div [] (List.map renderDelta deltas)
         ]
 
 

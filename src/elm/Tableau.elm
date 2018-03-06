@@ -2,6 +2,7 @@ module Tableau exposing (..)
 
 import Formula
 import Parser
+import Dict
 
 
 type alias Tableau =
@@ -16,11 +17,21 @@ type alias Ref =
     { str : String, up : Maybe Int }
 
 
+type alias Substitution =
+    { what : String, forWhat : String }
+
+
 type Extension
     = Open
     | Closed Ref Ref
     | Alpha Tableau
     | Beta Tableau Tableau
+    | Gamma Tableau Substitution -- -> premenna a term su stringy
+    | Delta Tableau Substitution
+
+
+defSubstitution =
+    { what = "", forWhat = "" }
 
 
 defRef =

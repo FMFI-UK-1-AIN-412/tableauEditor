@@ -22,13 +22,14 @@
 	display: inline-flex;
 }
 
-.formula > .beta > .formula {
+.beta > .formula {
 	display: inline-block;
-	width: 50%;
+	min-width: 20px;
+	flex-grow: 1;
 }
 
 .formulaId {
-	width: 20px;
+	width: 10px;
 }
 
 .formulaInput {
@@ -36,11 +37,24 @@
 	width: calc(100% - 80px);
 }
 
-.formulaReference {
-	width: 20px;
+.formulaInputSubst {
+	flex-grow: 1;
+	width: calc(100% - 300px);
 }
 
-.formulaInput, .formulaReference {
+.substitutedVariable {
+	width: 30px;
+}
+
+.substitutedConstant {
+	width: 80px;
+}
+
+.formulaReference {
+	width: 11px;
+}
+
+.formulaInput, .formulaReference .formulaInputSubst {
 	text-align: center;
 	background-color: inherit;
 	border: 0;

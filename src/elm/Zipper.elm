@@ -3,6 +3,7 @@ module Zipper exposing (..)
 import Tableau exposing (..)
 import Debug exposing (log)
 import Formula
+import Dict
 
 
 --crumb hovori o tom, kto je podo mnou
@@ -12,6 +13,8 @@ type Crumb
     = AlphaCrumb Node
     | BetaLeftCrumb Node Tableau
     | BetaRightCrumb Node Tableau
+    | GammaCrumb Node Tableau.Substitution
+    | DeltaCrumb Node Tableau.Substitution
 
 
 type alias BreadCrumbs =
@@ -46,12 +49,24 @@ children z =
             Beta _ _ ->
                 [ left z, right z ]
 
+            Gamma _ _ ->
+                [ down z ]
+
+            Delta _ _ ->
+                [ down z ]
+
 
 down : Zipper -> Zipper
 down ( t, bs ) =
     case t.ext of
         Alpha subt ->
             ( subt, (AlphaCrumb t.node) :: bs )
+
+        Gamma subtableau substitution ->
+            ( subtableau, (GammaCrumb t.node substitution) :: bs )
+
+        Delta subtableau substitution ->
+            ( subtableau, (DeltaCrumb t.node substitution) :: bs )
 
         _ ->
             ( t, bs )
@@ -92,6 +107,12 @@ up ( t, bs ) =
 
         (BetaRightCrumb n tl) :: bss ->
             ( Tableau n (Beta tl t), bss )
+
+        (GammaCrumb n subst) :: bss ->
+            ( Tableau n (Gamma t subst), bss )
+
+        (DeltaCrumb n subst) :: bss ->
+            ( Tableau n (Delta t subst), bss )
 
         [] ->
             ( t, bs )
@@ -136,6 +157,19 @@ zNode z =
     (zTableau z).node
 
 
+zSubstitution : Zipper -> Maybe Tableau.Substitution
+zSubstitution (( t, bs ) as z) =
+    case t.ext of
+        Gamma node subs ->
+            Just subs
+
+        Delta node subs ->
+            Just subs
+
+        _ ->
+            Nothing
+
+
 
 -- "Aplikuje" funkciu f na kazdy vrchol v zipperi
 
@@ -154,6 +188,12 @@ zWalkPost f (( t, bs ) as z) =
 
         Beta tl tr ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
+
+        Gamma t subst ->
+            z |> down |> zWalkPost f |> up |> f
+
+        Delta t subst ->
+            z |> down |> zWalkPost f |> up |> f
 
 
 fixRefs : Zipper -> Zipper
@@ -255,6 +295,26 @@ renumber2 tableau num =
             in
                 ( (Tableau { node | id = num + 1 } (Beta new_left new_right)), num2 )
 
+        Gamma t subst ->
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 t (num + 1)
+
+                node =
+                    tableau.node
+            in
+                ( Tableau { node | id = num + 1 } (Gamma new_tableau subst), num1 )
+
+        Delta t subst ->
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 t (num + 1)
+
+                node =
+                    tableau.node
+            in
+                ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
+
         _ ->
             ( tableau, num )
 
@@ -298,6 +358,22 @@ getRef ref z =
             |> Result.toMaybe
             |> Maybe.andThen ((flip findAbove) z)
     }
+
+
+getReffed : Ref -> Zipper -> Maybe Zipper
+getReffed r z =
+    r.up
+        |> Maybe.map ((flip above) z)
+
+
+setPair : Int -> Ref -> Ref -> Ref -> ( Ref, Ref )
+setPair which ref r1 r2 =
+    case which of
+        0 ->
+            ( ref, r2 )
+
+        _ ->
+            ( r1, ref )
 
 
 
@@ -350,6 +426,34 @@ extendBeta z =
             )
 
 
+extendGamma : Zipper -> Zipper
+extendGamma z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau tableau.node (Gamma (Tableau defNode Open) defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+
+
+extendDelta : Zipper -> Zipper
+extendDelta z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau tableau.node (Delta (Tableau defNode Open) defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+
+
 delete : Zipper -> Zipper
 delete z =
     modifyNode (\tableau -> Tableau defNode Open) z
@@ -362,6 +466,72 @@ makeClosed z =
             case tableau.ext of
                 Open ->
                     Tableau tableau.node (Closed defRef defRef)
+
+                _ ->
+                    tableau
+        )
+        z
+
+
+setClosed : Int -> String -> Zipper -> Zipper
+setClosed which newRefStr z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Closed r1 r2 ->
+                    let
+                        newRef =
+                            (setPair which (z |> getRef newRefStr) r1 r2)
+                    in
+                        Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
+
+                _ ->
+                    tableau
+        )
+        z
+
+
+makeOpen : Zipper -> Zipper
+makeOpen z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Closed _ _ ->
+                    Tableau tableau.node Open
+
+                _ ->
+                    tableau
+        )
+        z
+
+
+changeVariable : String -> Zipper -> Zipper
+changeVariable newVariable z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Gamma t subs ->
+                    Tableau tableau.node (Gamma t { subs | what = newVariable })
+
+                Delta t subs ->
+                    Tableau tableau.node (Delta t { subs | what = newVariable })
+
+                _ ->
+                    tableau
+        )
+        z
+
+
+changeTerm : String -> Zipper -> Zipper
+changeTerm newTerm z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Gamma t subs ->
+                    Tableau tableau.node (Gamma t { subs | forWhat = newTerm })
+
+                Delta t subs ->
+                    Tableau tableau.node (Delta t { subs | forWhat = newTerm })
 
                 _ ->
                     tableau

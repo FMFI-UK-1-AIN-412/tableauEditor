@@ -10,6 +10,8 @@ import Rules exposing (..)
 import Errors
 import Formula
 import Helper
+import Validate
+import Dict
 
 
 main : Program Never Model Msg
@@ -50,6 +52,12 @@ type Msg
     | ExpandBeta Zipper.Zipper
     | Delete Zipper.Zipper
     | MakeClosed Zipper.Zipper
+    | SetClosed Int Zipper.Zipper String
+    | MakeOpen Zipper.Zipper
+    | ExpandGamma Zipper.Zipper
+    | ExpandDelta Zipper.Zipper
+    | ChangeVariable Zipper.Zipper String
+    | ChangeTerm Zipper.Zipper String
 
 
 top : Zipper.Zipper -> Tableau
@@ -75,6 +83,12 @@ update msg model =
             ExpandBeta z ->
                 ( { model | tableau = (z |> Zipper.extendBeta |> topRenumbered) }, Cmd.none )
 
+            ExpandGamma z ->
+                ( { model | tableau = (z |> Zipper.extendGamma |> topRenumbered) }, Cmd.none )
+
+            ExpandDelta z ->
+                ( { model | tableau = (z |> Zipper.extendDelta |> topRenumbered) }, Cmd.none )
+
             ChangeRef z new ->
                 ( { model | tableau = (z |> Zipper.setRef new |> top) }, Cmd.none )
 
@@ -83,6 +97,18 @@ update msg model =
 
             MakeClosed z ->
                 ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
+
+            SetClosed which z ref ->
+                ( { model | tableau = (z |> Zipper.setClosed which ref |> top) }, Cmd.none )
+
+            MakeOpen z ->
+                ( { model | tableau = (z |> Zipper.makeOpen |> top) }, Cmd.none )
+
+            ChangeVariable z newVariable ->
+                ( { model | tableau = ((Zipper.up z) |> (Zipper.changeVariable newVariable) |> top) }, Cmd.none )
+
+            ChangeTerm z newTerm ->
+                ( { model | tableau = ((Zipper.up z) |> (Zipper.changeTerm newTerm) |> top) }, Cmd.none )
         )
 
 
@@ -90,6 +116,7 @@ view : Model -> Html Msg
 view model =
     div [ class "tableau" ]
         [ viewNode (Zipper.zipper model.tableau)
+        , problems model.tableau
         , Rules.help
         ]
 
@@ -129,6 +156,60 @@ viewNode z =
             ]
 
 
+viewSubsNode : Zipper.Zipper -> Html Msg
+viewSubsNode z =
+    let
+        ( tableau, bs ) =
+            z
+    in
+        div
+            [ class "formula" ]
+            [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
+            , input
+                [ classList
+                    [ ( "formulaInputSubst", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , value (Zipper.zNode z).value
+                , type_ "text"
+                , onInput <| ChangeText z
+                ]
+                []
+            , text "Substituting"
+            , input
+                [ classList
+                    [ ( "substitutedVariable", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+                , type_ "text"
+                , onInput <| ChangeVariable z
+                ]
+                []
+            , text "for"
+            , input
+                [ classList
+                    [ ( "substitutedConstant", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
+                , type_ "text"
+                , onInput <| ChangeTerm z
+                ]
+                []
+            , text "["
+            , input
+                [ class "formulaReference"
+                , value (Zipper.zNode z).reference.str
+                , onInput <| ChangeRef z
+                ]
+                []
+            , text "]"
+            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+            , viewChildren z
+            ]
+
+
 viewChildren : Zipper.Zipper -> Html Msg
 viewChildren z =
     case (Zipper.zTableau z).ext of
@@ -136,13 +217,19 @@ viewChildren z =
             viewOpen z
 
         Tableau.Closed r1 r2 ->
-            div [] [ text "*" ]
+            viewClosed z
 
         Tableau.Alpha t ->
             viewAlpha z
 
         Tableau.Beta lt rt ->
             viewBeta z
+
+        Tableau.Gamma t subs ->
+            viewGamma z
+
+        Tableau.Delta t subs ->
+            viewDelta z
 
 
 viewAlpha : Zipper.Zipper -> Html Msg
@@ -158,15 +245,30 @@ viewBeta z =
         ]
 
 
+viewGamma : Zipper.Zipper -> Html Msg
+viewGamma z =
+    div [ class "gamma" ] [ viewSubsNode (Zipper.down z) ]
+
+
+viewDelta : Zipper.Zipper -> Html Msg
+viewDelta z =
+    div [ class "delta" ] [ viewSubsNode (Zipper.down z) ]
+
+
 viewOpen : Zipper.Zipper -> Html Msg
 viewOpen z =
     div [ class "open" ]
-        [ expandControls z
+        [ viewControls z
         ]
 
 
-expandControls : Zipper.Zipper -> Html Msg
-expandControls z =
+viewClosed : Zipper.Zipper -> Html Msg
+viewClosed z =
+    div [ class "open" ] [ viewControls z ]
+
+
+viewControls : Zipper.Zipper -> Html Msg
+viewControls z =
     let
         ( t, bs ) =
             z
@@ -176,15 +278,102 @@ expandControls z =
                 Tableau.Open ->
                     [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
                     , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                    , button [ onClick (ExpandGamma z) ] [ text "γ" ]
+                    , button [ onClick (ExpandDelta z) ] [ text "δ" ]
                     , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
                     ]
 
                 Tableau.Alpha _ ->
                     []
 
+                Tableau.Gamma _ _ ->
+                    []
+
+                Tableau.Delta _ _ ->
+                    []
+
                 Tableau.Beta _ _ ->
                     []
 
-                Tableau.Closed _ _ ->
-                    []
+                Tableau.Closed r1 r2 ->
+                    let
+                        compl =
+                            Errors.errors <| Validate.areCloseRefsComplementary r1 r2 z
+
+                        ref1Cls =
+                            problemsClass <| (Validate.validateRef "Invalid close ref. #1" r1 z) ++ compl
+
+                        ref2Cls =
+                            problemsClass <| (Validate.validateRef "Invalid close ref. #1" r2 z) ++ compl
+                    in
+                        [ text "* "
+                        , input
+                            [ class ("refEdit " ++ ref1Cls)
+                            , type_ "text"
+                            , placeholder "Ref"
+                            , size 1
+                            , value r1.str
+                            , onInput <| SetClosed 0 z
+                            ]
+                            []
+                        , input
+                            [ class ("refEdit " ++ ref2Cls)
+                            , type_ "text"
+                            , placeholder "Ref"
+                            , size 1
+                            , value r2.str
+                            , onInput <| SetClosed 1 z
+                            ]
+                            []
+                        , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+                        ]
             )
+
+
+problems : Tableau -> Html Msg
+problems t =
+    let
+        errors =
+            Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
+    in
+        if List.isEmpty errors then
+            div [ class "problems" ] []
+        else
+            div [ class "problems" ]
+                [ p [] [ text "Problems" ]
+                , problemList <| errors
+                ]
+
+
+problemList : List Validate.Problem -> Html Msg
+problemList pl =
+    ul [ class "problemList" ] (List.map problemItem pl)
+
+
+problemItem : Validate.Problem -> Html Msg
+problemItem pi =
+    li [ class (problemClass pi) ]
+        [ text "("
+        , text <| toString <| .id <| Zipper.zNode <| pi.zip
+        , text ") "
+        , text <| pi.msg
+        ]
+
+
+problemsClass : List Validate.Problem -> String
+problemsClass pl =
+    case pl of
+        [] ->
+            ""
+
+        p :: _ ->
+            problemClass p
+
+
+problemClass { typ } =
+    case typ of
+        Validate.Syntax ->
+            "syntaxProblem"
+
+        Validate.Semantics ->
+            "semanticsProblem"
