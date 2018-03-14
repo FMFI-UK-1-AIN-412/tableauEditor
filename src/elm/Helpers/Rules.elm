@@ -30,12 +30,20 @@ betas =
     ]
 
 
+fG =
+    Atom "P" [ Var "x" ]
+
+
+fD =
+    Atom "P" [ Var "x" ]
+
+
 gammas =
-    [ F (ForAll "x" fA), T (Exists "x" fB) ]
+    [ F (ForAll "x" fG), T (Exists "x" fD) ]
 
 
 deltas =
-    [ T (ForAll "x" fA), F (Exists "x" fB) ]
+    [ T (ForAll "x" fD), F (Exists "x" fD) ]
 
 
 renderAlpha : Signed Formula -> Html msg
@@ -125,9 +133,9 @@ To write first order logic terms use '∀', '\\A', '\\forall', '\\a' and '∃', 
         , h3 [] [ text "β-rules" ]
         , div [] (List.map renderBeta betas)
         , h3 [] [ text "γ-rules" ]
-        , div [] (List.map renderGamma gammas)
-        , h3 [] [ text "δ-rules" ]
         , div [] (List.map renderDelta deltas)
+        , h3 [] [ text "δ-rules" ]
+        , div [] (List.map renderGamma gammas)
         ]
 
 

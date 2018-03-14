@@ -5,6 +5,7 @@ import Formula
 import Parser
 import Errors
 import Zipper
+import Dict
 
 
 type ProblemType
@@ -19,10 +20,12 @@ type alias Problem =
     }
 
 
+syntaxProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
 syntaxProblem z s =
     [ { typ = Syntax, msg = s, zip = z } ]
 
 
+semanticsProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
 semanticsProblem z s =
     [ { typ = Semantics, msg = s, zip = z } ]
 
@@ -102,10 +105,12 @@ isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
 
 
+isValidNodeRef : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 isValidNodeRef z =
     isValidRef "The" (Zipper.zNode z).reference z
 
 
+areValidCloseRefs : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 areValidCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -117,6 +122,7 @@ areValidCloseRefs z =
             Ok z
 
 
+isValidRef : String -> { a | up : Maybe b } -> c -> Result (List { msg : String, typ : ProblemType, zip : c }) c
 isValidRef str r z =
     r.up
         |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
@@ -147,6 +153,7 @@ validateReffedFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (\e -> semanticsProblem z "Referenced formula is invalid")
 
 
+validateRef : b -> { c | up : Maybe a } -> d -> List { msg : b, typ : ProblemType, zip : d }
 validateRef str r z =
     case r.up of
         Nothing ->
@@ -156,6 +163,7 @@ validateRef str r z =
             []
 
 
+validateNodeRef : Zipper.Zipper -> List { msg : String, typ : ProblemType, zip : Zipper.Zipper }
 validateNodeRef z =
     validateRef "Invalid reference" (Zipper.zNode z).reference z
 
@@ -215,6 +223,7 @@ isCorrectRule (( t, bs ) as z) =
 -- Top of the tableau, this must be a premise
 
 
+makeSemantic : List { b | typ : a } -> List { b | typ : ProblemType }
 makeSemantic =
     List.map (\p -> { p | typ = Semantics })
 
@@ -230,7 +239,7 @@ resultFromBool a x b =
 
 {- Check the value using a predicate.
    Pass the value along if predicate returns true,
-   return the give error otherwise
+   return the given error otherwise
 -}
 
 
@@ -264,10 +273,12 @@ validateAlphaRule z =
         |> Result.map (always z)
 
 
+validateBetaRuleLeft : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 validateBetaRuleLeft z =
     validateBeta z (z |> Zipper.up |> Zipper.right)
 
 
+validateBetaRuleRight : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 validateBetaRuleRight z =
     validateBeta z (z |> Zipper.up |> Zipper.left)
 
@@ -321,6 +332,29 @@ betasHaveSameRef this other =
                 (resultFromBool this (semanticsProblem this "β references are not the same"))
 
 
+getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
+getTermFromResult r =
+    case r of
+        Ok term ->
+            term
+
+        Err err ->
+            Formula.Var "x"
+
+
+makeS : Tableau.Substitution -> Formula.Substitution
+makeS subs =
+    let
+        newTerm =
+            subs.forWhat |> Formula.parseTerm |> getTermFromResult
+    in
+        Debug.log "makeS"
+            (Dict.fromList [ ( subs.what, newTerm ) ])
+
+
+validateGammaRule :
+    Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 validateGammaRule z =
     Zipper.getReffed (Zipper.zNode z).reference z
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
@@ -331,7 +365,7 @@ validateGammaRule z =
             )
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
-            (checkPredicate (uncurry Formula.isSignedSubformulaOf)
+            (checkPredicate (uncurry (Formula.substitutionIsValid (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map makeS |> Maybe.withDefault (Dict.fromList []))))
                 (semanticsProblem z
                     ("Is not an γ-subformula of ("
                         ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)

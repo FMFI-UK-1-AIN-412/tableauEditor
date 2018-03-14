@@ -3,7 +3,6 @@ module Editor exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Parser
 import Tableau exposing (..)
 import Zipper exposing (..)
 import Rules exposing (..)
@@ -11,7 +10,6 @@ import Errors
 import Formula
 import Helper
 import Validate
-import Dict
 
 
 main : Program Never Model Msg
@@ -181,7 +179,7 @@ viewSubsNode z =
                     [ ( "substitutedVariable", True )
                     , ( "semanticsProblem", Helper.hasReference z )
                     ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
                 , type_ "text"
                 , onInput <| ChangeVariable z
                 ]
@@ -192,7 +190,7 @@ viewSubsNode z =
                     [ ( "substitutedConstant", True )
                     , ( "semanticsProblem", Helper.hasReference z )
                     ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
                 , type_ "text"
                 , onInput <| ChangeTerm z
                 ]

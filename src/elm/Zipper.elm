@@ -387,6 +387,8 @@ setFormula text =
             let
                 oldNode =
                     tableau.node
+
+                -- substitute here
             in
                 { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
         )
@@ -511,10 +513,10 @@ changeVariable newVariable z =
         (\tableau ->
             case tableau.ext of
                 Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | what = newVariable })
+                    Tableau tableau.node (Gamma t { subs | forWhat = newVariable })
 
                 Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | what = newVariable })
+                    Tableau tableau.node (Delta t { subs | forWhat = newVariable })
 
                 _ ->
                     tableau
@@ -528,10 +530,10 @@ changeTerm newTerm z =
         (\tableau ->
             case tableau.ext of
                 Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | forWhat = newTerm })
+                    Tableau tableau.node (Gamma t { subs | what = newTerm })
 
                 Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | forWhat = newTerm })
+                    Tableau tableau.node (Delta t { subs | what = newTerm })
 
                 _ ->
                     tableau
