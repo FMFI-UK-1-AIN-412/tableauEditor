@@ -339,17 +339,16 @@ getTermFromResult r =
             term
 
         Err err ->
-            Formula.Var "x"
+            Formula.Var "default"
 
 
 makeS : Tableau.Substitution -> Formula.Substitution
 makeS subs =
     let
         newTerm =
-            subs.forWhat |> Formula.parseTerm |> getTermFromResult
+            subs.what |> Formula.parseTerm |> getTermFromResult
     in
-        Debug.log "makeS"
-            (Dict.fromList [ ( subs.what, newTerm ) ])
+        Dict.fromList [ ( subs.forWhat, newTerm ) ]
 
 
 validateGammaRule :

@@ -179,9 +179,9 @@ viewSubsNode z =
                     [ ( "substitutedVariable", True )
                     , ( "semanticsProblem", Helper.hasReference z )
                     ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
                 , type_ "text"
-                , onInput <| ChangeVariable z
+                , onInput <| ChangeTerm z
                 ]
                 []
             , text "for"
@@ -190,9 +190,9 @@ viewSubsNode z =
                     [ ( "substitutedConstant", True )
                     , ( "semanticsProblem", Helper.hasReference z )
                     ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
                 , type_ "text"
-                , onInput <| ChangeTerm z
+                , onInput <| ChangeVariable z
                 ]
                 []
             , text "["

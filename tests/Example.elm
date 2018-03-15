@@ -7,6 +7,8 @@ import Zipper exposing (..)
 import Tableau exposing (..)
 import Editor exposing (topRenumbered)
 import Formula
+import Validate
+import Dict
 
 
 passedTest : Test
@@ -335,8 +337,40 @@ gammaExampleResult =
                     }
                 , ext = Open
                 }
-                { what = "x", forWhat = "" }
+                { what = "", forWhat = "x" }
         }
+
+
+validateGammaExample =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x)"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T P(k)"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T P(k)"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
+getValueFromResult : Result x a -> Maybe a
+getValueFromResult r =
+    case r of
+        Ok a ->
+            Just a
+
+        Err err ->
+            Nothing
 
 
 suiteZipper : Test
@@ -371,6 +405,32 @@ suiteZipper =
             (\() ->
                 compareZippers gammaExampleResult
                     (zipperExample |> Zipper.extendGamma |> Zipper.changeVariable "x")
+            )
+        , test "substitution in gamma simple"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaExample
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaExample
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaExample
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
             )
         ]
 
