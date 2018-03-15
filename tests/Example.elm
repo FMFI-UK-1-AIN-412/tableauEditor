@@ -341,7 +341,17 @@ gammaExampleResult =
         }
 
 
-validateGammaExample =
+getValueFromResult : Result x a -> Maybe a
+getValueFromResult r =
+    case r of
+        Ok a ->
+            Just a
+
+        Err err ->
+            Nothing
+
+
+validateGammaSimple =
     zipper
         { node =
             { id = 1
@@ -363,14 +373,136 @@ validateGammaExample =
         }
 
 
-getValueFromResult : Result x a -> Maybe a
-getValueFromResult r =
-    case r of
-        Ok a ->
-            Just a
+validateGammaSimpleDisjunction =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x (P(x) | P(z))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x (P(x) | P(z))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T (P(k) | P(z))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T (P(k) | P(z))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
 
-        Err err ->
-            Nothing
+
+validateGammaSimpleDisjunction2 =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x (P(x) | R(x))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x (P(x) | R(x))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T (P(k) | R(k))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T (P(k) | R(k))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
+validateGammaBinaryWithInnerQuantifier =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x (P(x) | \\forall z P(z))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x (P(x) | \\forall z P(z))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T (P(k) | \\forall z P(z))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T (P(k) | \\forall z P(z))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
+validateGammaWithNonStartingVariable =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall z (P(x) | \\forall x P(x))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall z (P(x) | \\forall x P(x))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T \\forall z (P(k) | \\forall x P(k))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T \\forall z (P(k) | \\forall x P(k))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
+validateGammaExistingVariable =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall z (P(z) | P(k))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall z (P(z) | P(k))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T (P(k) | P(k))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T (P(k) | P(k))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "z" }
+        }
+
+
+validateGammaQuantifiedSameVariable =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x (P(x) | \\forall x R(x))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x (P(x) | \\forall x R(x))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T (P(k) | \\forall x R(k))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T (P(k) | \\forall x R(k))"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
 
 
 suiteZipper : Test
@@ -410,20 +542,20 @@ suiteZipper =
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
-                        (validateGammaExample
+                        (validateGammaSimple
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map Validate.makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                        (validateGammaExample
+                        (validateGammaSimple
                             |> down
                             |> zNode
                             |> .formula
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
-                        (validateGammaExample
+                        (validateGammaSimple
                             |> zNode
                             |> .formula
                             |> getValueFromResult
@@ -431,6 +563,162 @@ suiteZipper =
                         )
                     )
                     True
+            )
+        , test "substitution in gamma simple disjunction"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaSimpleDisjunction
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaSimpleDisjunction
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaSimpleDisjunction
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
+            )
+        , test "substitution in gamma simple disjunction 2"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaSimpleDisjunction2
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaSimpleDisjunction2
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaSimpleDisjunction2
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
+            )
+        , test "substitution in gamma with inner quantifier"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaBinaryWithInnerQuantifier
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaBinaryWithInnerQuantifier
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaBinaryWithInnerQuantifier
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
+            )
+        , test "substitution in gamma with bad quantified variable in the start of string"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaWithNonStartingVariable
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaWithNonStartingVariable
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaWithNonStartingVariable
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma with existing variable"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaExistingVariable
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaExistingVariable
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaExistingVariable
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma with variable quantified more times"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaQuantifiedSameVariable
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaQuantifiedSameVariable
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaQuantifiedSameVariable
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
             )
         ]
 
