@@ -669,6 +669,7 @@ suiteZipper =
                     False
             )
         , test "substitution in gamma with existing variable"
+            -- nema mi toto vyhubovat este pri pisani tej formuly?
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
@@ -695,6 +696,7 @@ suiteZipper =
                     False
             )
         , test "substitution in gamma with variable quantified more times"
+            -- nema mi toto vyhubovat este pri pisani tej formuly?
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
