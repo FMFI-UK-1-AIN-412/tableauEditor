@@ -1,15 +1,15 @@
 module Editor exposing (..)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Tableau exposing (..)
-import Zipper exposing (..)
-import Rules exposing (..)
 import Errors
 import Formula
 import Helper
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Rules exposing (..)
+import Tableau exposing (..)
 import Validate
+import Zipper exposing (..)
 
 
 main : Program Never Model Msg
@@ -73,40 +73,40 @@ update msg model =
     Debug.log "model"
         (case msg of
             ChangeText z new ->
-                ( { model | tableau = (z |> Zipper.setFormula new |> top) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.setFormula new |> top }, Cmd.none )
 
             ExpandAlpha z ->
-                ( { model | tableau = (z |> Zipper.extendAlpha |> topRenumbered) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.extendAlpha |> topRenumbered }, Cmd.none )
 
             ExpandBeta z ->
-                ( { model | tableau = (z |> Zipper.extendBeta |> topRenumbered) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.extendBeta |> topRenumbered }, Cmd.none )
 
             ExpandGamma z ->
-                ( { model | tableau = (z |> Zipper.extendGamma |> topRenumbered) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.extendGamma |> topRenumbered }, Cmd.none )
 
             ExpandDelta z ->
-                ( { model | tableau = (z |> Zipper.extendDelta |> topRenumbered) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.extendDelta |> topRenumbered }, Cmd.none )
 
             ChangeRef z new ->
-                ( { model | tableau = (z |> Zipper.setRef new |> top) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.setRef new |> top }, Cmd.none )
 
             Delete z ->
-                ( { model | tableau = (z |> Zipper.delete |> topRenumbered) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.delete |> topRenumbered }, Cmd.none )
 
             MakeClosed z ->
-                ( { model | tableau = (z |> Zipper.makeClosed |> top) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.makeClosed |> top }, Cmd.none )
 
             SetClosed which z ref ->
-                ( { model | tableau = (z |> Zipper.setClosed which ref |> top) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.setClosed which ref |> top }, Cmd.none )
 
             MakeOpen z ->
-                ( { model | tableau = (z |> Zipper.makeOpen |> top) }, Cmd.none )
+                ( { model | tableau = z |> Zipper.makeOpen |> top }, Cmd.none )
 
             ChangeVariable z newVariable ->
-                ( { model | tableau = ((Zipper.up z) |> (Zipper.changeVariable newVariable) |> top) }, Cmd.none )
+                ( { model | tableau = Zipper.up z |> Zipper.changeVariable newVariable |> top }, Cmd.none )
 
             ChangeTerm z newTerm ->
-                ( { model | tableau = ((Zipper.up z) |> (Zipper.changeTerm newTerm) |> top) }, Cmd.none )
+                ( { model | tableau = Zipper.up z |> Zipper.changeTerm newTerm |> top }, Cmd.none )
         )
 
 
@@ -125,33 +125,33 @@ viewNode z =
         ( tableau, bs ) =
             z
     in
-        div
-            [ class "formula" ]
-            [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
-            , input
-                [ classList
-                    [ ( "formulaInput", True )
-                    , ( "premise", Helper.isPremise z )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , value (Zipper.zNode z).value
-                , type_ "text"
-                , onInput <| ChangeText z
+    div
+        [ class "formula" ]
+        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
+        , input
+            [ classList
+                [ ( "formulaInput", True )
+                , ( "premise", Helper.isPremise z )
+                , ( "semanticsProblem", Helper.hasReference z )
                 ]
-                []
-            , text "["
-            , input
-                [ class "formulaReference"
-                , value (Zipper.zNode z).reference.str
-                , onInput <| ChangeRef z
-
-                --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
-                ]
-                []
-            , text "]"
-            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
-            , viewChildren z
+            , value (Zipper.zNode z).value
+            , type_ "text"
+            , onInput <| ChangeText z
             ]
+            []
+        , text "["
+        , input
+            [ class "formulaReference"
+            , value (Zipper.zNode z).reference.str
+            , onInput <| ChangeRef z
+
+            --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
+            ]
+            []
+        , text "]"
+        , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewChildren z
+        ]
 
 
 viewSubsNode : Zipper.Zipper -> Html Msg
@@ -160,52 +160,52 @@ viewSubsNode z =
         ( tableau, bs ) =
             z
     in
-        div
-            [ class "formula" ]
-            [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
-            , input
-                [ classList
-                    [ ( "formulaInputSubst", True )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , value (Zipper.zNode z).value
-                , type_ "text"
-                , onInput <| ChangeText z
+    div
+        [ class "formula" ]
+        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
+        , input
+            [ classList
+                [ ( "formulaInputSubst", True )
+                , ( "semanticsProblem", Helper.hasReference z )
                 ]
-                []
-            , text "Substituting"
-            , input
-                [ classList
-                    [ ( "substitutedVariable", True )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
-                , type_ "text"
-                , onInput <| ChangeTerm z
-                ]
-                []
-            , text "for"
-            , input
-                [ classList
-                    [ ( "substitutedConstant", True )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
-                , type_ "text"
-                , onInput <| ChangeVariable z
-                ]
-                []
-            , text "["
-            , input
-                [ class "formulaReference"
-                , value (Zipper.zNode z).reference.str
-                , onInput <| ChangeRef z
-                ]
-                []
-            , text "]"
-            , button [ class "delete", onClick (Delete z) ] [ text "x" ]
-            , viewChildren z
+            , value (Zipper.zNode z).value
+            , type_ "text"
+            , onInput <| ChangeText z
             ]
+            []
+        , text "Substituting"
+        , input
+            [ classList
+                [ ( "substitutedVariable", True )
+                , ( "semanticsProblem", Helper.hasReference z )
+                ]
+            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+            , type_ "text"
+            , onInput <| ChangeTerm z
+            ]
+            []
+        , text "for"
+        , input
+            [ classList
+                [ ( "substitutedConstant", True )
+                , ( "semanticsProblem", Helper.hasReference z )
+                ]
+            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
+            , type_ "text"
+            , onInput <| ChangeVariable z
+            ]
+            []
+        , text "["
+        , input
+            [ class "formulaReference"
+            , value (Zipper.zNode z).reference.str
+            , onInput <| ChangeRef z
+            ]
+            []
+        , text "]"
+        , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewChildren z
+        ]
 
 
 viewChildren : Zipper.Zipper -> Html Msg
@@ -271,61 +271,61 @@ viewControls z =
         ( t, bs ) =
             z
     in
-        div [ class "expandControls" ]
-            (case t.ext of
-                Tableau.Open ->
-                    [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
-                    , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                    , button [ onClick (ExpandGamma z) ] [ text "γ" ]
-                    , button [ onClick (ExpandDelta z) ] [ text "δ" ]
-                    , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
+    div [ class "expandControls" ]
+        (case t.ext of
+            Tableau.Open ->
+                [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+                , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                , button [ onClick (ExpandGamma z) ] [ text "γ" ]
+                , button [ onClick (ExpandDelta z) ] [ text "δ" ]
+                , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
+                ]
+
+            Tableau.Alpha _ ->
+                []
+
+            Tableau.Gamma _ _ ->
+                []
+
+            Tableau.Delta _ _ ->
+                []
+
+            Tableau.Beta _ _ ->
+                []
+
+            Tableau.Closed r1 r2 ->
+                let
+                    compl =
+                        Errors.errors <| Validate.areCloseRefsComplementary r1 r2 z
+
+                    ref1Cls =
+                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
+
+                    ref2Cls =
+                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r2 z ++ compl
+                in
+                [ text "* "
+                , input
+                    [ class ("refEdit " ++ ref1Cls)
+                    , type_ "text"
+                    , placeholder "Ref"
+                    , size 1
+                    , value r1.str
+                    , onInput <| SetClosed 0 z
                     ]
-
-                Tableau.Alpha _ ->
                     []
-
-                Tableau.Gamma _ _ ->
+                , input
+                    [ class ("refEdit " ++ ref2Cls)
+                    , type_ "text"
+                    , placeholder "Ref"
+                    , size 1
+                    , value r2.str
+                    , onInput <| SetClosed 1 z
+                    ]
                     []
-
-                Tableau.Delta _ _ ->
-                    []
-
-                Tableau.Beta _ _ ->
-                    []
-
-                Tableau.Closed r1 r2 ->
-                    let
-                        compl =
-                            Errors.errors <| Validate.areCloseRefsComplementary r1 r2 z
-
-                        ref1Cls =
-                            problemsClass <| (Validate.validateRef "Invalid close ref. #1" r1 z) ++ compl
-
-                        ref2Cls =
-                            problemsClass <| (Validate.validateRef "Invalid close ref. #1" r2 z) ++ compl
-                    in
-                        [ text "* "
-                        , input
-                            [ class ("refEdit " ++ ref1Cls)
-                            , type_ "text"
-                            , placeholder "Ref"
-                            , size 1
-                            , value r1.str
-                            , onInput <| SetClosed 0 z
-                            ]
-                            []
-                        , input
-                            [ class ("refEdit " ++ ref2Cls)
-                            , type_ "text"
-                            , placeholder "Ref"
-                            , size 1
-                            , value r2.str
-                            , onInput <| SetClosed 1 z
-                            ]
-                            []
-                        , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
-                        ]
-            )
+                , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+                ]
+        )
 
 
 problems : Tableau -> Html Msg
@@ -334,13 +334,13 @@ problems t =
         errors =
             Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
     in
-        if List.isEmpty errors then
-            div [ class "problems" ] []
-        else
-            div [ class "problems" ]
-                [ p [] [ text "Problems" ]
-                , problemList <| errors
-                ]
+    if List.isEmpty errors then
+        div [ class "problems" ] []
+    else
+        div [ class "problems" ]
+            [ p [] [ text "Problems" ]
+            , problemList <| errors
+            ]
 
 
 problemList : List Validate.Problem -> Html Msg
@@ -368,6 +368,7 @@ problemsClass pl =
             problemClass p
 
 
+problemClass : { a | typ : Validate.ProblemType } -> String
 problemClass { typ } =
     case typ of
         Validate.Syntax ->

@@ -1,24 +1,24 @@
 module Example exposing (..)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import Test exposing (..)
-import Zipper exposing (..)
-import Tableau exposing (..)
-import Editor exposing (topRenumbered)
-import Formula
-import Validate
 import Dict
+import Editor exposing (topRenumbered)
+import Expect exposing (Expectation)
+import Formula
+import Fuzz exposing (Fuzzer, int, list, string)
+import Tableau exposing (..)
+import Test exposing (..)
+import Validate
+import Zipper exposing (..)
 
 
 passedTest : Test
 passedTest =
-    test "this test always passes" (\() -> (Expect.equal True True))
+    test "this test always passes" (\() -> Expect.equal True True)
 
 
 passedTest1 : Test
 passedTest1 =
-    test "this test allways passes" (\() -> (Expect.notEqual True False))
+    test "this test allways passes" (\() -> Expect.notEqual True False)
 
 
 compareZippers : Zipper -> Zipper -> Expectation
@@ -505,11 +505,55 @@ validateGammaQuantifiedSameVariable =
         }
 
 
+validateGammaSubstituteForFunction =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(f(x))"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(f(x))"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T P(f(Diana))"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T P(f(Diana))"
+                    }
+                , ext = Open
+                }
+                { what = "Diana", forWhat = "x" }
+        }
+
+
+validateGammaTwoQuantifiersInTheBeginning =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x \\exists y P(x,y)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x \\exists y P(x,y)"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T \\exists y P(k,y)"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T \\exists y P(k,y)"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
 suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
-        [ test "compare simple zippers" (\() -> (compareZippers (zipper tableauExample) zipperExample))
-        , test "compare extended alpha" (\() -> (compareZippers (extendAlpha zipperExample) zipperWithAlpha))
+        [ test "compare simple zippers" (\() -> compareZippers (zipper tableauExample) zipperExample)
+        , test "compare extended alpha" (\() -> compareZippers (extendAlpha zipperExample) zipperWithAlpha)
         , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendAlpha zipperExample)) zipperWithAplhaDown)
         , test "compare zippers: extend alpha, go down, extend beta"
             (\() -> compareZippers (left (extendBeta (down (extendAlpha zipperExample)))) zipperWithAlphaDownBetaLeft)
@@ -669,7 +713,6 @@ suiteZipper =
                     False
             )
         , test "substitution in gamma with existing variable"
-            -- nema mi toto vyhubovat este pri pisani tej formuly?
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
@@ -696,7 +739,6 @@ suiteZipper =
                     False
             )
         , test "substitution in gamma with variable quantified more times"
-            -- nema mi toto vyhubovat este pri pisani tej formuly?
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
@@ -721,6 +763,58 @@ suiteZipper =
                         )
                     )
                     False
+            )
+        , test "substitution of function in gamma "
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaSubstituteForFunction
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaSubstituteForFunction
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaSubstituteForFunction
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
+            )
+        , test "substitution in gamma - two quantifiers in row in the beginning"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaTwoQuantifiersInTheBeginning
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaTwoQuantifiersInTheBeginning
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaTwoQuantifiersInTheBeginning
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    True
             )
         ]
 

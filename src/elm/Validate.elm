@@ -1,11 +1,11 @@
 module Validate exposing (..)
 
-import Tableau exposing (..)
+import Dict
+import Errors
 import Formula
 import Parser
-import Errors
+import Tableau exposing (..)
 import Zipper
-import Dict
 
 
 type ProblemType
@@ -50,14 +50,17 @@ error def r =
     ( lp ++ error [] (f z), z )
 
 
+second : a1 -> a2 -> a2
 second =
     curry Tuple.second
 
 
+always3 : a -> b -> c -> d -> a
 always3 r _ _ _ =
     r
 
 
+always2 : a -> b -> c -> a
 always2 r _ _ =
     r
 
@@ -86,7 +89,7 @@ isCorrectNode z =
     isValidNode z
         |> Result.andThen
             (\_ ->
-                Errors.merge2 (second)
+                Errors.merge2 second
                     (isCorrectRule z)
                     (areCorrectCloseRefs z)
             )
@@ -129,6 +132,9 @@ isValidRef str r z =
         |> Result.map (always z)
 
 
+areCorrectCloseRefs :
+    Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 areCorrectCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -168,6 +174,10 @@ validateNodeRef z =
     validateRef "Invalid reference" (Zipper.zNode z).reference z
 
 
+checkFormula :
+    String
+    -> Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) (Formula.Signed Formula.Formula)
 checkFormula str z =
     z
         |> Zipper.zNode
@@ -183,6 +193,11 @@ checkReffedFormula str r z =
         |> Result.andThen (checkFormula (str ++ " referenced formula"))
 
 
+areCloseRefsComplementary :
+    Ref
+    -> Ref
+    -> Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 areCloseRefsComplementary r1 r2 z =
     Errors.merge2 Formula.isSignedComplementary
         (checkReffedFormula "First close" r1 z)
@@ -190,6 +205,9 @@ areCloseRefsComplementary r1 r2 z =
         |> Result.andThen (resultFromBool z (semanticsProblem z "Closing formulas are not complementary."))
 
 
+isCorrectRule :
+    ( Tableau, Zipper.BreadCrumbs )
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 isCorrectRule (( t, bs ) as z) =
     case t.node.reference.up of
         Just 0 ->
@@ -210,11 +228,9 @@ isCorrectRule (( t, bs ) as z) =
                 (Zipper.GammaCrumb _ _) :: _ ->
                     validateGammaRule z
 
-                --                    validateGammaRule z
                 (Zipper.DeltaCrumb _ _) :: _ ->
-                    Ok z
+                    validateDeltaRule z
 
-                --                    validateDeltaRule z
                 [] ->
                     Ok z
 
@@ -283,6 +299,10 @@ validateBetaRuleRight z =
     validateBeta z (z |> Zipper.up |> Zipper.left)
 
 
+validateBeta :
+    Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 validateBeta this other =
     let
         ft =
@@ -310,11 +330,15 @@ validateBeta this other =
                 |> Result.map Formula.signedSubformulas
                 |> Result.map (List.sortBy Formula.strSigned)
     in
-        Errors.merge2 (==) children reffed
-            |> Result.andThen (resultFromBool this (semanticsProblem this "Wrong β subformulas."))
-            |> Errors.merge2 (always2 this) (betasHaveSameRef this other)
+    Errors.merge2 (==) children reffed
+        |> Result.andThen (resultFromBool this (semanticsProblem this "Wrong β subformulas."))
+        |> Errors.merge2 (always2 this) (betasHaveSameRef this other)
 
 
+betasHaveSameRef :
+    Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 betasHaveSameRef this other =
     let
         -- The invalid refs will be reported already
@@ -327,9 +351,9 @@ betasHaveSameRef this other =
         ro =
             getRef other
     in
-        Errors.merge2 (==) rt ro
-            |> Result.andThen
-                (resultFromBool this (semanticsProblem this "β references are not the same"))
+    Errors.merge2 (==) rt ro
+        |> Result.andThen
+            (resultFromBool this (semanticsProblem this "β references are not the same"))
 
 
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
@@ -348,7 +372,7 @@ makeS subs =
         newTerm =
             subs.what |> Formula.parseTerm |> getTermFromResult
     in
-        Dict.fromList [ ( subs.forWhat, newTerm ) ]
+    Dict.fromList [ ( subs.forWhat, newTerm ) ]
 
 
 validateGammaRule :
@@ -367,6 +391,30 @@ validateGammaRule z =
             (checkPredicate (uncurry (Formula.substitutionIsValid (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map makeS |> Maybe.withDefault (Dict.fromList []))))
                 (semanticsProblem z
                     ("Is not an γ-subformula of ("
+                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ ")."
+                    )
+                )
+            )
+        |> Result.map (always z)
+
+
+validateDeltaRule :
+    Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+validateDeltaRule z =
+    Zipper.getReffed (Zipper.zNode z).reference z
+        |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
+        |> Result.andThen validateReffedFormula
+        |> Result.andThen
+            (checkPredicate Formula.isDelta
+                (semanticsProblem z "Referenced formula is not γ")
+            )
+        |> Result.map2 (,) (checkFormula "Formula" z)
+        |> Result.andThen
+            (checkPredicate (uncurry (Formula.substitutionIsValid (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map makeS |> Maybe.withDefault (Dict.fromList []))))
+                (semanticsProblem z
+                    ("Is not an δ-subformula of ("
                         ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
