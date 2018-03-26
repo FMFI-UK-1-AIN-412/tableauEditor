@@ -356,6 +356,21 @@ betasHaveSameRef this other =
             (resultFromBool this (semanticsProblem this "β references are not the same"))
 
 
+isSimilarFreeAbove : String -> Zipper.Zipper -> Bool
+isSimilarFreeAbove v z =
+    False
+
+
+isSimilarBoundAbove : String -> Zipper.Zipper -> Bool
+isSimilarBoundAbove v z =
+    False
+
+
+isNewVariableValid : String -> Zipper.Zipper -> Bool
+isNewVariableValid variable z =
+    isSimilarFreeAbove variable z && isSimilarBoundAbove variable z
+
+
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
 getTermFromResult r =
     case r of
@@ -388,15 +403,41 @@ validateGammaRule z =
             )
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
-            (checkPredicate (uncurry (Formula.substitutionIsValid (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map makeS |> Maybe.withDefault (Dict.fromList []))))
+            (checkPredicate
+                (uncurry
+                    (Formula.substitutionIsValid
+                        (z
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                    )
+                )
                 (semanticsProblem z
-                    ("Is not an γ-subformula of ("
+                    ("This isn't valid γ-subformula created by substitution from ("
                         ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
                 )
             )
         |> Result.map (always z)
+        |> Result.andThen
+            (checkPredicate
+                (isNewVariableValid
+                    (z
+                        |> Zipper.up
+                        |> Zipper.zSubstitution
+                        |> Maybe.map makeS
+                        |> Maybe.withDefault (Dict.fromList [])
+                        |> Dict.values
+                        |> List.head
+                        |> Maybe.withDefault (Formula.Var "default")
+                        |> Formula.strTerm
+                    )
+                )
+                (semanticsProblem z "Substituting variable was located above. Please choose another, not used yet.")
+            )
 
 
 validateDeltaRule :

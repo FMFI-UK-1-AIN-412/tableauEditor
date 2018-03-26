@@ -549,7 +549,7 @@ validateGammaTwoQuantifiersInTheBeginning =
         }
 
 
-validateGammaNewVariableSimilarAsBound =
+validateGammaNewVariableSimilarToBound =
     zipper
         { node =
             { id = 1
@@ -571,8 +571,134 @@ validateGammaNewVariableSimilarAsBound =
         }
 
 
+validateGammaNewVariableSimilarToExistingFree =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x, k)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    }
+                , ext =
+                    Gamma
+                        { node =
+                            { id = 3
+                            , value = "T \\exists p Z(p, f(k))"
+                            , reference = { str = "2", up = Just 1 }
+                            , formula = Formula.parseSigned "T \\exists p Z(p, f(k))"
+                            }
+                        , ext = Open
+                        }
+                        { what = "k", forWhat = "z" }
+                }
+        }
+
+
+validateGammaNewVariableSimilarToExistingFree2 =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x, k)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    }
+                , ext =
+                    Gamma
+                        { node =
+                            { id = 3
+                            , value = "T P(z, k)"
+                            , reference = { str = "1", up = Just 2 }
+                            , formula = Formula.parseSigned "T P(z, k)"
+                            }
+                        , ext = Open
+                        }
+                        { what = "z", forWhat = "x" }
+                }
+        }
+
+
+validateGammaNewVariableSimilarToExistingFree3 =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x, k)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    }
+                , ext =
+                    Gamma
+                        { node =
+                            { id = 3
+                            , value = "T \\exists p Z(p, f(k))"
+                            , reference = { str = "2", up = Just 1 }
+                            , formula = Formula.parseSigned "T \\exists p Z(p, f(k))"
+                            }
+                        , ext = Open
+                        }
+                        { what = "k", forWhat = "z" }
+                }
+        }
+
+
+validateGammaNewVariableSimilarToExistingFree4 =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x, k)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    }
+                , ext =
+                    Gamma
+                        { node =
+                            { id = 3
+                            , value = "T P(k, k)"
+                            , reference = { str = "1", up = Just 2 }
+                            , formula = Formula.parseSigned "T P(k, k)"
+                            }
+                        , ext = Open
+                        }
+                        { what = "k", forWhat = "x" }
+                }
+        }
+
+
 
 --TODO: nema vypisat chybu uz pri pisani tretej formuly?
+-- todo tests:
+-- extend on other than open
 
 
 validateParsingTheory =
@@ -603,10 +729,6 @@ validateParsingTheory =
                         }
                 }
         }
-
-
-
---validateGammaNewVariableSimilarToExistingAbove
 
 
 suiteZipper : Test
@@ -876,24 +998,134 @@ suiteZipper =
                     )
                     True
             )
-        , test "substitution in gamma - controll all free variables (above) 1"
+        , test "substitution in gamma - controll all bound variables"
             (\() ->
                 Expect.equal
                     (Formula.substitutionIsValid
-                        (validateGammaNewVariableSimilarAsBound
+                        (validateGammaNewVariableSimilarToBound
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map Validate.makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                        (validateGammaNewVariableSimilarAsBound
+                        (validateGammaNewVariableSimilarToBound
                             |> down
                             |> zNode
                             |> .formula
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
-                        (validateGammaNewVariableSimilarAsBound
+                        (validateGammaNewVariableSimilarToBound
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma - controll all free variables"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaNewVariableSimilarToExistingFree
+                            |> Zipper.down
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree
+                            |> down
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma - controll all free variables 2"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaNewVariableSimilarToExistingFree2
+                            |> Zipper.down
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree2
+                            |> down
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree2
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma - controll all free variables 3"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaNewVariableSimilarToExistingFree3
+                            |> Zipper.down
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree3
+                            |> down
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree3
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
+        , test "substitution in gamma - controll all free variables 4"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaNewVariableSimilarToExistingFree4
+                            |> Zipper.down
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree4
+                            |> down
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaNewVariableSimilarToExistingFree4
                             |> zNode
                             |> .formula
                             |> getValueFromResult
@@ -903,8 +1135,3 @@ suiteZipper =
                     False
             )
         ]
-
-
-
--- todo tests:
--- extend on other than open
