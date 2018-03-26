@@ -549,6 +549,66 @@ validateGammaTwoQuantifiersInTheBeginning =
         }
 
 
+validateGammaNewVariableSimilarAsBound =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x \\exists k P(k, x)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x \\exists k P(k, x)"
+            }
+        , ext =
+            Gamma
+                { node =
+                    { id = 2
+                    , value = "T \\exists k P(k, k)"
+                    , reference = { str = "1", up = Just 1 }
+                    , formula = Formula.parseSigned "T \\exists k P(k, k)"
+                    }
+                , ext = Open
+                }
+                { what = "k", forWhat = "x" }
+        }
+
+
+
+--TODO: nema vypisat chybu uz pri pisani tretej formuly?
+
+
+validateParsingTheory =
+    zipper
+        { node =
+            { id = 1
+            , value = "T \\forall x P(x, k)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    }
+                , ext =
+                    Alpha
+                        { node =
+                            { id = 3
+                            , value = "F \\exists k \\forall p L(k, f(p))"
+                            , reference = { str = "3", up = Just 0 }
+                            , formula = Formula.parseSigned "F \\exists k \\forall p L(k, f(p))"
+                            }
+                        , ext = Open
+                        }
+                }
+        }
+
+
+
+--validateGammaNewVariableSimilarToExistingAbove
+
+
 suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
@@ -816,10 +876,35 @@ suiteZipper =
                     )
                     True
             )
+        , test "substitution in gamma - controll all free variables (above) 1"
+            (\() ->
+                Expect.equal
+                    (Formula.substitutionIsValid
+                        (validateGammaNewVariableSimilarAsBound
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map Validate.makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                        (validateGammaNewVariableSimilarAsBound
+                            |> down
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                        (validateGammaNewVariableSimilarAsBound
+                            |> zNode
+                            |> .formula
+                            |> getValueFromResult
+                            |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
+                        )
+                    )
+                    False
+            )
         ]
 
 
 
 -- todo tests:
 -- extend on other than open
--- implementovat kvantifikatory

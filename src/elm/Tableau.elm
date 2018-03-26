@@ -1,8 +1,8 @@
 module Tableau exposing (..)
 
+import Dict
 import Formula
 import Parser
-import Dict
 
 
 type alias Tableau =
@@ -30,6 +30,7 @@ type Extension
     | Delta Tableau Substitution
 
 
+defSubstitution : { forWhat : String, what : String }
 defSubstitution =
     { what = "", forWhat = "" }
 
@@ -38,5 +39,11 @@ defRef =
     { str = "", up = Nothing }
 
 
+defNode :
+    { formula : Result Parser.Error (Formula.Signed Formula.Formula)
+    , id : number
+    , reference : { str : String, up : Maybe a }
+    , value : String
+    }
 defNode =
     { id = 1, value = "", reference = defRef, formula = Formula.parseSigned "" }

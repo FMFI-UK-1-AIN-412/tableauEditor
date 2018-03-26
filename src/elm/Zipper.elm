@@ -1,9 +1,8 @@
 module Zipper exposing (..)
 
-import Tableau exposing (..)
 import Debug exposing (log)
 import Formula
-import Dict
+import Tableau exposing (..)
 
 
 --crumb hovori o tom, kto je podo mnou
@@ -36,37 +35,37 @@ children z =
         ( t, bs ) =
             z
     in
-        case t.ext of
-            Open ->
-                []
+    case t.ext of
+        Open ->
+            []
 
-            Closed _ _ ->
-                []
+        Closed _ _ ->
+            []
 
-            Alpha _ ->
-                [ down z ]
+        Alpha _ ->
+            [ down z ]
 
-            Beta _ _ ->
-                [ left z, right z ]
+        Beta _ _ ->
+            [ left z, right z ]
 
-            Gamma _ _ ->
-                [ down z ]
+        Gamma _ _ ->
+            [ down z ]
 
-            Delta _ _ ->
-                [ down z ]
+        Delta _ _ ->
+            [ down z ]
 
 
 down : Zipper -> Zipper
 down ( t, bs ) =
     case t.ext of
         Alpha subt ->
-            ( subt, (AlphaCrumb t.node) :: bs )
+            ( subt, AlphaCrumb t.node :: bs )
 
         Gamma subtableau substitution ->
-            ( subtableau, (GammaCrumb t.node substitution) :: bs )
+            ( subtableau, GammaCrumb t.node substitution :: bs )
 
         Delta subtableau substitution ->
-            ( subtableau, (DeltaCrumb t.node substitution) :: bs )
+            ( subtableau, DeltaCrumb t.node substitution :: bs )
 
         _ ->
             ( t, bs )
@@ -76,7 +75,7 @@ right : Zipper -> Zipper
 right ( t, bs ) =
     case t.ext of
         Beta tl tr ->
-            ( tr, (BetaRightCrumb t.node tl) :: bs )
+            ( tr, BetaRightCrumb t.node tl :: bs )
 
         _ ->
             ( t, bs )
@@ -90,7 +89,7 @@ left : Zipper -> Zipper
 left ( t, bs ) =
     case t.ext of
         Beta tl tr ->
-            ( tl, (BetaLeftCrumb t.node tr) :: bs )
+            ( tl, BetaLeftCrumb t.node tr :: bs )
 
         _ ->
             ( t, bs )
@@ -212,7 +211,7 @@ getFixedRef ({ str, up } as ref) z =
             { ref | str = "" }
 
         Just n ->
-            { ref | str = (z |> above n |> zNode |> .id |> toString) }
+            { ref | str = z |> above n |> zNode |> .id |> toString }
 
 
 fixNodeRef : Zipper -> Zipper
@@ -223,7 +222,7 @@ fixNodeRef z =
                 nodetmp =
                     t.node
             in
-                { t | node = { nodetmp | reference = (getFixedRef nodetmp.reference z) } }
+            { t | node = { nodetmp | reference = getFixedRef nodetmp.reference z } }
         )
         z
 
@@ -240,12 +239,12 @@ fixClosedRefs z =
                     node =
                         t.node
                 in
-                    case ext of
-                        Closed ref1 ref2 ->
-                            Tableau node (Closed (getFixedRef ref1 z) (getFixedRef ref2 z))
+                case ext of
+                    Closed ref1 ref2 ->
+                        Tableau node (Closed (getFixedRef ref1 z) (getFixedRef ref2 z))
 
-                        _ ->
-                            t
+                    _ ->
+                        t
             )
 
 
@@ -270,7 +269,7 @@ renumber2 tableau num =
                 ext =
                     tableau.ext
             in
-                ( Tableau { node | id = num + 1 } ext, num + 1 )
+            ( Tableau { node | id = num + 1 } ext, num + 1 )
 
         Alpha t ->
             let
@@ -280,7 +279,7 @@ renumber2 tableau num =
                 node =
                     tableau.node
             in
-                ( Tableau { node | id = num + 1 } (Alpha new_tableau), num1 )
+            ( Tableau { node | id = num + 1 } (Alpha new_tableau), num1 )
 
         Beta lt rt ->
             let
@@ -293,7 +292,7 @@ renumber2 tableau num =
                 node =
                     tableau.node
             in
-                ( (Tableau { node | id = num + 1 } (Beta new_left new_right)), num2 )
+            ( Tableau { node | id = num + 1 } (Beta new_left new_right), num2 )
 
         Gamma t subst ->
             let
@@ -303,7 +302,7 @@ renumber2 tableau num =
                 node =
                     tableau.node
             in
-                ( Tableau { node | id = num + 1 } (Gamma new_tableau subst), num1 )
+            ( Tableau { node | id = num + 1 } (Gamma new_tableau subst), num1 )
 
         Delta t subst ->
             let
@@ -313,7 +312,7 @@ renumber2 tableau num =
                 node =
                     tableau.node
             in
-                ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
+            ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
 
         _ ->
             ( tableau, num )
@@ -327,7 +326,7 @@ modifyRef ref z =
                 nodetmp =
                     tableau.node
             in
-                { tableau | node = { nodetmp | reference = ref } }
+            { tableau | node = { nodetmp | reference = ref } }
         )
         z
 
@@ -338,15 +337,15 @@ findAbove ref ( tableau, bs ) =
         node =
             tableau.node
     in
-        if node.id == ref then
-            Just 0
-        else
-            case bs of
-                a :: bbs ->
-                    Maybe.map ((+) 1) (( tableau, bs ) |> up |> findAbove ref)
+    if node.id == ref then
+        Just 0
+    else
+        case bs of
+            a :: bbs ->
+                Maybe.map ((+) 1) (( tableau, bs ) |> up |> findAbove ref)
 
-                [] ->
-                    Nothing
+            [] ->
+                Nothing
 
 
 getRef : String -> Zipper -> Ref
@@ -356,14 +355,14 @@ getRef ref z =
         ref
             |> String.toInt
             |> Result.toMaybe
-            |> Maybe.andThen ((flip findAbove) z)
+            |> Maybe.andThen (flip findAbove z)
     }
 
 
 getReffed : Ref -> Zipper -> Maybe Zipper
 getReffed r z =
     r.up
-        |> Maybe.map ((flip above) z)
+        |> Maybe.map (flip above z)
 
 
 setPair : Int -> Ref -> Ref -> Ref -> ( Ref, Ref )
@@ -390,7 +389,7 @@ setFormula text =
 
                 -- substitute here
             in
-                { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
+            { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
         )
 
 
@@ -483,9 +482,9 @@ setClosed which newRefStr z =
                 Closed r1 r2 ->
                     let
                         newRef =
-                            (setPair which (z |> getRef newRefStr) r1 r2)
+                            setPair which (z |> getRef newRefStr) r1 r2
                     in
-                        Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
+                    Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
 
                 _ ->
                     tableau
