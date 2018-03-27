@@ -361,7 +361,7 @@ isSimilarAbove : String -> Zipper.Zipper -> Bool
 isSimilarAbove variable z =
     Set.member variable (Formula.variables (z |> Zipper.zNode |> .value |> Formula.sf |> Formula.signedGetFormula))
         || (if (z |> Zipper.up) == z then
-                True
+                False
             else
                 isSimilarAbove variable (z |> Zipper.up)
            )
