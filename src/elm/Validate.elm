@@ -4,6 +4,7 @@ import Dict
 import Errors
 import Formula
 import Parser
+import Set
 import Tableau exposing (..)
 import Zipper
 
@@ -356,19 +357,23 @@ betasHaveSameRef this other =
             (resultFromBool this (semanticsProblem this "β references are not the same"))
 
 
-isSimilarFreeAbove : String -> Zipper.Zipper -> Bool
-isSimilarFreeAbove v z =
-    False
+isSimilarAbove : String -> Zipper.Zipper -> Bool
+isSimilarAbove variable z =
+    Set.member variable (Formula.variables (z |> Zipper.zNode |> .value |> Formula.sf |> Formula.signedGetFormula))
+        || (if (z |> Zipper.up) == z then
+                True
+            else
+                isSimilarAbove variable (z |> Zipper.up)
+           )
 
 
-isSimilarBoundAbove : String -> Zipper.Zipper -> Bool
-isSimilarBoundAbove v z =
-    False
+
+-- nechat tam podmienku?
 
 
 isNewVariableValid : String -> Zipper.Zipper -> Bool
 isNewVariableValid variable z =
-    isSimilarFreeAbove variable z && isSimilarBoundAbove variable z
+    not (isSimilarAbove variable (z |> Zipper.up))
 
 
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term

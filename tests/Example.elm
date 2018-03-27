@@ -1049,6 +1049,18 @@ suiteZipper =
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
+                        && Validate.isNewVariableValid
+                            (validateGammaNewVariableSimilarToExistingFree
+                                |> Zipper.down
+                                |> Zipper.zSubstitution
+                                |> Maybe.map Validate.makeS
+                                |> Maybe.withDefault (Dict.fromList [])
+                                |> Dict.values
+                                |> List.head
+                                |> Maybe.withDefault (Formula.Var "default")
+                                |> Formula.strTerm
+                            )
+                            (validateGammaNewVariableSimilarToExistingFree |> Zipper.down |> Zipper.down)
                     )
                     False
             )
@@ -1076,6 +1088,18 @@ suiteZipper =
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
+                        && Validate.isNewVariableValid
+                            (validateGammaNewVariableSimilarToExistingFree2
+                                |> Zipper.down
+                                |> Zipper.zSubstitution
+                                |> Maybe.map Validate.makeS
+                                |> Maybe.withDefault (Dict.fromList [])
+                                |> Dict.values
+                                |> List.head
+                                |> Maybe.withDefault (Formula.Var "default")
+                                |> Formula.strTerm
+                            )
+                            (validateGammaNewVariableSimilarToExistingFree2 |> Zipper.down |> Zipper.down)
                     )
                     False
             )
@@ -1104,6 +1128,18 @@ suiteZipper =
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
+                        && Validate.isNewVariableValid
+                            (validateGammaNewVariableSimilarToExistingFree3
+                                |> Zipper.down
+                                |> Zipper.zSubstitution
+                                |> Maybe.map Validate.makeS
+                                |> Maybe.withDefault (Dict.fromList [])
+                                |> Dict.values
+                                |> List.head
+                                |> Maybe.withDefault (Formula.Var "default")
+                                |> Formula.strTerm
+                            )
+                            (validateGammaNewVariableSimilarToExistingFree3 |> Zipper.down |> Zipper.down)
                     )
                     False
             )
@@ -1131,6 +1167,18 @@ suiteZipper =
                             |> getValueFromResult
                             |> Maybe.withDefault (Formula.T (Formula.Atom "default" []))
                         )
+                        && Validate.isNewVariableValid
+                            (validateGammaNewVariableSimilarToExistingFree4
+                                |> Zipper.down
+                                |> Zipper.zSubstitution
+                                |> Maybe.map Validate.makeS
+                                |> Maybe.withDefault (Dict.fromList [])
+                                |> Dict.values
+                                |> List.head
+                                |> Maybe.withDefault (Formula.Var "default")
+                                |> Formula.strTerm
+                            )
+                            (validateGammaNewVariableSimilarToExistingFree4 |> Zipper.down |> Zipper.down)
                     )
                     False
             )
