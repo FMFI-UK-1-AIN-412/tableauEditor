@@ -9820,6 +9820,10 @@ var _aaa$bbb$Formula$spaces = A2(
 			$char,
 			_elm_lang$core$Native_Utils.chr(' '));
 	});
+var _aaa$bbb$Formula$oneOfSymbols = function (syms) {
+	return _elm_tools$parser$Parser$oneOf(
+		A2(_elm_lang$core$List$map, _elm_tools$parser$Parser$symbol, syms));
+};
 var _aaa$bbb$Formula$errorString = function (e) {
 	return A2(
 		_elm_lang$core$Basics_ops['++'],
@@ -9950,7 +9954,20 @@ var _aaa$bbb$Formula$formula = _elm_tools$parser$Parser$oneOf(
 					A2(
 						_elm_tools$parser$Parser_ops['|.'],
 						_elm_tools$parser$Parser$succeed(_aaa$bbb$Formula$Neg),
-						_elm_tools$parser$Parser$keyword('-')),
+						_aaa$bbb$Formula$oneOfSymbols(
+							{
+								ctor: '::',
+								_0: '-',
+								_1: {
+									ctor: '::',
+									_0: '¬',
+									_1: {
+										ctor: '::',
+										_0: '~',
+										_1: {ctor: '[]'}
+									}
+								}
+							})),
 					_aaa$bbb$Formula$spaces),
 				_elm_tools$parser$Parser$lazy(
 					function (_p5) {
@@ -10075,8 +10092,7 @@ var _aaa$bbb$Formula$binary = F2(
 							A2(
 								_elm_tools$parser$Parser_ops['|.'],
 								_elm_tools$parser$Parser$succeed(_elm_lang$core$Basics$identity),
-								_elm_tools$parser$Parser$oneOf(
-									A2(_elm_lang$core$List$map, _elm_tools$parser$Parser$symbol, conn))),
+								_aaa$bbb$Formula$oneOfSymbols(conn)),
 							_aaa$bbb$Formula$spaces),
 						_elm_tools$parser$Parser$lazy(
 							function (_p11) {
@@ -12140,7 +12156,7 @@ var _aaa$bbb$Help$help = A2(
 			_0: A2(
 				_evancz$elm_markdown$Markdown$toHtml,
 				{ctor: '[]'},
-				'\nUse `&`, `/\\` or `∧` for conjunction, `|`, `\\/` or `∨` for disjunction, `->` or `→` for implication\nand `-` or `¬` for negation. Conjunction and disjunction are strictly binary. Each node of\nthe tableau contains a signed formula, i.e. it must be prefixed by `T` or `F`.\n'),
+				'\nUse `&`, `/\\` or `∧` for conjunction, `|`, `\\/` or `∨` for disjunction, `->` or `→` for implication,\nand `-`, `~` or `¬` for negation. Conjunction and disjunction are strictly binary. Each node of\nthe tableau contains a signed formula, i.e. it must be prefixed by `T` or `F`.\n'),
 			_1: {
 				ctor: '::',
 				_0: A2(
