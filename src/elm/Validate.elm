@@ -359,7 +359,7 @@ betasHaveSameRef this other =
 
 isSimilarAbove : String -> Zipper.Zipper -> Bool
 isSimilarAbove variable z =
-    Set.member variable (Formula.variables (z |> Zipper.zNode |> .value |> Formula.sf |> Formula.signedGetFormula))
+    Set.member variable (Formula.freeFormula (z |> Zipper.zNode |> .value |> Formula.sf |> Formula.signedGetFormula))
         || (if (z |> Zipper.up) == z then
                 False
             else
@@ -373,7 +373,12 @@ isSimilarAbove variable z =
 
 isNewVariableValid : String -> Zipper.Zipper -> Bool
 isNewVariableValid variable z =
-    not (isSimilarAbove variable (z |> Zipper.up))
+    case getTermFromResult (Formula.parseTerm variable) of
+        Formula.Var s ->
+            not (isSimilarAbove variable (z |> Zipper.up))
+
+        Formula.Fun _ _ ->
+            False
 
 
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
@@ -383,7 +388,7 @@ getTermFromResult r =
             term
 
         Err err ->
-            Formula.Var "default"
+            Formula.Fun "default" []
 
 
 makeS : Tableau.Substitution -> Formula.Substitution
@@ -395,10 +400,55 @@ makeS subs =
     Dict.fromList [ ( subs.forWhat, newTerm ) ]
 
 
+checkSubstitution : Result String Formula.Formula -> Formula.Formula
+checkSubstitution r =
+    case r of
+        Ok f ->
+            f
+
+        Err msg ->
+            Formula.Atom "default" []
+
+
+substitutionIsValid : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
+substitutionIsValid substitution new original =
+    new == applyToSigned Formula.removeQuantifierAndSubstitute substitution original
+
+
+applyToSigned :
+    (Formula.Substitution -> Formula.Formula -> Result String Formula.Formula)
+    -> Formula.Substitution
+    -> Formula.Signed Formula.Formula
+    -> Formula.Signed Formula.Formula
+applyToSigned function substitution sf =
+    case sf of
+        Formula.T formula ->
+            Formula.T (checkSubstitution (function substitution formula))
+
+        Formula.F formula ->
+            Formula.F (checkSubstitution (function substitution formula))
+
+
 validateGammaRule :
     Zipper.Zipper
     -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 validateGammaRule z =
+    let
+        validSubst =
+            Formula.removeQuantifierAndSubstitute
+                (z
+                    |> Zipper.up
+                    |> Zipper.zSubstitution
+                    |> Maybe.map makeS
+                    |> Maybe.withDefault (Dict.fromList [])
+                )
+                (z
+                    |> Zipper.zNode
+                    |> .value
+                    |> Formula.sf
+                    |> Formula.signedGetFormula
+                )
+    in
     Zipper.getReffed (Zipper.zNode z).reference z
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.andThen validateReffedFormula
@@ -410,7 +460,7 @@ validateGammaRule z =
         |> Result.andThen
             (checkPredicate
                 (uncurry
-                    (Formula.substitutionIsValid
+                    (substitutionIsValid
                         (z
                             |> Zipper.up
                             |> Zipper.zSubstitution
@@ -441,7 +491,9 @@ validateGammaRule z =
                         |> Formula.strTerm
                     )
                 )
-                (semanticsProblem z "Substituting variable was located above. Please choose another, not used yet.")
+                (semanticsProblem z
+                    "Substituting variable was located above as free. Please choose another, not used yet. Or cannot substiute function, just variable."
+                )
             )
 
 
