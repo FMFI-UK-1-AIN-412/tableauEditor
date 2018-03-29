@@ -525,7 +525,7 @@ validateGammaRule z =
             )
         |> Result.map (always z)
         |> Result.andThen
-            -- checking existing variable above
+            -- checking existing variable above + if new constant is variable or function
             (checkPredicate
                 (isNewVariableValid
                     (z
