@@ -359,12 +359,21 @@ betasHaveSameRef this other =
 
 isSimilarAbove : String -> Zipper.Zipper -> Bool
 isSimilarAbove variable z =
-    Set.member variable (Formula.freeFormula (z |> Zipper.zNode |> .value |> Formula.sf |> Formula.signedGetFormula))
-        || (if (z |> Zipper.up) == z then
-                False
-            else
-                isSimilarAbove variable (z |> Zipper.up)
-           )
+    let
+        maybeParsed =
+            z |> Zipper.zNode |> .value |> Formula.parseSigned
+    in
+    case maybeParsed of
+        Ok parsed ->
+            Set.member variable (Formula.freeFormula (parsed |> Formula.signedGetFormula))
+                || (if (z |> Zipper.up) == z then
+                        False
+                    else
+                        isSimilarAbove variable (z |> Zipper.up)
+                   )
+
+        Err _ ->
+            False
 
 
 isNewVariableValid : String -> Zipper.Zipper -> Bool
