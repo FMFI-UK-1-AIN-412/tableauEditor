@@ -501,7 +501,26 @@ validateGammaRule z =
                         )
                     )
                 )
-                (semanticsProblem z "This is not substituable. Substitutable variable is bound in that formula.")
+                (semanticsProblem z
+                    ("This is not substituable. Variable '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' is bound in referrenced formula ("
+                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ "). Choose another variable."
+                    )
+                )
             )
         |> Result.andThen
             -- checking valid substitution
@@ -517,7 +536,35 @@ validateGammaRule z =
                     )
                 )
                 (semanticsProblem z
-                    ("This isn't valid γ-subformula created by substitution from ("
+                    ("This isn't valid γ-subformula created by substituting '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' for '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .forWhat
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' from ("
                         ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
@@ -540,7 +587,23 @@ validateGammaRule z =
                     )
                 )
                 (semanticsProblem z
-                    "Substituting variable was located above as free. Please choose another, not used yet. Or cannot substiute function, just variable."
+                    ("Substituting variable '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' was located above as free. Please choose another, not used yet. "
+                        ++ "Make sure, your new variable is variable and not function."
+                    )
                 )
             )
         |> Result.map (always z)

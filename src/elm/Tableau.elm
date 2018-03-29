@@ -30,7 +30,7 @@ type Extension
     | Delta Tableau Substitution
 
 
-defSubstitution : { forWhat : String, what : String }
+defSubstitution : Substitution
 defSubstitution =
     { what = "", forWhat = "" }
 
