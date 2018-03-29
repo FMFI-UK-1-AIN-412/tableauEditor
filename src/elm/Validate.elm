@@ -367,10 +367,6 @@ isSimilarAbove variable z =
            )
 
 
-
--- nechat tam podmienku?
-
-
 isNewVariableValid : String -> Zipper.Zipper -> Bool
 isNewVariableValid variable z =
     case getTermFromResult (Formula.parseTerm variable) of
@@ -400,55 +396,90 @@ makeS subs =
     Dict.fromList [ ( subs.forWhat, newTerm ) ]
 
 
-checkSubstitution : Result String Formula.Formula -> Formula.Formula
-checkSubstitution r =
-    case r of
-        Ok f ->
-            f
-
-        Err msg ->
-            Formula.Atom "default" []
-
-
 substitutionIsValid : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
 substitutionIsValid substitution new original =
+    let
+        applyToSigned :
+            (Formula.Substitution -> Formula.Formula -> Result String Formula.Formula)
+            -> Formula.Substitution
+            -> Formula.Signed Formula.Formula
+            -> Formula.Signed Formula.Formula
+        applyToSigned function substitution sf =
+            case sf of
+                Formula.T formula ->
+                    Formula.T (checkSubstitution (function substitution formula))
+
+                Formula.F formula ->
+                    Formula.F (checkSubstitution (function substitution formula))
+
+        checkSubstitution : Result String Formula.Formula -> Formula.Formula
+        checkSubstitution r =
+            case r of
+                Ok f ->
+                    f
+
+                Err msg ->
+                    Formula.Atom "default" []
+    in
     new == applyToSigned Formula.removeQuantifierAndSubstitute substitution original
 
 
-applyToSigned :
-    (Formula.Substitution -> Formula.Formula -> Result String Formula.Formula)
-    -> Formula.Substitution
-    -> Formula.Signed Formula.Formula
-    -> Formula.Signed Formula.Formula
-applyToSigned function substitution sf =
-    case sf of
-        Formula.T formula ->
-            Formula.T (checkSubstitution (function substitution formula))
+isSubstituable : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
+isSubstituable s new original =
+    let
+        _ =
+            Debug.log "is Substituable formula" original
 
-        Formula.F formula ->
-            Formula.F (checkSubstitution (function substitution formula))
+        _ =
+            Debug.log "substitution " s
+
+        removeSign : Formula.Substitution -> Formula.Signed Formula.Formula -> Bool
+        removeSign s sf =
+            case sf of
+                Formula.T formula ->
+                    removeQuantifierAndSubstitute s formula
+
+                Formula.F formula ->
+                    removeQuantifierAndSubstitute s formula
+
+        removeQuantifierAndSubstitute : Formula.Substitution -> Formula.Formula -> Bool
+        removeQuantifierAndSubstitute substitution original =
+            case original of
+                Formula.ForAll s f ->
+                    if List.member s (Dict.keys substitution) then
+                        removeQuantifierAndSubstitute substitution f
+                    else
+                        trySubs substitution original
+
+                Formula.Exists s f ->
+                    if List.member s (Dict.keys substitution) then
+                        removeQuantifierAndSubstitute substitution f
+                    else
+                        trySubs substitution original
+
+                _ ->
+                    trySubs substitution original
+
+        trySubs : Formula.Substitution -> Formula.Formula -> Bool
+        trySubs s f =
+            let
+                _ =
+                    Debug.log "subs says" (toString (Formula.substFormula s f))
+            in
+            case Formula.substFormula s f of
+                Ok f ->
+                    True
+
+                Err msg ->
+                    False
+    in
+    removeSign s original
 
 
 validateGammaRule :
     Zipper.Zipper
     -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 validateGammaRule z =
-    let
-        validSubst =
-            Formula.removeQuantifierAndSubstitute
-                (z
-                    |> Zipper.up
-                    |> Zipper.zSubstitution
-                    |> Maybe.map makeS
-                    |> Maybe.withDefault (Dict.fromList [])
-                )
-                (z
-                    |> Zipper.zNode
-                    |> .value
-                    |> Formula.sf
-                    |> Formula.signedGetFormula
-                )
-    in
     Zipper.getReffed (Zipper.zNode z).reference z
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.andThen validateReffedFormula
@@ -458,6 +489,22 @@ validateGammaRule z =
             )
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
+            -- checking substituable
+            (checkPredicate
+                (uncurry
+                    (isSubstituable
+                        (z
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                    )
+                )
+                (semanticsProblem z "This is not substituable. Substitutable variable is bound in that formula.")
+            )
+        |> Result.andThen
+            -- checking valid substitution
             (checkPredicate
                 (uncurry
                     (substitutionIsValid
@@ -478,6 +525,7 @@ validateGammaRule z =
             )
         |> Result.map (always z)
         |> Result.andThen
+            -- checking existing variable above
             (checkPredicate
                 (isNewVariableValid
                     (z
@@ -495,6 +543,7 @@ validateGammaRule z =
                     "Substituting variable was located above as free. Please choose another, not used yet. Or cannot substiute function, just variable."
                 )
             )
+        |> Result.map (always z)
 
 
 validateDeltaRule :
@@ -509,15 +558,6 @@ validateDeltaRule z =
                 (semanticsProblem z "Referenced formula is not γ")
             )
         |> Result.map2 (,) (checkFormula "Formula" z)
-        |> Result.andThen
-            (checkPredicate (uncurry (Formula.substitutionIsValid (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map makeS |> Maybe.withDefault (Dict.fromList []))))
-                (semanticsProblem z
-                    ("Is not an δ-subformula of ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
-                        ++ ")."
-                    )
-                )
-            )
         |> Result.map (always z)
 
 
