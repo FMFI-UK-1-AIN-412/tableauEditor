@@ -538,3 +538,47 @@ changeTerm newTerm z =
                     tableau
         )
         z
+
+
+prettify : Tableau -> Tableau
+prettify t =
+    let
+        z =
+            zipper t
+
+        prettifyNode : Tableau.Node -> Tableau.Node
+        prettifyNode n =
+            let
+                newValue =
+                    case Formula.parseSigned n.value of
+                        Ok f ->
+                            Formula.strSigned f
+
+                        Err _ ->
+                            n.value
+            in
+            { n | value = newValue }
+    in
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Alpha tbl ->
+                        Tableau (tableau.node |> prettifyNode) (Alpha (prettify tbl))
+
+                    Beta tl tr ->
+                        Tableau (tableau.node |> prettifyNode) (Beta (prettify tl) (prettify tr))
+
+                    Gamma tbl subs ->
+                        Tableau (tableau.node |> prettifyNode) (Gamma (prettify tbl) subs)
+
+                    Delta tbl subs ->
+                        Tableau (tableau.node |> prettifyNode) (Delta (prettify tbl) subs)
+
+                    Open ->
+                        Tableau (tableau.node |> prettifyNode) Open
+
+                    Closed r1 r2 ->
+                        Tableau (tableau.node |> prettifyNode) (Closed r1 r2)
+            )
+        |> zTableau

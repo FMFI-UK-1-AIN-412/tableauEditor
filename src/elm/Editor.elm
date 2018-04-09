@@ -56,6 +56,7 @@ type Msg
     | ExpandDelta Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
+    | Prettify
 
 
 top : Zipper.Zipper -> Tableau
@@ -107,6 +108,9 @@ update msg model =
 
             ChangeTerm z newTerm ->
                 ( { model | tableau = Zipper.up z |> Zipper.changeTerm newTerm |> top }, Cmd.none )
+
+            Prettify ->
+                ( { model | tableau = Zipper.prettify model.tableau }, Cmd.none )
         )
 
 
@@ -115,6 +119,13 @@ view model =
     div [ class "tableau" ]
         [ viewNode (Zipper.zipper model.tableau)
         , problems model.tableau
+        , p [ class "actions" ]
+            [ button [ onClick Prettify ] [ text "Prettify formulas" ]
+            , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+
+            --            , jsonExportControl model.t
+            --            , jsonImportControl model
+            ]
         , Rules.help
         ]
 

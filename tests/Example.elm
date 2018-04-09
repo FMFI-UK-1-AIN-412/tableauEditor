@@ -617,12 +617,13 @@ suiteZipper =
         , test "substitution of function in gamma "
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Validate.isNewVariableValid
                         (validateGammaSubstituteForFunction
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map Validate.makeS
                             |> Maybe.withDefault (Dict.fromList [])
+                            |> Dict.values |>
                         )
                         (validateGammaSubstituteForFunction
                             |> down
@@ -643,7 +644,7 @@ suiteZipper =
         , test "substitution in gamma - controll all bound variables"
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Formula.removeQuantifierAndSubstitute
                         (validateGammaNewVariableSimilarToBound
                             |> Zipper.up
                             |> Zipper.zSubstitution
@@ -669,7 +670,7 @@ suiteZipper =
         , test "substitution in gamma - controll all free variables"
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Formula.removeQuantifierAndSubstitute
                         (validateGammaNewVariableSimilarToExistingFree
                             |> Zipper.down
                             |> Zipper.zSubstitution
@@ -709,7 +710,7 @@ suiteZipper =
         , test "substitution in gamma - controll all free variables 2"
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Formula.removeQuantifierAndSubstitute
                         (validateGammaNewVariableSimilarToExistingFree2
                             |> Zipper.down
                             |> Zipper.zSubstitution
@@ -748,7 +749,7 @@ suiteZipper =
         , test "substitution in gamma - controll all free variables 3"
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Formula.removeQuantifierAndSubstitute
                         (validateGammaNewVariableSimilarToExistingFree3
                             |> Zipper.down
                             |> Zipper.zSubstitution
@@ -788,7 +789,7 @@ suiteZipper =
         , test "substitution in gamma - controll all free variables 4"
             (\() ->
                 Expect.equal
-                    (Formula.substitutionIsValid
+                    (Formula.removeQuantifierAndSubstitute
                         (validateGammaNewVariableSimilarToExistingFree4
                             |> Zipper.down
                             |> Zipper.zSubstitution

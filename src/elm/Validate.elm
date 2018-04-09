@@ -473,9 +473,9 @@ isSubstituable s new original =
         trySubs s f =
             let
                 _ =
-                    Debug.log "subs says" (toString (Formula.substFormula s f))
+                    Debug.log "subs says" (toString (Formula.substitute s f))
             in
-            case Formula.substFormula s f of
+            case Formula.substitute s f of
                 Ok f ->
                     True
 

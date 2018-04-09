@@ -1,8 +1,8 @@
 module Rules exposing (..)
 
-import Html exposing (Html, Attribute, div, table, tr, td, text, p, h2, h3)
-import Html.Attributes exposing (..)
 import Formula exposing (..)
+import Html exposing (Attribute, Html, div, h2, h3, p, table, td, text, tr)
+import Html.Attributes exposing (..)
 import Markdown
 
 
