@@ -437,6 +437,9 @@ extendBeta z =
                     Alpha t ->
                         Tableau tableau.node (Beta (Tableau defNode (Alpha t)) (Tableau defNode (Alpha t)))
 
+                    Beta lt rt ->
+                        Tableau tableau.node (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode (Beta lt rt)))
+
                     Gamma t s ->
                         Tableau tableau.node (Beta (Tableau defNode (Gamma t s)) (Tableau defNode (Gamma t s)))
 
@@ -457,6 +460,18 @@ extendGamma z =
                     Open ->
                         Tableau tableau.node (Gamma (Tableau defNode Open) defSubstitution)
 
+                    Alpha t ->
+                        Tableau tableau.node (Gamma (Tableau defNode (Alpha t)) defSubstitution)
+
+                    Beta lt rt ->
+                        Tableau tableau.node (Gamma (Tableau defNode (Beta lt rt)) defSubstitution)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Gamma (Tableau defNode (Gamma t s)) defSubstitution)
+
+                    Delta t s ->
+                        Tableau tableau.node (Gamma (Tableau defNode (Delta t s)) defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -471,6 +486,18 @@ extendDelta z =
                     Open ->
                         Tableau tableau.node (Delta (Tableau defNode Open) defSubstitution)
 
+                    Alpha t ->
+                        Tableau tableau.node (Delta (Tableau defNode (Alpha t)) defSubstitution)
+
+                    Beta lt rt ->
+                        Tableau tableau.node (Delta (Tableau defNode (Beta lt rt)) defSubstitution)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Delta (Tableau defNode (Gamma t s)) defSubstitution)
+
+                    Delta t s ->
+                        Tableau tableau.node (Delta (Tableau defNode (Delta t s)) defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -478,7 +505,16 @@ extendDelta z =
 
 delete : Zipper -> Zipper
 delete z =
-    modifyNode (\tableau -> Tableau defNode Open) z
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Alpha t ->
+                    Tableau t.node t.ext
+
+                _ ->
+                    Tableau defNode Open
+        )
+        z
 
 
 makeClosed : Zipper -> Zipper
