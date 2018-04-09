@@ -4,8 +4,8 @@
     "repository": "https://github.com/moarwick/elm-webpack-starter.git",
     "license": "MIT",
     "source-directories": [
-        "src/elm",
-        "src/elm/Helpers",
+        "src",
+        "src/Helpers",
         "../tablueau-parser/src"
     ],
     "exposed-modules": [],

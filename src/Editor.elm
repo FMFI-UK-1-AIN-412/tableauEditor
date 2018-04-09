@@ -1,11 +1,16 @@
 module Editor exposing (..)
 
+--import Helpers.Exporting.Json.Decode
+
 import Errors
 import Formula
 import Helper
+import Helpers.Exporting.Json.Encode
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Http
+import Json.Decode
 import Rules exposing (..)
 import Tableau exposing (..)
 import Validate
@@ -27,6 +32,22 @@ type alias Model =
     }
 
 
+
+--type alias FileReaderPortData =
+--    { contents : String
+--    , filename : String
+--    , jsonImporting : Bool
+--    , jsonImportError : String
+--    , jsonImportId : String
+--    }
+--
+--
+--port fileSelected : String -> Cmd msg
+--
+--
+--port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
+
+
 init : ( Model, Cmd msg )
 init =
     ( { tableau =
@@ -38,6 +59,10 @@ init =
                 }
             , ext = Open
             }
+
+      --      , jsonImporting = False
+      --      , jsonImportError = ""
+      --      , jsonImportId = "importJson"
       }
     , Cmd.none
     )
@@ -57,6 +82,11 @@ type Msg
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | Prettify
+
+
+
+--    | JsonSelected
+--    | JsonRead FileReaderPortData
 
 
 top : Zipper.Zipper -> Tableau
@@ -122,8 +152,8 @@ view model =
         , p [ class "actions" ]
             [ button [ onClick Prettify ] [ text "Prettify formulas" ]
             , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+            , jsonExportControl model.tableau
 
-            --            , jsonExportControl model.t
             --            , jsonImportControl model
             ]
         , Rules.help
@@ -161,6 +191,7 @@ viewNode z =
             []
         , text "]"
         , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewControls z
         , viewChildren z
         ]
 
@@ -215,6 +246,7 @@ viewSubsNode z =
             []
         , text "]"
         , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewControls z
         , viewChildren z
         ]
 
@@ -267,7 +299,7 @@ viewDelta z =
 viewOpen : Zipper.Zipper -> Html Msg
 viewOpen z =
     div [ class "open" ]
-        [ viewControls z
+        [--viewControls z
         ]
 
 
@@ -284,26 +316,6 @@ viewControls z =
     in
     div [ class "expandControls" ]
         (case t.ext of
-            Tableau.Open ->
-                [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
-                , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                , button [ onClick (ExpandGamma z) ] [ text "γ" ]
-                , button [ onClick (ExpandDelta z) ] [ text "δ" ]
-                , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
-                ]
-
-            Tableau.Alpha _ ->
-                []
-
-            Tableau.Gamma _ _ ->
-                []
-
-            Tableau.Delta _ _ ->
-                []
-
-            Tableau.Beta _ _ ->
-                []
-
             Tableau.Closed r1 r2 ->
                 let
                     compl =
@@ -335,6 +347,14 @@ viewControls z =
                     ]
                     []
                 , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+                ]
+
+            _ ->
+                [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+                , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                , button [ onClick (ExpandGamma z) ] [ text "γ" ]
+                , button [ onClick (ExpandDelta z) ] [ text "δ" ]
+                , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
                 ]
         )
 
@@ -387,3 +407,56 @@ problemClass { typ } =
 
         Validate.Semantics ->
             "semanticsProblem"
+
+
+jsonDataUri json =
+    "data:application/json;charset=utf-8," ++ Http.encodeUri json
+
+
+jsonExportControl t =
+    a
+        [ type_ "button"
+        , href <| jsonDataUri <| Helpers.Exporting.Json.Encode.encode 2 t
+        , downloadAs "tableau.json"
+        ]
+        [ button [] [ text "Export as JSON" ] ]
+
+
+
+--jsonImportControl : Model -> Html Msg
+--jsonImportControl model =
+--    case model.jsonImporting of
+--        True ->
+--            text "Loading file..."
+--
+--        False ->
+--            label [ for model.jsonImportId ]
+--                [ button
+--                    {- This is really ugly, but:
+--                       - we really need the buton and onClick, if we want it to look like a button
+--                         (embedding the label in a button or vice versa works in webkit but not in firefox)
+--                       - Adding another Msg / Cmd just for this...
+--                    -}
+--                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
+--                    [ text "Import from JSON"
+--                    ]
+--                , input
+--                    [ type_ "file"
+--                    , id model.jsonImportId
+--                    , accept "application/json"
+--                    , on "change"
+--                        (Json.Decode.succeed JsonSelected)
+--                    ]
+--                    []
+--                ]
+
+
+jsonImportError model =
+    case model.jsonImportError of
+        "" ->
+            div [] []
+
+        _ ->
+            p
+                [ class "jsonImportError" ]
+                [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]

@@ -407,6 +407,18 @@ extendAlpha z =
                     Open ->
                         Tableau tableau.node (Alpha (Tableau defNode Open))
 
+                    Alpha t ->
+                        Tableau tableau.node (Alpha (Tableau defNode (Alpha t)))
+
+                    Beta lt rt ->
+                        Tableau tableau.node (Alpha (Tableau defNode (Beta lt rt)))
+
+                    Gamma t s ->
+                        Tableau tableau.node (Alpha (Tableau defNode (Gamma t s)))
+
+                    Delta t s ->
+                        Tableau tableau.node (Alpha (Tableau defNode (Delta t s)))
+
                     _ ->
                         --tuto dopisat v pripade extendovania nie len pod leafs
                         tableau
@@ -421,6 +433,15 @@ extendBeta z =
                 case tableau.ext of
                     Open ->
                         Tableau tableau.node (Beta (Tableau defNode Open) (Tableau defNode Open))
+
+                    Alpha t ->
+                        Tableau tableau.node (Beta (Tableau defNode (Alpha t)) (Tableau defNode (Alpha t)))
+
+                    Gamma t s ->
+                        Tableau tableau.node (Beta (Tableau defNode (Gamma t s)) (Tableau defNode (Gamma t s)))
+
+                    Delta t s ->
+                        Tableau tableau.node (Beta (Tableau defNode (Delta t s)) (Tableau defNode (Delta t s)))
 
                     _ ->
                         tableau
