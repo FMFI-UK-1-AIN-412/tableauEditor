@@ -16,86 +16,79 @@ mkRef str =
     { str = str, up = Nothing }
 
 
+ref : Decoder Tableau.Ref
 ref =
     map mkRef string
 
 
+closedRefs : Decoder ( Tableau.Ref, Tableau.Ref )
 closedRefs =
     map2 (,)
         (index 0 ref)
         (index 1 ref)
 
 
+node : Decoder Tableau.Node
 node =
-    let
-        id =
-            field "id" int
-
-        value =
-            field "value" string
-
-        reference =
-            field "reference" ref
-    in
     map4
         Tableau.Node
         (field "id" int)
         (field "value" string)
         (field "reference" ref)
-        (Formula.parseSigned (field "value" string))
+        (map Formula.parseSigned (field "value" string))
 
 
+substitution : Decoder Tableau.Substitution
 substitution =
     map2 Tableau.Substitution
         (field "what" string)
         (field "forWhat" string)
 
 
+open : Decoder Tableau.Tableau
 open =
-    map2
-        Tableau.Tableau
+    map2 Tableau.Tableau
         (field "node" node)
-        (lazy
-            (\_ -> Tableau.Open)
-        )
+        (succeed Tableau.Open)
 
 
+closed : Decoder Tableau.Tableau
 closed =
-    let
-        ( r1, r2 ) =
-            field "closed" closedRefs
-    in
     map2
         Tableau.Tableau
         (field "node" node)
-        (Tableau.Closed r1 r2)
+        (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
+alpha : Decoder Tableau.Tableau
 alpha =
     map2
         Tableau.Tableau
         (field "node" node)
-        (lazy (\_ -> Tableau.Alpha (field "child" (Json.Decode.lazy (\_ -> tableau)))))
+        (map Tableau.Alpha (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
+beta : Decoder Tableau.Tableau
 beta =
     map2 Tableau.Tableau
         (field "node" node)
-        (lazy (\_ -> Tableau.Beta (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau)))))
+        (map2 Tableau.Beta (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
 
 
+delta : Decoder Tableau.Tableau
 delta =
     map2
         Tableau.Tableau
         (field "node" node)
-        (lazy (\_ -> Tableau.Delta (field "child" (lazy (\_ -> tableau))) (lazy (field "substitution" substitution))))
+        (map2 Tableau.Delta (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
+gamma : Decoder Tableau.Tableau
 gamma =
     map2
         Tableau.Tableau
         (field "node" node)
-        (lazy (\_ -> Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (lazy (\_ -> field "substitution" substitution))))
+        (map2 Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
@@ -137,6 +130,7 @@ tableau =
         )
 
 
+decode : String -> Result String Tableau.Tableau
 decode =
     decodeString tableau >> Result.map reRefTableau
 

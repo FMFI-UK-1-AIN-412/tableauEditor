@@ -26,7 +26,7 @@ type Extension
     | Closed Ref Ref
     | Alpha Tableau
     | Beta Tableau Tableau
-    | Gamma Tableau Substitution -- -> premenna a term su stringy
+    | Gamma Tableau Substitution
     | Delta Tableau Substitution
 
 

@@ -1,11 +1,11 @@
 module Editor exposing (..)
 
---import Helpers.Exporting.Json.Decode
-
 import Errors
 import Formula
 import Helper
+import Helpers.Exporting.Json.Decode
 import Helpers.Exporting.Json.Encode
+import Helpers.Exporting.Ports exposing (FileReaderPortData, fileContentRead, fileSelected)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -29,23 +29,10 @@ main =
 
 type alias Model =
     { tableau : Tableau
+    , jsonImporting : Bool
+    , jsonImportError : String
+    , jsonImportId : String
     }
-
-
-
---type alias FileReaderPortData =
---    { contents : String
---    , filename : String
---    , jsonImporting : Bool
---    , jsonImportError : String
---    , jsonImportId : String
---    }
---
---
---port fileSelected : String -> Cmd msg
---
---
---port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
 
 
 init : ( Model, Cmd msg )
@@ -59,10 +46,9 @@ init =
                 }
             , ext = Open
             }
-
-      --      , jsonImporting = False
-      --      , jsonImportError = ""
-      --      , jsonImportId = "importJson"
+      , jsonImporting = False
+      , jsonImportError = ""
+      , jsonImportId = "importJson"
       }
     , Cmd.none
     )
@@ -82,11 +68,8 @@ type Msg
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | Prettify
-
-
-
---    | JsonSelected
---    | JsonRead FileReaderPortData
+    | JsonSelected
+    | JsonRead FileReaderPortData
 
 
 top : Zipper.Zipper -> Tableau
@@ -141,6 +124,17 @@ update msg model =
 
             Prettify ->
                 ( { model | tableau = Zipper.prettify model.tableau }, Cmd.none )
+
+            JsonSelected ->
+                ( model, Cmd.none )
+
+            JsonRead { contents } ->
+                case contents |> Helpers.Exporting.Json.Decode.decode of
+                    Ok t ->
+                        ( { model | jsonImporting = False, tableau = t }, Cmd.none )
+
+                    Err e ->
+                        ( { model | jsonImporting = False, jsonImportError = toString e }, Cmd.none )
         )
 
 
@@ -153,8 +147,7 @@ view model =
             [ button [ onClick Prettify ] [ text "Prettify formulas" ]
             , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
             , jsonExportControl model.tableau
-
-            --            , jsonImportControl model
+            , jsonImportControl model
             ]
         , Rules.help
         ]
@@ -409,10 +402,12 @@ problemClass { typ } =
             "semanticsProblem"
 
 
+jsonDataUri : String -> String
 jsonDataUri json =
     "data:application/json;charset=utf-8," ++ Http.encodeUri json
 
 
+jsonExportControl : Tableau -> Html msg
 jsonExportControl t =
     a
         [ type_ "button"
@@ -422,35 +417,35 @@ jsonExportControl t =
         [ button [] [ text "Export as JSON" ] ]
 
 
+jsonImportControl : Model -> Html Msg
+jsonImportControl model =
+    case model.jsonImporting of
+        True ->
+            text "Loading file..."
 
---jsonImportControl : Model -> Html Msg
---jsonImportControl model =
---    case model.jsonImporting of
---        True ->
---            text "Loading file..."
---
---        False ->
---            label [ for model.jsonImportId ]
---                [ button
---                    {- This is really ugly, but:
---                       - we really need the buton and onClick, if we want it to look like a button
---                         (embedding the label in a button or vice versa works in webkit but not in firefox)
---                       - Adding another Msg / Cmd just for this...
---                    -}
---                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
---                    [ text "Import from JSON"
---                    ]
---                , input
---                    [ type_ "file"
---                    , id model.jsonImportId
---                    , accept "application/json"
---                    , on "change"
---                        (Json.Decode.succeed JsonSelected)
---                    ]
---                    []
---                ]
+        False ->
+            label [ for model.jsonImportId ]
+                [ button
+                    {- This is really ugly, but:
+                       - we really need the buton and onClick, if we want it to look like a button
+                         (embedding the label in a button or vice versa works in webkit but not in firefox)
+                       - Adding another Msg / Cmd just for this...
+                    -}
+                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
+                    [ text "Import from JSON"
+                    ]
+                , input
+                    [ type_ "file"
+                    , id model.jsonImportId
+                    , accept "application/json"
+                    , on "change"
+                        (Json.Decode.succeed JsonSelected)
+                    ]
+                    []
+                ]
 
 
+jsonImportError : { a | jsonImportError : String } -> Html msg
 jsonImportError model =
     case model.jsonImportError of
         "" ->

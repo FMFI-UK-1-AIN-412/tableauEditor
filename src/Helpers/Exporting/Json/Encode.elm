@@ -4,10 +4,12 @@ import Json.Encode exposing (..)
 import Tableau exposing (Extension(Alpha, Beta, Closed, Delta, Gamma, Open), Node, Tableau)
 
 
+jsonRef : { a | str : String } -> Value
 jsonRef r =
     string r.str
 
 
+jsonNode : { b | id : Int, reference : { a | str : String }, value : String } -> Value
 jsonNode { id, value, reference } =
     object
         [ ( "id", int id )
@@ -21,6 +23,7 @@ jsonNodeList n =
     [ ( "node", jsonNode n ) ]
 
 
+jsonSubstitution : { a | forWhat : String, what : String } -> Value
 jsonSubstitution { what, forWhat } =
     object
         [ ( "what", string what )
