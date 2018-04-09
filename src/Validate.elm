@@ -386,6 +386,16 @@ isNewVariableValid variable z =
             False
 
 
+isNewVariableVariable : String -> Zipper.Zipper -> Bool
+isNewVariableVariable variable _ =
+    case getTermFromResult (Formula.parseTerm variable) of
+        Formula.Var s ->
+            True
+
+        Formula.Fun _ _ ->
+            False
+
+
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
 getTermFromResult r =
     case r of
@@ -583,6 +593,138 @@ validateGammaRule z =
         |> Result.andThen
             -- checking existing variable above + if new constant is variable or function
             (checkPredicate
+                (isNewVariableVariable
+                    (z
+                        |> Zipper.up
+                        |> Zipper.zSubstitution
+                        |> Maybe.map makeS
+                        |> Maybe.withDefault (Dict.fromList [])
+                        |> Dict.values
+                        |> List.head
+                        |> Maybe.withDefault (Formula.Var "default")
+                        |> Formula.strTerm
+                    )
+                )
+                (semanticsProblem z
+                    ("Substituting variable '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' is not variable but function. Should be variable."
+                    )
+                )
+            )
+        |> Result.map (always z)
+
+
+validateDeltaRule :
+    Zipper.Zipper
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+validateDeltaRule z =
+    Zipper.getReffed (Zipper.zNode z).reference z
+        |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
+        |> Result.andThen validateReffedFormula
+        |> Result.andThen
+            (checkPredicate Formula.isDelta
+                (semanticsProblem z "Referenced formula is not delta")
+            )
+        |> Result.map2 (,) (checkFormula "Formula" z)
+        |> Result.andThen
+            -- checking substituable
+            (checkPredicate
+                (uncurry
+                    (isSubstituable
+                        (z
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                    )
+                )
+                (semanticsProblem z
+                    ("This is not substituable. Variable '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' is bound in referrenced formula ("
+                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ "). Choose another variable."
+                    )
+                )
+            )
+        |> Result.andThen
+            -- checking valid substitution
+            (checkPredicate
+                (uncurry
+                    (substitutionIsValid
+                        (z
+                            |> Zipper.up
+                            |> Zipper.zSubstitution
+                            |> Maybe.map makeS
+                            |> Maybe.withDefault (Dict.fromList [])
+                        )
+                    )
+                )
+                (semanticsProblem z
+                    ("This isn't valid delta-subformula created by substituting '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .what
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' for '"
+                        ++ (z
+                                |> Zipper.up
+                                |> Zipper.zSubstitution
+                                |> Maybe.map .forWhat
+                                |> Maybe.map
+                                    (\s ->
+                                        if s == "" then
+                                            "_"
+                                        else
+                                            s
+                                    )
+                                |> Maybe.withDefault ""
+                           )
+                        ++ "' from ("
+                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ ")."
+                    )
+                )
+            )
+        |> Result.map (always z)
+        |> Result.andThen
+            -- checking existing variable above + if new constant is variable or function
+            (checkPredicate
                 (isNewVariableValid
                     (z
                         |> Zipper.up
@@ -615,21 +757,6 @@ validateGammaRule z =
                     )
                 )
             )
-        |> Result.map (always z)
-
-
-validateDeltaRule :
-    Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
-validateDeltaRule z =
-    Zipper.getReffed (Zipper.zNode z).reference z
-        |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
-        |> Result.andThen validateReffedFormula
-        |> Result.andThen
-            (checkPredicate Formula.isDelta
-                (semanticsProblem z "Referenced formula is not γ")
-            )
-        |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.map (always z)
 
 
