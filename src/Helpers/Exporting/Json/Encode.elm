@@ -1,7 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(Alpha, Beta, Closed, Delta, Gamma, Open), Node, Tableau)
+import Tableau exposing (Extension(Alpha, Beta, Closed, Delta, Gamma, Open), GUI, Node, Tableau)
 
 
 jsonRef : { a | str : String } -> Value
@@ -9,8 +9,8 @@ jsonRef r =
     string r.str
 
 
-jsonNode : { b | id : Int, reference : { a | str : String }, value : String } -> Value
-jsonNode { id, value, reference } =
+jsonNode : { b | id : Int, reference : { a | str : String }, value : String, gui : GUI } -> Value
+jsonNode { id, value, reference, gui } =
     object
         [ ( "id", int id )
         , ( "value", string value )

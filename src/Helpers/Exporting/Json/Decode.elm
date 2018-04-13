@@ -1,5 +1,6 @@
 module Helpers.Exporting.Json.Decode exposing (decode, tableau)
 
+import Dict
 import Formula
 import Json.Decode exposing (..)
 import Tableau
@@ -30,12 +31,13 @@ closedRefs =
 
 node : Decoder Tableau.Node
 node =
-    map4
+    map5
         Tableau.Node
         (field "id" int)
         (field "value" string)
         (field "reference" ref)
         (map Formula.parseSigned (field "value" string))
+        (succeed { controlsShown = False })
 
 
 substitution : Decoder Tableau.Substitution

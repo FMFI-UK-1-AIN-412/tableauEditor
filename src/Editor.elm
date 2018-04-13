@@ -43,6 +43,7 @@ init =
                 , value = ""
                 , reference = { str = "1", up = Just 0 }
                 , formula = Formula.parseSigned ""
+                , gui = defGUI
                 }
             , ext = Open
             }
@@ -60,6 +61,7 @@ type Msg
     | ExpandAlpha Zipper.Zipper
     | ExpandBeta Zipper.Zipper
     | Delete Zipper.Zipper
+    | DeleteMe Zipper.Zipper
     | MakeClosed Zipper.Zipper
     | SetClosed Int Zipper.Zipper String
     | MakeOpen Zipper.Zipper
@@ -70,6 +72,7 @@ type Msg
     | Prettify
     | JsonSelected
     | JsonRead FileReaderPortData
+    | ChangeButtonsAppearance Zipper.Zipper
 
 
 top : Zipper.Zipper -> Tableau
@@ -107,6 +110,9 @@ update msg model =
             Delete z ->
                 ( { model | tableau = z |> Zipper.delete |> topRenumbered }, Cmd.none )
 
+            DeleteMe z ->
+                ( { model | tableau = z |> Zipper.deleteMe |> topRenumbered }, Cmd.none )
+
             MakeClosed z ->
                 ( { model | tableau = z |> Zipper.makeClosed |> top }, Cmd.none )
 
@@ -135,6 +141,9 @@ update msg model =
 
                     Err e ->
                         ( { model | jsonImporting = False, jsonImportError = toString e }, Cmd.none )
+
+            ChangeButtonsAppearance z ->
+                ( { model | tableau = z |> Zipper.changeButtonAppearance |> top }, Cmd.none )
         )
 
 
@@ -183,10 +192,15 @@ viewNode z =
             ]
             []
         , text "]"
-        , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewButtonsAppearanceControlls z
         , viewControls z
         , viewChildren z
         ]
+
+
+viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
+viewButtonsAppearanceControlls z =
+    button [ class "delete", onClick (ChangeButtonsAppearance z) ] [ text "E" ]
 
 
 viewSubsNode : Zipper.Zipper -> Html Msg
@@ -238,7 +252,7 @@ viewSubsNode z =
             ]
             []
         , text "]"
-        , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , viewButtonsAppearanceControlls z
         , viewControls z
         , viewChildren z
         ]
@@ -298,7 +312,7 @@ viewOpen z =
 
 viewClosed : Zipper.Zipper -> Html Msg
 viewClosed z =
-    div [ class "open" ] [ viewControls z ]
+    div [ class "open" ] []
 
 
 viewControls : Zipper.Zipper -> Html Msg
@@ -339,16 +353,23 @@ viewControls z =
                     , onInput <| SetClosed 1 z
                     ]
                     []
-                , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+                , button [ class "delete", onClick (MakeOpen z) ] [ text "o" ]
                 ]
 
             _ ->
-                [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
-                , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                , button [ onClick (ExpandGamma z) ] [ text "γ" ]
-                , button [ onClick (ExpandDelta z) ] [ text "δ" ]
-                , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
-                ]
+                case t.node.gui.controlsShown of
+                    True ->
+                        [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+                        , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                        , button [ onClick (ExpandGamma z) ] [ text "γ" ]
+                        , button [ onClick (ExpandDelta z) ] [ text "δ" ]
+                        , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
+                        , button [ class "delete", onClick (DeleteMe z) ] [ text "x" ]
+                        , button [ class "delete", onClick (Delete z) ] [ text "X" ]
+                        ]
+
+                    False ->
+                        []
         )
 
 

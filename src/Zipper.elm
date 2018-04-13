@@ -507,14 +507,99 @@ delete : Zipper -> Zipper
 delete z =
     modifyNode
         (\tableau ->
-            case tableau.ext of
-                Alpha t ->
-                    Tableau t.node t.ext
-
-                _ ->
-                    Tableau defNode Open
+            Tableau tableau.node Open
         )
         z
+
+
+getExtension : Extension -> Extension
+getExtension e =
+    case e of
+        Alpha t ->
+            t.ext
+
+        Beta lt rt ->
+            case lt.ext of
+                Open ->
+                    Alpha rt
+
+                _ ->
+                    Beta lt rt
+
+        Gamma t s ->
+            t.ext
+
+        Delta t s ->
+            t.ext
+
+        Open ->
+            Open
+
+        Closed r1 r2 ->
+            Open
+
+
+deleteMe : Zipper -> Zipper
+deleteMe z =
+    if (z |> up) == z then
+        modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau defNode Open
+
+                    Closed r1 r2 ->
+                        Tableau defNode Open
+
+                    Alpha t ->
+                        t
+
+                    Beta lt rt ->
+                        -- mozem zmazat iba ked jedna z biet sa moze stat alfou
+                        if lt.node.value == "" then
+                            rt
+                        else if rt.node.value == "" then
+                            lt
+                        else
+                            tableau
+
+                    Gamma t s ->
+                        t
+
+                    Delta t s ->
+                        t
+            )
+            z
+    else
+        modifyNode
+            (\tableau ->
+                -- som na pozicii otca mazaneho
+                case tableau.ext of
+                    Open ->
+                        tableau
+
+                    Closed r1 r2 ->
+                        Tableau tableau.node Open
+
+                    Alpha t ->
+                        Tableau tableau.node t.ext
+
+                    Beta lt rt ->
+                        -- mozem zmazat iba ked jedna z biet sa moze stat alfou
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Alpha rt)
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Alpha lt)
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node t.ext
+
+                    Delta t s ->
+                        Tableau tableau.node t.ext
+            )
+            (z |> up)
 
 
 makeClosed : Zipper -> Zipper
@@ -593,6 +678,28 @@ changeTerm newTerm z =
 
                 _ ->
                     tableau
+        )
+        z
+
+
+changeButtonAppearance : Zipper -> Zipper
+changeButtonAppearance z =
+    modifyNode
+        (\tableau ->
+            let
+                oldNode =
+                    tableau.node
+
+                oldGUI =
+                    tableau.node.gui
+
+                newGUI =
+                    { oldGUI | controlsShown = not oldGUI.controlsShown }
+
+                newNode =
+                    { oldNode | gui = newGUI }
+            in
+            { tableau | node = newNode }
         )
         z
 
