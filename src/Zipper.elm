@@ -386,8 +386,6 @@ setFormula text =
             let
                 oldNode =
                     tableau.node
-
-                -- substitute here
             in
             { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
         )
@@ -435,16 +433,16 @@ extendBeta z =
                         Tableau tableau.node (Beta (Tableau defNode Open) (Tableau defNode Open))
 
                     Alpha t ->
-                        Tableau tableau.node (Beta (Tableau defNode (Alpha t)) (Tableau defNode (Alpha t)))
+                        Tableau tableau.node (Beta (Tableau defNode (Alpha t)) (Tableau defNode Open))
 
                     Beta lt rt ->
-                        Tableau tableau.node (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode (Beta lt rt)))
+                        Tableau tableau.node (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode Open))
 
                     Gamma t s ->
-                        Tableau tableau.node (Beta (Tableau defNode (Gamma t s)) (Tableau defNode (Gamma t s)))
+                        Tableau tableau.node (Beta (Tableau defNode (Gamma t s)) (Tableau defNode Open))
 
                     Delta t s ->
-                        Tableau tableau.node (Beta (Tableau defNode (Delta t s)) (Tableau defNode (Delta t s)))
+                        Tableau tableau.node (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
 
                     _ ->
                         tableau
@@ -510,33 +508,6 @@ delete z =
             Tableau tableau.node Open
         )
         z
-
-
-getExtension : Extension -> Extension
-getExtension e =
-    case e of
-        Alpha t ->
-            t.ext
-
-        Beta lt rt ->
-            case lt.ext of
-                Open ->
-                    Alpha rt
-
-                _ ->
-                    Beta lt rt
-
-        Gamma t s ->
-            t.ext
-
-        Delta t s ->
-            t.ext
-
-        Open ->
-            Open
-
-        Closed r1 r2 ->
-            Open
 
 
 deleteMe : Zipper -> Zipper
@@ -662,7 +633,7 @@ changeVariable newVariable z =
                 _ ->
                     tableau
         )
-        z
+        (z |> up)
 
 
 changeTerm : String -> Zipper -> Zipper
@@ -675,6 +646,20 @@ changeTerm newTerm z =
 
                 Delta t subs ->
                     Tableau tableau.node (Delta t { subs | what = newTerm })
+
+                _ ->
+                    tableau
+        )
+        (z |> up)
+
+
+switchBetas : Zipper -> Zipper
+switchBetas z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                Beta lt rt ->
+                    Tableau tableau.node (Beta rt lt)
 
                 _ ->
                     tableau

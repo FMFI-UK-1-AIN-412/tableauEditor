@@ -446,12 +446,6 @@ substitutionIsValid substitution new original =
 isSubstituable : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
 isSubstituable s new original =
     let
-        _ =
-            Debug.log "is Substituable formula" original
-
-        _ =
-            Debug.log "substitution " s
-
         removeSign : Formula.Substitution -> Formula.Signed Formula.Formula -> Bool
         removeSign s sf =
             case sf of
@@ -481,10 +475,6 @@ isSubstituable s new original =
 
         trySubs : Formula.Substitution -> Formula.Formula -> Bool
         trySubs s f =
-            let
-                _ =
-                    Debug.log "subs says" (toString (Formula.substitute s f))
-            in
             case Formula.substitute s f of
                 Ok f ->
                     True

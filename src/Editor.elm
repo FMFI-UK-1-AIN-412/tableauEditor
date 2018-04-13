@@ -69,6 +69,7 @@ type Msg
     | ExpandDelta Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
+    | SwitchBetas Zipper.Zipper
     | Prettify
     | JsonSelected
     | JsonRead FileReaderPortData
@@ -123,10 +124,13 @@ update msg model =
                 ( { model | tableau = z |> Zipper.makeOpen |> top }, Cmd.none )
 
             ChangeVariable z newVariable ->
-                ( { model | tableau = Zipper.up z |> Zipper.changeVariable newVariable |> top }, Cmd.none )
+                ( { model | tableau = z |> Zipper.changeVariable newVariable |> top }, Cmd.none )
 
             ChangeTerm z newTerm ->
-                ( { model | tableau = Zipper.up z |> Zipper.changeTerm newTerm |> top }, Cmd.none )
+                ( { model | tableau = z |> Zipper.changeTerm newTerm |> top }, Cmd.none )
+
+            SwitchBetas z ->
+                ( { model | tableau = z |> Zipper.switchBetas |> topRenumbered }, Cmd.none )
 
             Prettify ->
                 ( { model | tableau = Zipper.prettify model.tableau }, Cmd.none )
@@ -355,6 +359,22 @@ viewControls z =
                     []
                 , button [ class "delete", onClick (MakeOpen z) ] [ text "o" ]
                 ]
+
+            Tableau.Beta lt rt ->
+                case t.node.gui.controlsShown of
+                    True ->
+                        [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
+                        , button [ onClick (ExpandBeta z) ] [ text "β" ]
+                        , button [ onClick (ExpandGamma z) ] [ text "γ" ]
+                        , button [ onClick (ExpandDelta z) ] [ text "δ" ]
+                        , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
+                        , button [ class "delete", onClick (DeleteMe z) ] [ text "x" ]
+                        , button [ class "delete", onClick (Delete z) ] [ text "X" ]
+                        , button [ class "delete", onClick (SwitchBetas z) ] [ text "->|<-" ]
+                        ]
+
+                    False ->
+                        []
 
             _ ->
                 case t.node.gui.controlsShown of
