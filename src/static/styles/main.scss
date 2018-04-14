@@ -92,6 +92,14 @@ button.delete:hover {
 
 .jsonImportError { background-color: lightpink; }
 
+.rules {
+	with: 100%;
+}
+.rule-wrapper {
+	width: 50%;
+	display: inline-grid;
+}
+
 .rulesHelp .rule {
 	display: inline-block;
 	padding: 0.5em;

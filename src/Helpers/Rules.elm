@@ -128,14 +128,20 @@ To write first order logic terms use '∀', '\\A', '\\forall', '\\a' and '∃', 
             [ text "To enter a premise / assumption (which you want to prove), make it reference itself"
             , text """ (i.e. "(1) F ... [1]")."""
             ]
-        , h3 [] [ text "α-rules" ]
-        , div [] (List.map renderAlpha alphas)
-        , h3 [] [ text "β-rules" ]
-        , div [] (List.map renderBeta betas)
-        , h3 [] [ text "γ-rules" ]
-        , div [] (List.map renderDelta deltas)
-        , h3 [] [ text "δ-rules" ]
-        , div [] (List.map renderGamma gammas)
+        , div [ class "rules" ]
+            [ div [ class "rule-wrapper" ]
+                [ h3 [] [ text "α-rules" ]
+                , div [] (List.map renderAlpha alphas)
+                , h3 [] [ text "β-rules" ]
+                , div [] (List.map renderBeta betas)
+                ]
+            , div [ class "rule-wrapper" ]
+                [ h3 [] [ text "γ-rules" ]
+                , div [] (List.map renderDelta deltas)
+                , h3 [] [ text "δ-rules - use completely new variable x in subformula" ]
+                , div [] (List.map renderGamma gammas)
+                ]
+            ]
         ]
 
 

@@ -23,7 +23,7 @@ main =
         { init = init
         , update = update
         , view = view
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -53,6 +53,11 @@ init =
       }
     , Cmd.none
     )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    fileContentRead JsonRead
 
 
 type Msg
@@ -88,66 +93,76 @@ topRenumbered =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    case msg of
+        JsonSelected ->
+            ( { model | jsonImportError = "", jsonImporting = True }, fileSelected model.jsonImportId )
+
+        _ ->
+            ( simpleUpdate msg { model | jsonImportError = "" }, Cmd.none )
+
+
+simpleUpdate : Msg -> Model -> Model
+simpleUpdate msg model =
     Debug.log "model"
         (case msg of
             ChangeText z new ->
-                ( { model | tableau = z |> Zipper.setFormula new |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.setFormula new |> top }
 
             ExpandAlpha z ->
-                ( { model | tableau = z |> Zipper.extendAlpha |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.extendAlpha |> topRenumbered }
 
             ExpandBeta z ->
-                ( { model | tableau = z |> Zipper.extendBeta |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.extendBeta |> topRenumbered }
 
             ExpandGamma z ->
-                ( { model | tableau = z |> Zipper.extendGamma |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.extendGamma |> topRenumbered }
 
             ExpandDelta z ->
-                ( { model | tableau = z |> Zipper.extendDelta |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.extendDelta |> topRenumbered }
 
             ChangeRef z new ->
-                ( { model | tableau = z |> Zipper.setRef new |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.setRef new |> top }
 
             Delete z ->
-                ( { model | tableau = z |> Zipper.delete |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.delete |> topRenumbered }
 
             DeleteMe z ->
-                ( { model | tableau = z |> Zipper.deleteMe |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
             MakeClosed z ->
-                ( { model | tableau = z |> Zipper.makeClosed |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.makeClosed |> top }
 
             SetClosed which z ref ->
-                ( { model | tableau = z |> Zipper.setClosed which ref |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.setClosed which ref |> top }
 
             MakeOpen z ->
-                ( { model | tableau = z |> Zipper.makeOpen |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.makeOpen |> top }
 
             ChangeVariable z newVariable ->
-                ( { model | tableau = z |> Zipper.changeVariable newVariable |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.changeVariable newVariable |> top }
 
             ChangeTerm z newTerm ->
-                ( { model | tableau = z |> Zipper.changeTerm newTerm |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.changeTerm newTerm |> top }
 
             SwitchBetas z ->
-                ( { model | tableau = z |> Zipper.switchBetas |> topRenumbered }, Cmd.none )
+                { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
 
             Prettify ->
-                ( { model | tableau = Zipper.prettify model.tableau }, Cmd.none )
+                { model | tableau = Zipper.prettify model.tableau }
 
             JsonSelected ->
-                ( model, Cmd.none )
+                model
 
             JsonRead { contents } ->
                 case contents |> Helpers.Exporting.Json.Decode.decode of
                     Ok t ->
-                        ( { model | jsonImporting = False, tableau = t }, Cmd.none )
+                        { model | jsonImporting = False, tableau = t }
 
                     Err e ->
-                        ( { model | jsonImporting = False, jsonImportError = toString e }, Cmd.none )
+                        { model | jsonImporting = False, jsonImportError = toString e }
 
             ChangeButtonsAppearance z ->
-                ( { model | tableau = z |> Zipper.changeButtonAppearance |> top }, Cmd.none )
+                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
         )
 
 
@@ -155,6 +170,7 @@ view : Model -> Html Msg
 view model =
     div [ class "tableau" ]
         [ viewNode (Zipper.zipper model.tableau)
+        , verdict model.tableau
         , problems model.tableau
         , p [ class "actions" ]
             [ button [ onClick Prettify ] [ text "Prettify formulas" ]
@@ -162,6 +178,7 @@ view model =
             , jsonExportControl model.tableau
             , jsonImportControl model
             ]
+        , jsonImportError model
         , Rules.help
         ]
 
@@ -496,3 +513,51 @@ jsonImportError model =
             p
                 [ class "jsonImportError" ]
                 [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]
+
+
+verdict : Tableau -> Html msg
+verdict t =
+    let
+        ass =
+            t |> Zipper.zipper |> Helper.assumptions
+
+        ( premises, conclusions ) =
+            List.partition
+                (\sf ->
+                    case sf of
+                        Formula.T _ ->
+                            True
+
+                        Formula.F _ ->
+                            False
+                )
+                ass
+    in
+    if List.isEmpty ass then
+        div [ class "verdict" ] [ p [] [ text "This tableau doesn't prove anything." ] ]
+    else
+        div [ class "verdict" ]
+            [ p []
+                [ text "This tableau "
+                , text (textVerdict <| Zipper.zipper t)
+                , text ":"
+                ]
+            , p []
+                [ text (premises |> List.map (Formula.signedGetFormula >> Formula.strFormula) |> String.join " , ")
+                , text " ⊦ "
+                , text (conclusions |> List.map (Formula.signedGetFormula >> Formula.strFormula) |> String.join " , ")
+                ]
+            ]
+
+
+textVerdict : Zipper -> String
+textVerdict t =
+    case Helper.isClosed t of
+        Ok True ->
+            "proves"
+
+        Ok False ->
+            "does not prove"
+
+        Err _ ->
+            "might be proving (once correct)"

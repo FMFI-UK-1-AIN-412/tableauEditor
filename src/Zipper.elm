@@ -314,8 +314,15 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
 
-        _ ->
-            ( tableau, num )
+        Closed r1 r2 ->
+            let
+                node =
+                    tableau.node
+
+                ext =
+                    tableau.ext
+            in
+            ( Tableau { node | id = num + 1 } ext, num + 1 )
 
 
 modifyRef : Ref -> Zipper -> Zipper
@@ -417,9 +424,8 @@ extendAlpha z =
                     Delta t s ->
                         Tableau tableau.node (Alpha (Tableau defNode (Delta t s)))
 
-                    _ ->
-                        --tuto dopisat v pripade extendovania nie len pod leafs
-                        tableau
+                    Closed r1 r2 ->
+                        Tableau tableau.node (Alpha (Tableau defNode (Closed r1 r2)))
             )
 
 
