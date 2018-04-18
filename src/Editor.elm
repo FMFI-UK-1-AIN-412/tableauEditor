@@ -154,6 +154,10 @@ simpleUpdate msg model =
                 model
 
             JsonRead { contents } ->
+                let
+                    _ =
+                        Debug.log "JSON READ" "jsonread"
+                in
                 case contents |> Helpers.Exporting.Json.Decode.decode of
                     Ok t ->
                         { model | jsonImporting = False, tableau = t }
@@ -173,8 +177,8 @@ view model =
         , verdict model.tableau
         , problems model.tableau
         , p [ class "actions" ]
-            [ button [ onClick Prettify ] [ text "Prettify formulas" ]
-            , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+            [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+            , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
             , jsonExportControl model.tableau
             , jsonImportControl model
             ]
@@ -221,7 +225,7 @@ viewNode z =
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
 viewButtonsAppearanceControlls z =
-    button [ class "delete", onClick (ChangeButtonsAppearance z) ] [ text "E" ]
+    button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "E" ]
 
 
 viewSubsNode : Zipper.Zipper -> Html Msg
@@ -326,14 +330,12 @@ viewDelta z =
 
 viewOpen : Zipper.Zipper -> Html Msg
 viewOpen z =
-    div [ class "open" ]
-        [--viewControls z
-        ]
+    div [] []
 
 
 viewClosed : Zipper.Zipper -> Html Msg
 viewClosed z =
-    div [ class "open" ] []
+    div [] []
 
 
 viewControls : Zipper.Zipper -> Html Msg
@@ -357,7 +359,7 @@ viewControls z =
                 in
                 [ text "* "
                 , input
-                    [ class ("refEdit " ++ ref1Cls)
+                    [ class ("closed button " ++ ref1Cls)
                     , type_ "text"
                     , placeholder "Ref"
                     , size 1
@@ -366,7 +368,7 @@ viewControls z =
                     ]
                     []
                 , input
-                    [ class ("refEdit " ++ ref2Cls)
+                    [ class ("closed button " ++ ref2Cls)
                     , type_ "text"
                     , placeholder "Ref"
                     , size 1
@@ -374,20 +376,36 @@ viewControls z =
                     , onInput <| SetClosed 1 z
                     ]
                     []
-                , button [ class "delete", onClick (MakeOpen z) ] [ text "o" ]
+                , button [ class "button", onClick (MakeOpen z) ] [ text "o" ]
                 ]
 
             Tableau.Beta lt rt ->
                 case t.node.gui.controlsShown of
                     True ->
-                        [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
-                        , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                        , button [ onClick (ExpandGamma z) ] [ text "γ" ]
-                        , button [ onClick (ExpandDelta z) ] [ text "δ" ]
-                        , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
-                        , button [ class "delete", onClick (DeleteMe z) ] [ text "x" ]
-                        , button [ class "delete", onClick (Delete z) ] [ text "X" ]
-                        , button [ class "delete", onClick (SwitchBetas z) ] [ text "->|<-" ]
+                        [ div [ class "onclick-menu add", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
+                                , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
+                                , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
+                                , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
+                                ]
+                            ]
+                        , div [ class "onclick-menu change", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [] [ text "α" ] ]
+                                , li [] [ button [] [ text "β" ] ]
+                                , li [] [ button [] [ text "γ" ] ]
+                                , li [] [ button [] [ text "δ" ] ]
+                                ]
+                            ]
+                        , div [ class "onclick-menu del", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [ onClick (DeleteMe z) ] [ text "x" ] ]
+                                , li [] [ button [ onClick (Delete z) ] [ text "X" ] ]
+                                ]
+                            ]
+                        , button [ class "button", onClick (MakeClosed z) ] [ text "*" ]
+                        , button [ class "button", onClick (SwitchBetas z) ] [ text "->|<-" ]
                         ]
 
                     False ->
@@ -396,13 +414,29 @@ viewControls z =
             _ ->
                 case t.node.gui.controlsShown of
                     True ->
-                        [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
-                        , button [ onClick (ExpandBeta z) ] [ text "β" ]
-                        , button [ onClick (ExpandGamma z) ] [ text "γ" ]
-                        , button [ onClick (ExpandDelta z) ] [ text "δ" ]
-                        , button [ class "delete", onClick (MakeClosed z) ] [ text "*" ]
-                        , button [ class "delete", onClick (DeleteMe z) ] [ text "x" ]
-                        , button [ class "delete", onClick (Delete z) ] [ text "X" ]
+                        [ div [ class "onclick-menu add", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
+                                , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
+                                , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
+                                , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
+                                ]
+                            ]
+                        , div [ class "onclick-menu change", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [] [ text "α" ] ]
+                                , li [] [ button [] [ text "β" ] ]
+                                , li [] [ button [] [ text "γ" ] ]
+                                , li [] [ button [] [ text "δ" ] ]
+                                ]
+                            ]
+                        , div [ class "onclick-menu del", tabindex 0 ]
+                            [ ul [ class "onclick-menu-content" ]
+                                [ li [] [ button [ onClick (DeleteMe z) ] [ text "x" ] ]
+                                , li [] [ button [ onClick (Delete z) ] [ text "X" ] ]
+                                ]
+                            ]
+                        , button [ class "button", onClick (MakeClosed z) ] [ text "*" ]
                         ]
 
                     False ->
@@ -472,7 +506,7 @@ jsonExportControl t =
         , href <| jsonDataUri <| Helpers.Exporting.Json.Encode.encode 2 t
         , downloadAs "tableau.json"
         ]
-        [ button [] [ text "Export as JSON" ] ]
+        [ button [ class "button" ] [ text "Export as JSON" ] ]
 
 
 jsonImportControl : Model -> Html Msg
@@ -489,7 +523,9 @@ jsonImportControl model =
                          (embedding the label in a button or vice versa works in webkit but not in firefox)
                        - Adding another Msg / Cmd just for this...
                     -}
-                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
+                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();")
+                    , class "button"
+                    ]
                     [ text "Import from JSON"
                     ]
                 , input
