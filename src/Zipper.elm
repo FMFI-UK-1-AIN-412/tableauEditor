@@ -382,49 +382,71 @@ setPair which ref r1 r2 =
             ( r1, ref )
 
 
-renumberJustInReferences : Zipper -> Zipper
-renumberJustInReferences z =
+renumberJustInReferences : (Int -> Int) -> Zipper -> Zipper
+renumberJustInReferences f z =
     modifyNode
         (\tableau ->
-            renumberJusts tableau
+            renumberJusts tableau f 0
         )
         z
 
 
-renumberJusts : Tableau -> Tableau
-renumberJusts tableau =
+renumberJusts : Tableau -> (Int -> Int) -> Int -> Tableau
+renumberJusts tableau f lengthOfPathFromFather =
     case tableau.ext of
         Alpha t ->
-            Tableau tableau.node (Alpha (renumberJusts (renumberJust t)))
+            Tableau
+                tableau.node
+                (Alpha (renumberJusts (renumberJust t f lengthOfPathFromFather) f (lengthOfPathFromFather + 1)))
 
         Beta lt rt ->
-            Tableau tableau.node (Beta (renumberJusts (renumberJust lt)) (renumberJusts (renumberJust rt)))
+            Tableau
+                tableau.node
+                (Beta
+                    (renumberJusts (renumberJust lt f lengthOfPathFromFather) f (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust rt f lengthOfPathFromFather) f (lengthOfPathFromFather + 1))
+                )
 
         Gamma t s ->
-            Tableau tableau.node (Gamma (renumberJusts (renumberJust t)) s)
+            Tableau
+                tableau.node
+                (Gamma (renumberJusts (renumberJust t f lengthOfPathFromFather) f (lengthOfPathFromFather + 1)) s)
 
         Delta t s ->
-            Tableau tableau.node (Delta (renumberJusts (renumberJust t)) s)
+            Tableau
+                tableau.node
+                (Delta (renumberJusts (renumberJust t f lengthOfPathFromFather) f (lengthOfPathFromFather + 1)) s)
 
         Open ->
             tableau
 
         Closed r1 r2 ->
-            Tableau tableau.node (Closed (renumberJustInRef r1) (renumberJustInRef r2))
+            Tableau
+                tableau.node
+                (Closed
+                    (renumberJustInRef r1 f (lengthOfPathFromFather + 1))
+                    (renumberJustInRef r2 f (lengthOfPathFromFather + 1))
+                )
 
 
-renumberJustInRef : Ref -> Ref
-renumberJustInRef r =
-    case r.up of
+renumberJustInRef : Ref -> (Int -> Int) -> Int -> Ref
+renumberJustInRef ref func lengthOfPathFromFather =
+    case ref.up of
+        Just 0 ->
+            ref
+
         Just x ->
-            Ref r.str (Just (x + 1))
+            if x >= lengthOfPathFromFather then
+                Ref ref.str (Just (func x))
+            else
+                ref
 
         Nothing ->
-            Ref r.str Nothing
+            ref
 
 
-renumberJust : Tableau -> Tableau
-renumberJust t =
+renumberJust : Tableau -> (Int -> Int) -> Int -> Tableau
+renumberJust t f lengthOfPathFromFather =
     case t.node.reference.up of
         Just 0 ->
             t
@@ -434,14 +456,11 @@ renumberJust t =
                 oldReference =
                     t.node.reference
 
-                newReference =
-                    { oldReference | up = Just (x + 1) }
-
                 oldNode =
                     t.node
 
                 newNode =
-                    { oldNode | reference = newReference }
+                    { oldNode | reference = renumberJustInRef oldReference f lengthOfPathFromFather }
 
                 newTableau =
                     { t | node = newNode }

@@ -1,109 +1,237 @@
 .tableau {
-	width: 100%;
-	border-spacing: 0;
-	border-collapse: collapse;
+    width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
 }
 
 .formula {
-	display: block;
+    display: block;
 }
 
 .beta {
-	width: 100%;
+    width: 100%;
 }
 
 .formula > .beta {
-	display: inline-flex;
+    display: inline-flex;
 }
 
 .beta > .formula {
-	display: inline-block;
-	min-width: 20px;
-	flex-grow: 1;
+    display: inline-block;
+    min-width: 20px;
+    flex-grow: 1;
 }
 
 .formulaId {
-	width: 10px;
+    width: 10px;
 }
 
 .formulaInput {
-	flex-grow: 1;
-	width: calc(100% - 80px);
+    flex-grow: 1;
+    width: calc(100% - 80px);
 }
 
 .formulaInputSubst {
-	flex-grow: 1;
-	width: calc(100% - 300px);
+    flex-grow: 1;
+    width: calc(100% - 286px);
 }
 
 .substitutedVariable {
-	width: 30px;
+    width: 30px;
 }
 
 .substitutedConstant {
-	width: 80px;
+    width: 80px;
 }
 
 .formulaReference {
-	width: 11px;
+    width: 11px;
 }
 
-.formulaInput, .formulaReference .formulaInputSubst {
-	text-align: center;
-	background-color: inherit;
-	border: 0;
-	border-bottom: thin dashed lightgray;
+.formulaInput, .formulaReference, .formulaInputSubst, .substitutedVariable, .substitutedConstant {
+    text-align: center;
+    background-color: inherit;
+    border: 0;
+    border-bottom: thin dashed lightgray;
 }
 
 .expandControls {
-	text-align: center;
-	display: block;
+    text-align: center;
 }
 
 .actions button {
-	margin: 0 0.5em;
+    margin: 0 0.5em;
 }
 
-.actions #importJson {
-	display: none;
+.button {
+    padding: 2px 10px;
+    background-color: #fff;
+    border-radius: 20px;
+    border: thin solid #ececec;
 }
+
+.closed {
+    min-width: 17px;
+}
+
+//custom menu component start
+      /* The necessities */
+  .onclick-menu {
+      position: relative;
+      display: inline-block;
+  }
+.onclick-menu:before {
+    font-size: 12px;
+}
+
+.onclick-menu.del:before {
+    content: "Delete";
+}
+
+.onclick-menu.change:before {
+    content: "Change";
+}
+
+.onclick-menu.add:before {
+    content: "Add";
+}
+
+.onclick-menu:focus {
+    pointer-events: none;
+}
+
+.onclick-menu:focus .onclick-menu-content {
+    opacity: 1;
+    visibility: visible;
+}
+
+.onclick-menu-content {
+    pointer-events: auto;
+    position: absolute;
+    z-index: 1;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.5s;
+}
+
+.onclick-menu.no-pointer-events {
+    pointer-events: auto !important;
+}
+
+.onclick-menu.no-visibility .onclick-menu-content {
+    visibility: visible !important;
+    display: none;
+}
+
+.onclick-menu.no-visibility:focus .onclick-menu-content {
+    display: block;
+}
+
+.onclick-menu.no-opacity .onclick-menu-content {
+    opacity: 1 !important;
+}
+
+/*
+Eye candy
+( colors courtesy of https://kuler.adobe.com/try-color-theme-3350110 )
+*/
+.onclick-menu {
+    padding: 0;
+    margin: 0;
+    outline: 0;
+    margin-right: 0.3em;
+    text-align: left;
+}
+.onclick-menu:before {
+    padding: 2px 10px;
+    background-color: #fff;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+    border-radius: 20px;
+    border: thin solid #ececec;
+}
+.onclick-menu-content {
+    background-color: #364656;
+    width: auto;
+
+    margin-top: 19px;
+    margin-left: 0;
+    padding: 10px;
+}
+
+/* arrow for the expanding part */
+.onclick-menu-content:before {
+    content: "";
+    width: 0;
+    height: 0;
+
+    border-bottom: 10px solid #364656;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+
+    position: absolute;
+    top: -10px;
+}
+
+.onclick-menu-content li {
+    color: #f2f5e9;
+    list-style-type: none;
+    white-space: nowrap;
+}
+
+/* style the buttons */
+.onclick-menu-content button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: inherit;
+    outline: 0;
+    cursor: pointer;
+}
+.onclick-menu-content button:hover {
+    color: #ff8c31;
+}
+
+//custom menu component end
+
+  .actions #importJson {
+      display: none;
+  }
 
 /** delete button */
 button.delete {
-	padding: 0 0.3em;
-	border: thin solid lightgray;
-	background-color: inherit;
-	color: gray;
-}
-button.delete:hover {
-	background-color: lightpink;
+    padding: 0 0.3em;
+    border: thin solid lightgray;
+    background-color: inherit;
+    color: gray;
 }
 
 .premise { background-color: #def; }
 
-.syntaxProblem    { background-color: lightpink; }
-.semanticsProblem { background-color: rgb(255, 211, 131); }
+.syntaxProblem    { background-color: #ff8c31; }
+.semanticsProblem { background-color: #ff8c3170; }
 
-.jsonImportError { background-color: lightpink; }
+.jsonImportError { background-color: #ff8c31; }
 
 .rules {
-	with: 100%;
+    with: 100%;
 }
 .rule-wrapper {
-	width: 50%;
-	display: inline-grid;
+    width: 50%;
+    display: inline-grid;
 }
 
 .rulesHelp .rule {
-	display: inline-block;
-	padding: 0.5em;
-	text-align: center;
-	vertical-align: top;
+    display: inline-block;
+    padding: 0.5em;
+    text-align: center;
+    vertical-align: top;
 }
 
 p code {
-	background-color: lightgray;
-	padding: 0 0.2em;
+    background-color: lightgray;
+    padding: 0 0.2em;
 }
 
 /**
@@ -112,18 +240,18 @@ p code {
  */
 
 @media print {
-	body > div > *:not(.tableau):not(.verdict):not(.problems),
-	button.delete
-	{
-		display: none;
-	}
-	.formulaEdit, .refEdit {
-		border-bottom: none;
-	}
-	/* Print color backgrounds for webkit browsers */
-	body {
-		-webkit-print-color-adjust: exact;
-	}
+    body > div > *:not(.tableau):not(.verdict):not(.problems),
+    button.delete
+    {
+        display: none;
+    }
+    .formulaEdit, .refEdit {
+        border-bottom: none;
+    }
+    /* Print color backgrounds for webkit browsers */
+    body {
+        -webkit-print-color-adjust: exact;
+    }
 }
 
 /* vim: set sw=2 ts=2 sts=2 et : */
