@@ -56,6 +56,7 @@ errors r =
             []
 
 
+second : a1 -> a2 -> a2
 second =
     curry Tuple.second
 

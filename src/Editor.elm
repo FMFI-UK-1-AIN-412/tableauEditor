@@ -75,6 +75,10 @@ type Msg
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
+    | ChangeToAlpha Zipper.Zipper
+    | ChangeToBeta Zipper.Zipper
+    | ChangeToGamma Zipper.Zipper
+    | ChangeToDelta Zipper.Zipper
     | Prettify
     | JsonSelected
     | JsonRead FileReaderPortData
@@ -109,16 +113,16 @@ simpleUpdate msg model =
                 { model | tableau = z |> Zipper.setFormula new |> top }
 
             ExpandAlpha z ->
-                { model | tableau = z |> Zipper.extendAlpha |> topRenumbered }
+                { model | tableau = z |> Zipper.extendAlpha |> renumberJustInReferences |> topRenumbered }
 
             ExpandBeta z ->
-                { model | tableau = z |> Zipper.extendBeta |> topRenumbered }
+                { model | tableau = z |> Zipper.extendBeta |> renumberJustInReferences |> topRenumbered }
 
             ExpandGamma z ->
-                { model | tableau = z |> Zipper.extendGamma |> topRenumbered }
+                { model | tableau = z |> Zipper.extendGamma |> renumberJustInReferences |> topRenumbered }
 
             ExpandDelta z ->
-                { model | tableau = z |> Zipper.extendDelta |> topRenumbered }
+                { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences |> topRenumbered }
 
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRef new |> top }
@@ -146,6 +150,18 @@ simpleUpdate msg model =
 
             SwitchBetas z ->
                 { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
+
+            ChangeToAlpha z ->
+                { model | tableau = z |> Zipper.changeToAlpha |> topRenumbered }
+
+            ChangeToBeta z ->
+                { model | tableau = z |> Zipper.changeToBeta |> topRenumbered }
+
+            ChangeToGamma z ->
+                { model | tableau = z |> Zipper.changeToGamma |> topRenumbered }
+
+            ChangeToDelta z ->
+                { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
 
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
@@ -247,7 +263,7 @@ viewSubsNode z =
             , onInput <| ChangeText z
             ]
             []
-        , text "Substituting"
+        , text "substituting"
         , input
             [ classList
                 [ ( "substitutedVariable", True )
@@ -392,10 +408,10 @@ viewControls z =
                             ]
                         , div [ class "onclick-menu change", tabindex 0 ]
                             [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [] [ text "α" ] ]
-                                , li [] [ button [] [ text "β" ] ]
-                                , li [] [ button [] [ text "γ" ] ]
-                                , li [] [ button [] [ text "δ" ] ]
+                                [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
+                                , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
+                                , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
+                                , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
                                 ]
                             ]
                         , div [ class "onclick-menu del", tabindex 0 ]
@@ -424,10 +440,10 @@ viewControls z =
                             ]
                         , div [ class "onclick-menu change", tabindex 0 ]
                             [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [] [ text "α" ] ]
-                                , li [] [ button [] [ text "β" ] ]
-                                , li [] [ button [] [ text "γ" ] ]
-                                , li [] [ button [] [ text "δ" ] ]
+                                [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
+                                , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
+                                , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
+                                , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
                                 ]
                             ]
                         , div [ class "onclick-menu del", tabindex 0 ]

@@ -382,6 +382,76 @@ setPair which ref r1 r2 =
             ( r1, ref )
 
 
+renumberJustInReferences : Zipper -> Zipper
+renumberJustInReferences z =
+    modifyNode
+        (\tableau ->
+            renumberJusts tableau
+        )
+        z
+
+
+renumberJusts : Tableau -> Tableau
+renumberJusts tableau =
+    case tableau.ext of
+        Alpha t ->
+            Tableau tableau.node (Alpha (renumberJusts (renumberJust t)))
+
+        Beta lt rt ->
+            Tableau tableau.node (Beta (renumberJusts (renumberJust lt)) (renumberJusts (renumberJust rt)))
+
+        Gamma t s ->
+            Tableau tableau.node (Gamma (renumberJusts (renumberJust t)) s)
+
+        Delta t s ->
+            Tableau tableau.node (Delta (renumberJusts (renumberJust t)) s)
+
+        Open ->
+            tableau
+
+        Closed r1 r2 ->
+            Tableau tableau.node (Closed (renumberJustInRef r1) (renumberJustInRef r2))
+
+
+renumberJustInRef : Ref -> Ref
+renumberJustInRef r =
+    case r.up of
+        Just x ->
+            Ref r.str (Just (x + 1))
+
+        Nothing ->
+            Ref r.str Nothing
+
+
+renumberJust : Tableau -> Tableau
+renumberJust t =
+    case t.node.reference.up of
+        Just 0 ->
+            t
+
+        Just x ->
+            let
+                oldReference =
+                    t.node.reference
+
+                newReference =
+                    { oldReference | up = Just (x + 1) }
+
+                oldNode =
+                    t.node
+
+                newNode =
+                    { oldNode | reference = newReference }
+
+                newTableau =
+                    { t | node = newNode }
+            in
+            newTableau
+
+        Nothing ->
+            t
+
+
 
 --Actions
 
@@ -584,11 +654,8 @@ makeClosed z =
     modifyNode
         (\tableau ->
             case tableau.ext of
-                Open ->
-                    Tableau tableau.node (Closed defRef defRef)
-
                 _ ->
-                    tableau
+                    Tableau tableau.node (Closed defRef defRef)
         )
         z
 
@@ -693,6 +760,117 @@ changeButtonAppearance z =
             { tableau | node = newNode }
         )
         z
+
+
+changeToAlpha : Zipper -> Zipper
+changeToAlpha z =
+    if (z |> up) == z then
+        z
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Alpha rt)
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Alpha lt)
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Alpha t)
+
+                    Delta t s ->
+                        Tableau tableau.node (Alpha t)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToBeta : Zipper -> Zipper
+changeToBeta z =
+    if (z |> up) == z then
+        z
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    Gamma t s ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    Delta t s ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToGamma : Zipper -> Zipper
+changeToGamma z =
+    if (z |> up) == z then
+        z
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (Gamma t defSubstitution)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Gamma rt defSubstitution)
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Gamma lt defSubstitution)
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Delta t s ->
+                        Tableau tableau.node (Gamma t s)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToDelta : Zipper -> Zipper
+changeToDelta z =
+    if (z |> up) == z then
+        z
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (Delta t defSubstitution)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Delta rt defSubstitution)
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Delta lt defSubstitution)
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Delta t s)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
 
 
 prettify : Tableau -> Tableau
