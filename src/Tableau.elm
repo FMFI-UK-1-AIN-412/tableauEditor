@@ -51,7 +51,7 @@ defRef =
 
 defGUI : { controlsShown : Bool }
 defGUI =
-    { controlsShown = False }
+    { controlsShown = True }
 
 
 defNode :

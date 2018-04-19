@@ -471,6 +471,11 @@ renumberJust t f lengthOfPathFromFather =
             t
 
 
+closeControls : Node -> Node
+closeControls oldNode =
+    { oldNode | gui = { controlsShown = False } }
+
+
 
 --Actions
 
@@ -499,22 +504,22 @@ extendAlpha z =
             (\tableau ->
                 case tableau.ext of
                     Open ->
-                        Tableau tableau.node (Alpha (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode Open))
 
                     Alpha t ->
-                        Tableau tableau.node (Alpha (Tableau defNode (Alpha t)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Alpha t)))
 
                     Beta lt rt ->
-                        Tableau tableau.node (Alpha (Tableau defNode (Beta lt rt)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Beta lt rt)))
 
                     Gamma t s ->
-                        Tableau tableau.node (Alpha (Tableau defNode (Gamma t s)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Gamma t s)))
 
                     Delta t s ->
-                        Tableau tableau.node (Alpha (Tableau defNode (Delta t s)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Delta t s)))
 
                     Closed r1 r2 ->
-                        Tableau tableau.node (Alpha (Tableau defNode (Closed r1 r2)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Closed r1 r2)))
             )
 
 
@@ -525,19 +530,19 @@ extendBeta z =
             (\tableau ->
                 case tableau.ext of
                     Open ->
-                        Tableau tableau.node (Beta (Tableau defNode Open) (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode Open) (Tableau defNode Open))
 
                     Alpha t ->
-                        Tableau tableau.node (Beta (Tableau defNode (Alpha t)) (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Alpha t)) (Tableau defNode Open))
 
                     Beta lt rt ->
-                        Tableau tableau.node (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode Open))
 
                     Gamma t s ->
-                        Tableau tableau.node (Beta (Tableau defNode (Gamma t s)) (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Gamma t s)) (Tableau defNode Open))
 
                     Delta t s ->
-                        Tableau tableau.node (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
 
                     _ ->
                         tableau
@@ -551,19 +556,19 @@ extendGamma z =
             (\tableau ->
                 case tableau.ext of
                     Open ->
-                        Tableau tableau.node (Gamma (Tableau defNode Open) defSubstitution)
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode Open) defSubstitution)
 
                     Alpha t ->
-                        Tableau tableau.node (Gamma (Tableau defNode (Alpha t)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Alpha t)) defSubstitution)
 
                     Beta lt rt ->
-                        Tableau tableau.node (Gamma (Tableau defNode (Beta lt rt)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Beta lt rt)) defSubstitution)
 
                     Gamma t s ->
-                        Tableau tableau.node (Gamma (Tableau defNode (Gamma t s)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Gamma t s)) defSubstitution)
 
                     Delta t s ->
-                        Tableau tableau.node (Gamma (Tableau defNode (Delta t s)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Delta t s)) defSubstitution)
 
                     _ ->
                         tableau
@@ -577,19 +582,19 @@ extendDelta z =
             (\tableau ->
                 case tableau.ext of
                     Open ->
-                        Tableau tableau.node (Delta (Tableau defNode Open) defSubstitution)
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode Open) defSubstitution)
 
                     Alpha t ->
-                        Tableau tableau.node (Delta (Tableau defNode (Alpha t)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Alpha t)) defSubstitution)
 
                     Beta lt rt ->
-                        Tableau tableau.node (Delta (Tableau defNode (Beta lt rt)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Beta lt rt)) defSubstitution)
 
                     Gamma t s ->
-                        Tableau tableau.node (Delta (Tableau defNode (Gamma t s)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Gamma t s)) defSubstitution)
 
                     Delta t s ->
-                        Tableau tableau.node (Delta (Tableau defNode (Delta t s)) defSubstitution)
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Delta t s)) defSubstitution)
 
                     _ ->
                         tableau

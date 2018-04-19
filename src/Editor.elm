@@ -13,6 +13,7 @@ import Http
 import Json.Decode
 import Rules exposing (..)
 import Tableau exposing (..)
+import UndoList exposing (UndoList)
 import Validate
 import Zipper exposing (..)
 
@@ -28,16 +29,18 @@ main =
 
 
 type alias Model =
-    { tableau : Tableau
-    , jsonImporting : Bool
-    , jsonImportError : String
-    , jsonImportId : String
-    }
+    UndoList
+        { tableau : Tableau
+        , jsonImporting : Bool
+        , jsonImportError : String
+        , jsonImportId : String
+        }
 
 
 init : ( Model, Cmd msg )
 init =
-    ( { tableau =
+    ( UndoList.fresh
+        { tableau =
             { node =
                 { id = 1
                 , value = ""
@@ -47,10 +50,10 @@ init =
                 }
             , ext = Open
             }
-      , jsonImporting = False
-      , jsonImportError = ""
-      , jsonImportId = "importJson"
-      }
+        , jsonImporting = False
+        , jsonImportError = ""
+        , jsonImportId = "importJson"
+        }
     , Cmd.none
     )
 
@@ -79,6 +82,8 @@ type Msg
     | ChangeToBeta Zipper.Zipper
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
+    | Undo
+    | Redo
     | Prettify
     | JsonSelected
     | JsonRead FileReaderPortData
@@ -96,16 +101,26 @@ topRenumbered =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg ({ present } as model) =
     case msg of
         JsonSelected ->
-            ( { model | jsonImportError = "", jsonImporting = True }, fileSelected model.jsonImportId )
+            ( UndoList.new { present | jsonImportError = "", jsonImporting = True } model, fileSelected present.jsonImportId )
+
+        Undo ->
+            ( UndoList.undo model, Cmd.none )
+
+        Redo ->
+            ( UndoList.redo model, Cmd.none )
 
         _ ->
-            ( simpleUpdate msg { model | jsonImportError = "" }, Cmd.none )
+            ( UndoList.new (simpleUpdate msg { present | jsonImportError = "" }) model, Cmd.none )
 
 
-simpleUpdate : Msg -> Model -> Model
+
+--
+--simpleUpdate : Msg -> Model -> Model
+
+
 simpleUpdate msg model =
     Debug.log "model"
         (case msg of
@@ -169,6 +184,12 @@ simpleUpdate msg model =
             JsonSelected ->
                 model
 
+            Undo ->
+                model
+
+            Redo ->
+                model
+
             JsonRead { contents } ->
                 let
                     _ =
@@ -187,18 +208,20 @@ simpleUpdate msg model =
 
 
 view : Model -> Html Msg
-view model =
+view ({ present } as model) =
     div [ class "tableau" ]
-        [ viewNode (Zipper.zipper model.tableau)
-        , verdict model.tableau
-        , problems model.tableau
+        [ viewNode (Zipper.zipper present.tableau)
+        , verdict present.tableau
+        , problems present.tableau
         , p [ class "actions" ]
             [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
             , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
-            , jsonExportControl model.tableau
-            , jsonImportControl model
+            , jsonExportControl present.tableau
+            , jsonImportControl present.jsonImporting present.jsonImportId
+            , button [ class "button", onClick Undo ] [ text "Undo" ]
+            , button [ class "button", onClick Redo ] [ text "Redo" ]
             ]
-        , jsonImportError model
+        , jsonImportError present
         , Rules.help
         ]
 
@@ -525,28 +548,28 @@ jsonExportControl t =
         [ button [ class "button" ] [ text "Export as JSON" ] ]
 
 
-jsonImportControl : Model -> Html Msg
-jsonImportControl model =
-    case model.jsonImporting of
+jsonImportControl : Bool -> String -> Html Msg
+jsonImportControl jsonImporting jsonImportId =
+    case jsonImporting of
         True ->
             text "Loading file..."
 
         False ->
-            label [ for model.jsonImportId ]
+            label [ for jsonImportId ]
                 [ button
                     {- This is really ugly, but:
                        - we really need the buton and onClick, if we want it to look like a button
                          (embedding the label in a button or vice versa works in webkit but not in firefox)
                        - Adding another Msg / Cmd just for this...
                     -}
-                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();")
+                    [ attribute "onClick" ("javascript:document.getElementById('" ++ jsonImportId ++ "').click();")
                     , class "button"
                     ]
                     [ text "Import from JSON"
                     ]
                 , input
                     [ type_ "file"
-                    , id model.jsonImportId
+                    , id jsonImportId
                     , accept "application/json"
                     , on "change"
                         (Json.Decode.succeed JsonSelected)
