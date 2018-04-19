@@ -396,6 +396,16 @@ isNewVariableVariable variable _ =
             False
 
 
+isNewVariableFunction : String -> Bool
+isNewVariableFunction variable =
+    case getTermFromResult (Formula.parseTerm variable) of
+        Formula.Var s ->
+            True
+
+        Formula.Fun _ _ ->
+            False
+
+
 getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
 getTermFromResult r =
     case r of
@@ -580,41 +590,16 @@ validateGammaRule z =
                 )
             )
         |> Result.map (always z)
-        |> Result.andThen
-            -- checking existing variable above + if new constant is variable or function
-            (checkPredicate
-                (isNewVariableVariable
-                    (z
-                        |> Zipper.up
-                        |> Zipper.zSubstitution
-                        |> Maybe.map makeS
-                        |> Maybe.withDefault (Dict.fromList [])
-                        |> Dict.values
-                        |> List.head
-                        |> Maybe.withDefault (Formula.Var "default")
-                        |> Formula.strTerm
-                    )
-                )
-                (semanticsProblem z
-                    ("Substituting variable '"
-                        ++ (z
-                                |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .what
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
-                           )
-                        ++ "' is not variable but function. Should be variable."
-                    )
-                )
-            )
-        |> Result.map (always z)
+
+
+checkNewVariable : (String -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
+checkNewVariable pred x z =
+    case pred (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "") of
+        True ->
+            Ok z
+
+        False ->
+            Err x
 
 
 validateDeltaRule :
@@ -628,9 +613,19 @@ validateDeltaRule z =
             (checkPredicate Formula.isDelta
                 (semanticsProblem z "Referenced formula is not delta")
             )
+        |> Result.map (always z)
+        |> Result.andThen
+            -- checking existing variable above + if new constant is variable or function
+            (checkNewVariable
+                isNewVariableFunction
+                (semanticsProblem z
+                    "Your new variable can't be function."
+                )
+            )
+        |> Result.andThen validateReffedFormula
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
-            -- checking substituable
+            -- checking substitutable
             (checkPredicate
                 (uncurry
                     (isSubstituable
@@ -743,7 +738,6 @@ validateDeltaRule z =
                                 |> Maybe.withDefault ""
                            )
                         ++ "' was located above as free. Please choose another, not used yet. "
-                        ++ "Make sure, your new variable is variable and not function."
                     )
                 )
             )
