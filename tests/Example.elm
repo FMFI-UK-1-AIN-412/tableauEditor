@@ -36,6 +36,7 @@ tableauExample =
         , value = ""
         , reference = { str = "1", up = Just 0 }
         , formula = Formula.parseSigned ""
+        , gui = defGUI
         }
     , ext = Open
     }
@@ -51,6 +52,7 @@ tableauWithAlpha =
         , value = ""
         , reference = { str = "1", up = Just 0 }
         , formula = Formula.parseSigned ""
+        , gui = { controlsShown = False }
         }
     , ext =
         Alpha
@@ -59,6 +61,7 @@ tableauWithAlpha =
                 , value = ""
                 , reference = { str = "", up = Nothing }
                 , formula = Formula.parseSigned ""
+                , gui = defGUI
                 }
             , ext = Open
             }
@@ -75,6 +78,7 @@ zipperWithAplhaDown =
             , value = ""
             , reference = { str = "", up = Nothing }
             , formula = Formula.parseSigned ""
+            , gui = defGUI
             }
       , ext = Open
       }
@@ -83,6 +87,7 @@ zipperWithAplhaDown =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
       ]
     )
@@ -94,19 +99,33 @@ zipperWithAlphaDownBetaLeft =
             , value = ""
             , reference = { str = "", up = Nothing }
             , formula = Formula.parseSigned ""
+            , gui = defGUI
             }
       , ext = Open
       }
-    , [ BetaLeftCrumb { id = 1, value = "", reference = { str = "", up = Nothing }, formula = Formula.parseSigned "" }
+    , [ BetaLeftCrumb
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
+            }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
                 , formula = Formula.parseSigned ""
+                , gui = defGUI
                 }
             , ext = Open
             }
-      , AlphaCrumb { id = 1, value = "", reference = { str = "1", up = Just 0 }, formula = Formula.parseSigned "" }
+      , AlphaCrumb
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
+            }
       ]
     )
 
@@ -117,16 +136,30 @@ zipperOnlyAlphaOfRightBeta =
             , value = ""
             , reference = { str = "", up = Nothing }
             , formula = Formula.parseSigned ""
+            , gui = defGUI
             }
       , ext = Open
       }
-    , [ AlphaCrumb { id = 1, value = "", reference = { str = "", up = Nothing }, formula = Formula.parseSigned "" }
-      , BetaRightCrumb { id = 1, value = "", reference = { str = "1", up = Just 0 }, formula = Formula.parseSigned "" }
+    , [ AlphaCrumb
+            { id = 1
+            , value = ""
+            , reference = { str = "", up = Nothing }
+            , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
+            }
+      , BetaRightCrumb
+            { id = 1
+            , value = ""
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
+            }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
                 , formula = Formula.parseSigned ""
+                , gui = defGUI
                 }
             , ext = Open
             }
@@ -140,6 +173,7 @@ onlyAlphaOfRightBetaRenumbered =
         , value = ""
         , reference = { str = "1", up = Just 0 }
         , formula = Formula.parseSigned ""
+        , gui = { controlsShown = False }
         }
     , ext =
         Beta
@@ -148,6 +182,7 @@ onlyAlphaOfRightBetaRenumbered =
                 , value = ""
                 , reference = { str = "", up = Nothing }
                 , formula = Formula.parseSigned ""
+                , gui = defGUI
                 }
             , ext = Open
             }
@@ -156,6 +191,7 @@ onlyAlphaOfRightBetaRenumbered =
                 , value = ""
                 , reference = { str = "", up = Nothing }
                 , formula = Formula.parseSigned ""
+                , gui = { controlsShown = False }
                 }
             , ext =
                 Alpha
@@ -164,6 +200,7 @@ onlyAlphaOfRightBetaRenumbered =
                         , value = ""
                         , reference = { str = "", up = Nothing }
                         , formula = Formula.parseSigned ""
+                        , gui = defGUI
                         }
                     , ext = Open
                     }
@@ -186,6 +223,7 @@ zipperZWalkPostResult =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -194,6 +232,7 @@ zipperZWalkPostResult =
                     , value = ""
                     , reference = { str = "", up = Nothing }
                     , formula = Formula.parseSigned ""
+                    , gui = { controlsShown = False }
                     }
                 , ext =
                     Beta
@@ -202,6 +241,7 @@ zipperZWalkPostResult =
                             , value = ""
                             , reference = { str = "", up = Nothing }
                             , formula = Formula.parseSigned ""
+                            , gui = { controlsShown = False }
                             }
                         , ext =
                             Alpha
@@ -210,6 +250,7 @@ zipperZWalkPostResult =
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
                                     , formula = Formula.parseSigned ""
+                                    , gui = defGUI
                                     }
                                 , ext = Open
                                 }
@@ -219,6 +260,7 @@ zipperZWalkPostResult =
                             , value = ""
                             , reference = { str = "", up = Nothing }
                             , formula = Formula.parseSigned ""
+                            , gui = { controlsShown = False }
                             }
                         , ext =
                             Beta
@@ -227,6 +269,7 @@ zipperZWalkPostResult =
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
                                     , formula = Formula.parseSigned ""
+                                    , gui = { controlsShown = False }
                                     }
                                 , ext =
                                     Alpha
@@ -235,6 +278,7 @@ zipperZWalkPostResult =
                                             , value = ""
                                             , reference = { str = "", up = Nothing }
                                             , formula = Formula.parseSigned ""
+                                            , gui = defGUI
                                             }
                                         , ext = Open
                                         }
@@ -244,6 +288,7 @@ zipperZWalkPostResult =
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
                                     , formula = Formula.parseSigned ""
+                                    , gui = defGUI
                                     }
                                 , ext = Open
                                 }
@@ -263,6 +308,7 @@ testReferenceRewritingResult =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -271,6 +317,7 @@ testReferenceRewritingResult =
                     , value = ""
                     , reference = { str = "", up = Nothing }
                     , formula = Formula.parseSigned ""
+                    , gui = defGUI
                     }
                 , ext = Open
                 }
@@ -284,6 +331,7 @@ fixRefsTest =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -292,6 +340,7 @@ fixRefsTest =
                     , value = ""
                     , reference = { str = "", up = Nothing }
                     , formula = Formula.parseSigned ""
+                    , gui = defGUI
                     }
                 , ext = Open
                 }
@@ -305,6 +354,7 @@ fixRefsTestResult =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -313,6 +363,7 @@ fixRefsTestResult =
                     , value = ""
                     , reference = { str = "", up = Nothing }
                     , formula = Formula.parseSigned ""
+                    , gui = defGUI
                     }
                 , ext = Open
                 }
@@ -326,6 +377,7 @@ gammaExampleResult =
             , value = ""
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned ""
+            , gui = { controlsShown = False }
             }
         , ext =
             Gamma
@@ -334,6 +386,7 @@ gammaExampleResult =
                     , value = ""
                     , reference = { str = "", up = Nothing }
                     , formula = Formula.parseSigned ""
+                    , gui = defGUI
                     }
                 , ext = Open
                 }
@@ -358,6 +411,7 @@ validateGammaSubstituteFunction =
             , value = "T \\forall x P(f(x))"
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned "T \\forall x P(f(x))"
+            , gui = { controlsShown = False }
             }
         , ext =
             Gamma
@@ -366,6 +420,7 @@ validateGammaSubstituteFunction =
                     , value = "T P(f(Diana))"
                     , reference = { str = "1", up = Just 1 }
                     , formula = Formula.parseSigned "T P(f(Diana))"
+                    , gui = defGUI
                     }
                 , ext = Open
                 }
@@ -380,6 +435,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
             , value = "T \\forall x P(x, k)"
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -388,6 +444,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                     , value = "T \\forall z \\exists p Z(p, f(z))"
                     , reference = { str = "2", up = Just 0 }
                     , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , gui = { controlsShown = False }
                     }
                 , ext =
                     Gamma
@@ -396,6 +453,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                             , value = "T \\exists p Z(p, f(k))"
                             , reference = { str = "2", up = Just 1 }
                             , formula = Formula.parseSigned "T \\exists p Z(p, f(k))"
+                            , gui = defGUI
                             }
                         , ext = Open
                         }
@@ -411,6 +469,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
             , value = "T \\forall x P(x, k)"
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -419,6 +478,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                     , value = "T \\forall z \\exists p Z(p, f(z))"
                     , reference = { str = "2", up = Just 0 }
                     , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , gui = { controlsShown = False }
                     }
                 , ext =
                     Gamma
@@ -427,6 +487,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                             , value = "T P(z, k)"
                             , reference = { str = "1", up = Just 2 }
                             , formula = Formula.parseSigned "T P(z, k)"
+                            , gui = defGUI
                             }
                         , ext = Open
                         }
@@ -448,6 +509,7 @@ validateParsingTheory =
             , value = "T \\forall x P(x, k)"
             , reference = { str = "1", up = Just 0 }
             , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            , gui = { controlsShown = False }
             }
         , ext =
             Alpha
@@ -456,6 +518,7 @@ validateParsingTheory =
                     , value = "T \\forall z \\exists p Z(p, f(z))"
                     , reference = { str = "2", up = Just 0 }
                     , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , gui = { controlsShown = False }
                     }
                 , ext =
                     Alpha
@@ -464,6 +527,7 @@ validateParsingTheory =
                             , value = "F \\exists k \\forall p L(k, f(p))"
                             , reference = { str = "3", up = Just 0 }
                             , formula = Formula.parseSigned "F \\exists k \\forall p L(k, f(p))"
+                            , gui = defGUI
                             }
                         , ext = Open
                         }
@@ -479,7 +543,7 @@ suiteZipper =
         , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendAlpha zipperExample)) zipperWithAplhaDown)
         , test "compare zippers: extend alpha, go down, extend beta"
             (\() -> compareZippers (left (extendBeta (down (extendAlpha zipperExample)))) zipperWithAlphaDownBetaLeft)
-        , test "compare zippers, extend beta, do right, extend alpha, go down"
+        , test "compare zippers, extend beta, go right, extend alpha, go down"
             (\() ->
                 compareZippers
                     (zipperExample |> extendBeta |> right |> extendAlpha |> down)
