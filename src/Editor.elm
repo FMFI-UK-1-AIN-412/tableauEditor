@@ -256,6 +256,7 @@ viewNode z =
             []
         , text "]"
         , viewButtonsAppearanceControlls z
+        , singleNodeProblems z
         , viewControls z
         , viewChildren z
         ]
@@ -316,6 +317,7 @@ viewSubsNode z =
             []
         , text "]"
         , viewButtonsAppearanceControlls z
+        , singleNodeProblems z
         , viewControls z
         , viewChildren z
         ]
@@ -480,6 +482,22 @@ viewControls z =
                     False ->
                         []
         )
+
+
+singleNodeProblems : Zipper -> Html Msg
+singleNodeProblems z =
+    let
+        errors =
+            Errors.errors <| Validate.isCorrectNode <| z
+    in
+    if List.isEmpty errors then
+        div [ class "nodeProblems" ] []
+    else
+        div [ class "nodeProblems" ]
+            (List.map
+                (\pr -> small [ class "nodeProblemsText" ] [ text <| pr.msg ])
+                errors
+            )
 
 
 problems : Tableau -> Html Msg
