@@ -117,8 +117,7 @@ update msg ({ present } as model) =
 
 
 
---
---simpleUpdate : Msg -> Model -> Model
+--simpleUpdate : Msg -> Model -> (Model)
 
 
 simpleUpdate msg model =

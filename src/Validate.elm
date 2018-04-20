@@ -602,6 +602,21 @@ checkNewVariable pred x z =
             Err x
 
 
+getReffedSignedFormula : Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+getReffedSignedFormula z =
+    case Zipper.getReffed (Zipper.zNode z).reference z of
+        Just rz ->
+            case rz |> Zipper.zNode |> .formula of
+                Ok sf ->
+                    Ok sf
+
+                Err _ ->
+                    Err (syntaxProblem z "reffed formula incorrectly parsed")
+
+        Nothing ->
+            Err (semanticsProblem z "no reffed formula")
+
+
 validateDeltaRule :
     Zipper.Zipper
     -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
@@ -622,7 +637,7 @@ validateDeltaRule z =
                     "Your new variable can't be function."
                 )
             )
-        |> Result.andThen validateReffedFormula
+        |> Result.andThen (\z -> getReffedSignedFormula z)
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substitutable
