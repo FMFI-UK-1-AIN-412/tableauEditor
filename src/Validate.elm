@@ -634,7 +634,7 @@ validateDeltaRule z =
             (checkNewVariable
                 isNewVariableFunction
                 (semanticsProblem z
-                    "Your new variable can't be function."
+                    "Your new variable can't be empty or function."
                 )
             )
         |> Result.andThen (\z -> getReffedSignedFormula z)
