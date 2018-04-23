@@ -1,4 +1,4 @@
-module Editor exposing (..)
+port module Editor exposing (..)
 
 import Errors
 import Formula

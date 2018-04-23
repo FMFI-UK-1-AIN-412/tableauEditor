@@ -85,7 +85,7 @@
 	display: block;
 }
 
-//custom menu component start
+/*custom menu component start*/
 /* The necessities */
 .onclick-menu {
 	position: relative;
@@ -204,7 +204,7 @@ Eye candy
 	color: #ff8c31;
 }
 
-//custom menu component end
+/*custom menu component end*/
 
 .actions #importJson {
 	display: none;

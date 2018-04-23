@@ -3,7 +3,11 @@
   <head>
     <meta charSet="utf-8"/>
     <title>Tableau Editor</title>
-    <script type="text/javascript" src="/static/index.js"></script>
+    <link rel="icon"
+          type="image/png"
+          href="static/img/favicon.ico">
+    <link rel="stylesheet" href="./main.css">
+    <script type="text/javascript" src="../Editor.js"></script>
   </head>
   <body>
     <div id="main"></div>
@@ -32,7 +36,10 @@
                 var data = b64DecodeUnicode(base64encoded);
                 var portData = {
                     contents: data,
-                    filename: file.name
+                    filename: file.name,
+                    jsonImporting: false,
+                    jsonImportError: "",
+                    jsonImportId : "importJson"
                 };
                 app.ports.fileContentRead.send(portData);
             });
