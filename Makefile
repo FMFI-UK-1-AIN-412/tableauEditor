@@ -1,5 +1,5 @@
 
-STATIC_FILES = static/index.html static/main.scss
+STATIC_FILES = static/index.html static/main.css
 ELM_MAIN = src/Editor.elm
 ELM_FILES = $(wildcard src/*.elm)
 
