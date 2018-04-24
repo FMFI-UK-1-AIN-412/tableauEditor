@@ -63,6 +63,15 @@
 	margin: 0 0.5em;
 }
 
+.actions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.problems {
+	max-width: 97%;
+}
+
 .button {
 	padding: 2px 10px;
 	background-color: #fff;
@@ -223,7 +232,12 @@ button.delete {
 .syntaxProblem    { background-color: #ff8c31; }
 .semanticsProblem { background-color: #ff8c3170; }
 
-.jsonImportError { background-color: #ff8c31; }
+.jsonImportError {
+	color: #ff8c31;
+	font-size: 14px;
+	display: flex;
+	justify-content: center;
+}
 
 .rules {
 	with: 100%;
@@ -251,10 +265,13 @@ p code {
  */
 
 @media print {
-	body > div > *:not(.tableau):not(.verdict):not(.problems),
-	button.delete
+	body > div > *:not(.formula):not(.verdict):not(.problems),
+	.onclick-menu, .nodeProblems, .button
 	{
 		display: none;
+	}
+	.closed {
+		display: inline-block;
 	}
 	.formulaEdit, .refEdit {
 		border-bottom: none;

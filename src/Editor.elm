@@ -205,10 +205,7 @@ simpleUpdate msg model =
 view : Model -> Html Msg
 view ({ present } as model) =
     div [ class "tableau" ]
-        [ viewNode (Zipper.zipper present.tableau)
-        , verdict present.tableau
-        , problems present.tableau
-        , p [ class "actions" ]
+        [ div [ class "actions" ]
             [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
             , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
             , jsonExportControl present.tableau
@@ -217,6 +214,9 @@ view ({ present } as model) =
             , button [ class "button", onClick Redo ] [ text "Redo" ]
             ]
         , jsonImportError present
+        , viewNode (Zipper.zipper present.tableau)
+        , verdict present.tableau
+        , problems present.tableau
         , Rules.help
         ]
 

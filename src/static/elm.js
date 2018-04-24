@@ -17747,41 +17747,55 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p29) {
 		},
 		{
 			ctor: '::',
-			_0: _moarwick$elm_webpack_starter$Editor$viewNode(
-				_moarwick$elm_webpack_starter$Zipper$zipper(_p31.tableau)),
-			_1: {
-				ctor: '::',
-				_0: _moarwick$elm_webpack_starter$Editor$verdict(_p31.tableau),
-				_1: {
+			_0: A2(
+				_elm_lang$html$Html$div,
+				{
 					ctor: '::',
-					_0: _moarwick$elm_webpack_starter$Editor$problems(_p31.tableau),
+					_0: _elm_lang$html$Html_Attributes$class('actions'),
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$button,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('button'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Prettify),
+								_1: {ctor: '[]'}
+							}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('Prettify formulas'),
+							_1: {ctor: '[]'}
+						}),
 					_1: {
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$p,
+							_elm_lang$html$Html$button,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('actions'),
-								_1: {ctor: '[]'}
+								_0: _elm_lang$html$Html_Attributes$class('button'),
+								_1: {
+									ctor: '::',
+									_0: A2(_elm_lang$html$Html_Attributes$attribute, 'onClick', 'javascript:window.print()'),
+									_1: {ctor: '[]'}
+								}
 							},
 							{
 								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$button,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('button'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Prettify),
-											_1: {ctor: '[]'}
-										}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('Prettify formulas'),
-										_1: {ctor: '[]'}
-									}),
+								_0: _elm_lang$html$Html$text('Print'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p31.tableau),
+							_1: {
+								ctor: '::',
+								_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p31.jsonImporting, _p31.jsonImportId),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -17791,67 +17805,53 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p29) {
 											_0: _elm_lang$html$Html_Attributes$class('button'),
 											_1: {
 												ctor: '::',
-												_0: A2(_elm_lang$html$Html_Attributes$attribute, 'onClick', 'javascript:window.print()'),
+												_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Undo),
 												_1: {ctor: '[]'}
 											}
 										},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Print'),
+											_0: _elm_lang$html$Html$text('Undo'),
 											_1: {ctor: '[]'}
 										}),
 									_1: {
 										ctor: '::',
-										_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p31.tableau),
-										_1: {
-											ctor: '::',
-											_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p31.jsonImporting, _p31.jsonImportId),
-											_1: {
+										_0: A2(
+											_elm_lang$html$Html$button,
+											{
 												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$button,
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$class('button'),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Undo),
-															_1: {ctor: '[]'}
-														}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text('Undo'),
-														_1: {ctor: '[]'}
-													}),
+												_0: _elm_lang$html$Html_Attributes$class('button'),
 												_1: {
 													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$button,
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$class('button'),
-															_1: {
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Redo),
-																_1: {ctor: '[]'}
-															}
-														},
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html$text('Redo'),
-															_1: {ctor: '[]'}
-														}),
+													_0: _elm_lang$html$Html_Events$onClick(_moarwick$elm_webpack_starter$Editor$Redo),
 													_1: {ctor: '[]'}
 												}
-											}
-										}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Redo'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
 									}
 								}
-							}),
+							}
+						}
+					}
+				}),
+			_1: {
+				ctor: '::',
+				_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p31),
+				_1: {
+					ctor: '::',
+					_0: _moarwick$elm_webpack_starter$Editor$viewNode(
+						_moarwick$elm_webpack_starter$Zipper$zipper(_p31.tableau)),
+					_1: {
+						ctor: '::',
+						_0: _moarwick$elm_webpack_starter$Editor$verdict(_p31.tableau),
 						_1: {
 							ctor: '::',
-							_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p31),
+							_0: _moarwick$elm_webpack_starter$Editor$problems(_p31.tableau),
 							_1: {
 								ctor: '::',
 								_0: _moarwick$elm_webpack_starter$Rules$help,
