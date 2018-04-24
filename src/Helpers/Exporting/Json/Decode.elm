@@ -135,14 +135,8 @@ tableau =
 decode : String -> Result String Tableau.Tableau
 decode s =
     let
-        _ =
-            Debug.log "Decoding" "decoding"
-
         fn =
             decodeString tableau >> Result.map reRefTableau
-
-        _ =
-            Debug.log "decoded " (fn s)
     in
     fn s
 

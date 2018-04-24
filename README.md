@@ -3,23 +3,21 @@
 In this repository is maintained the code to my bachelor thesis.
 
 
-I used this boilerplate for project initialization:
-https://github.com/elm-community/elm-webpack-starter
-
 Here you can find other material to my bachelor thesis: https://nitrajka.github.io/
 
-### Serve locally:
+### Development server:
 ```
-npm start
+elm-live src/Editor.elm src/Tableau.elm src/Zipper.elm src/Errors.elm src/Validate.elm src/Helpers/Helper.elm src/Helpers/Rules.elm src/Helpers/Exporting/Ports.elm src/Helpers/Exporting/Json/Encode.elm src/Helpers/Exporting/Json/Decode.elm --open --pushstate --output=src/static/elm.js
 ```
-* Access app at `http://localhost:8080/`
-* The entry point file is `src/elm/Editor.elm`
+* Access app at `http://localhost:8000/`
 
 
 ### Build & bundle for prod:
 ```
-npm run build
+make
 ```
 
-* Files are saved into the `/dist` folder
-* To check it, open `dist/index.html`
+* Files are saved into the `/build` folder
+* To check it, open `build/index.html`
+
+When switching between prod and development don't forget to uncomment the correct links in header of `index.html` file.

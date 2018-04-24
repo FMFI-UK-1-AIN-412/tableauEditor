@@ -1,9 +1,10 @@
 
-STATIC_FILES = static/index.html static/main.css
+STATIC_FILES = index.html static/main.css static/img/favicon.ico
 ELM_MAIN = src/Editor.elm
 ELM_FILES = $(wildcard src/*.elm)
 
 PUBLISH_URL = danka.ii.fmph.uniba.sk:/home/webmaster/dai/courses/lpi/tableauEditor
+
 
 SRC_DIR = src
 OUT_DIR = build
@@ -20,7 +21,7 @@ clean:
 .PHONY: build publish clean
 
 
-$(OUT_DIR)/index.html: $(SRC_DIR)/index.html
+$(OUT_DIR)/index.html: index.html
 	mkdir -p $(OUT_DIR)
 	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))",' $< >$@
 

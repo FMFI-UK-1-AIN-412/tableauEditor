@@ -190,10 +190,6 @@ simpleUpdate msg model =
                 model
 
             JsonRead { contents } ->
-                let
-                    _ =
-                        Debug.log "JSON READ" "jsonread"
-                in
                 case contents |> Helpers.Exporting.Json.Decode.decode of
                     Ok t ->
                         { model | jsonImporting = False, tableau = t }
