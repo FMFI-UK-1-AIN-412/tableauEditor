@@ -501,6 +501,9 @@ problems t =
     let
         errors =
             Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
+
+        _ =
+            Debug.log "checking problems" errors
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
