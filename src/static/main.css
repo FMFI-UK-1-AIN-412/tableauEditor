@@ -33,7 +33,7 @@
 
 .formulaInputSubst {
 	flex-grow: 1;
-	width: calc(100% - 286px);
+	width: calc(100% - 185px);
 }
 
 .substitutedVariable {
@@ -41,7 +41,7 @@
 }
 
 .substitutedConstant {
-	width: 80px;
+	width: 50px;
 }
 
 .formulaReference {

@@ -611,8 +611,8 @@ delete z =
 
 
 deleteMe : Zipper -> Zipper
-deleteMe z =
-    if (z |> up) == z then
+deleteMe (( t, fatherbs ) as zip) =
+    if (zip |> up) == zip then
         modifyNode
             (\tableau ->
                 case tableau.ext of
@@ -640,37 +640,69 @@ deleteMe z =
                     Delta t s ->
                         t
             )
-            z
+            zip
     else
-        modifyNode
-            (\tableau ->
-                -- som na pozicii otca mazaneho
-                case tableau.ext of
-                    Open ->
-                        tableau
+        let
+            _ =
+                Debug.log "bc" fatherbs
+        in
+        case fatherbs of
+            (BetaLeftCrumb fatherNode tr) :: bss ->
+                modifyNode
+                    (\tableau ->
+                        case tableau.ext of
+                            Beta lt rt ->
+                                if lt.node.value == "" then
+                                    Tableau tableau.node (Alpha rt)
+                                    --  ( Tableau fatherNode (Beta tableau tr), bss )
+                                else
+                                    tableau
 
-                    Closed r1 r2 ->
-                        Tableau tableau.node Open
+                            _ ->
+                                tableau
+                    )
+                    (zip |> up)
 
-                    Alpha t ->
-                        Tableau tableau.node t.ext
+            (BetaRightCrumb fatherNode tl) :: bss ->
+                modifyNode
+                    (\tableau ->
+                        case tableau.ext of
+                            Beta lt rt ->
+                                if rt.node.value == "" then
+                                    Tableau tableau.node (Alpha lt)
+                                    --  ( Tableau fatherNode (Beta tableau tr), bss )
+                                else
+                                    tableau
 
-                    Beta lt rt ->
-                        -- mozem zmazat iba ked jedna z biet sa moze stat alfou
-                        if lt.node.value == "" then
-                            Tableau tableau.node (Alpha rt)
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (Alpha lt)
-                        else
-                            Tableau tableau.node (Beta lt rt)
+                            _ ->
+                                tableau
+                    )
+                    (zip |> up)
 
-                    Gamma t s ->
-                        Tableau tableau.node t.ext
+            _ ->
+                modifyNode
+                    (\tableau ->
+                        -- som na pozicii otca mazaneho
+                        case tableau.ext of
+                            Open ->
+                                tableau
 
-                    Delta t s ->
-                        Tableau tableau.node t.ext
-            )
-            (z |> up)
+                            Closed r1 r2 ->
+                                Tableau tableau.node Open
+
+                            Alpha t ->
+                                Tableau tableau.node t.ext
+
+                            Gamma t s ->
+                                Tableau tableau.node t.ext
+
+                            Delta t s ->
+                                Tableau tableau.node t.ext
+
+                            _ ->
+                                tableau
+                    )
+                    (zip |> up)
 
 
 makeClosed : Zipper -> Zipper

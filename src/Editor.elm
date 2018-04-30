@@ -145,7 +145,14 @@ simpleUpdate msg model =
                 { model | tableau = z |> Zipper.delete |> topRenumbered }
 
             DeleteMe z ->
-                { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences (flip (-) 1) |> topRenumbered }
+                let
+                    newZipp =
+                        z |> Zipper.deleteMe
+                in
+                if newZipp /= (z |> up) then
+                    { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences (flip (-) 1) |> topRenumbered }
+                else
+                    { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
             MakeClosed z ->
                 { model | tableau = z |> Zipper.makeClosed |> top }
@@ -282,7 +289,7 @@ viewSubsNode z =
             , onInput <| ChangeText z
             ]
             []
-        , text "substituting"
+        , text "|"
         , input
             [ classList
                 [ ( "substitutedVariable", True )
@@ -501,9 +508,6 @@ problems t =
     let
         errors =
             Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
-
-        _ =
-            Debug.log "checking problems" errors
     in
     if List.isEmpty errors then
         div [ class "problems" ] []

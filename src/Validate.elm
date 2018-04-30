@@ -68,10 +68,6 @@ always2 r _ _ =
 
 isCorrectTableau : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isCorrectTableau z =
-    let
-        _ =
-            Debug.log "correct tableau" "checking"
-    in
     Errors.merge2 (always2 z)
         (isCorrectNode z)
         (List.foldl
@@ -83,10 +79,6 @@ isCorrectTableau z =
 
 isValidNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidNode z =
-    let
-        _ =
-            Debug.log "val" (z |> Zipper.zNode |> .value)
-    in
     Errors.merge3 (always3 z)
         (isValidFormula z)
         (isValidNodeRef z)
@@ -218,25 +210,17 @@ isCorrectRule :
     ( Tableau, Zipper.BreadCrumbs )
     -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
 isCorrectRule (( t, bs ) as z) =
-    let
-        _ =
-            Debug.log "validating" t.node.value
-    in
-    --    case t.node.reference.up of
-    --        Just 0 ->
-    --            -- This is a premise
-    --            Ok z
-    --
-    --        _ ->
     case bs of
         (Zipper.AlphaCrumb _) :: _ ->
-            validateAlphaRule z
+            case t.node.reference.up of
+                Just 0 ->
+                    -- This is a premise
+                    Ok z
+
+                _ ->
+                    validateAlphaRule z
 
         (Zipper.BetaLeftCrumb _ _) :: _ ->
-            let
-                _ =
-                    Debug.log "validating" "beta left crumb"
-            in
             validateBetaRuleLeft z
 
         (Zipper.BetaRightCrumb _ _) :: _ ->
@@ -316,15 +300,8 @@ validateBetaRuleRight z =
     validateBeta z (z |> Zipper.up |> Zipper.left)
 
 
-isPointingOnOther : Zipper.Zipper -> Bool
-isPointingOnOther this =
-    let
-        _ =
-            Debug.log "this id" (this |> Zipper.zNode |> .id)
-
-        _ =
-            Debug.log "reference up" (this |> Zipper.zNode |> .reference |> .up)
-    in
+isPointingOnSelf : Zipper.Zipper -> Bool
+isPointingOnSelf this =
     case this |> Zipper.zNode |> .reference |> .up of
         Just 0 ->
             True
@@ -335,16 +312,12 @@ isPointingOnOther this =
 
 checkIsPointingOnSelf : (Zipper.Zipper -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
 checkIsPointingOnSelf pred x z =
-    let
-        _ =
-            Debug.log "checking if is pointing on self" (pred z)
-    in
     case pred z of
         True ->
             Err x
 
         False ->
-            Err x
+            Ok z
 
 
 validateBeta :
@@ -359,9 +332,6 @@ validateBeta this other =
         fo =
             other |> checkFormula "The other β subformula"
 
-        _ =
-            Debug.log "validate " "nh"
-
         children =
             ft
                 |> Result.map List.singleton
@@ -371,13 +341,13 @@ validateBeta this other =
         -- This is a hack, but defining an ordering on formulas...
         reffed =
             this
-                |> Debug.log "nee" (Zipper.getReffed (Zipper.zNode this).reference)
+                |> Zipper.getReffed (Zipper.zNode this).reference
                 |> Result.fromMaybe (semanticsProblem this "Invalid reference")
                 |> Result.andThen validateReffedFormula
                 |> Result.map (always this)
                 |> Result.andThen
                     (checkIsPointingOnSelf
-                        isPointingOnOther
+                        isPointingOnSelf
                         (semanticsProblem this "β can not be premise")
                     )
                 |> Result.andThen (\z -> getReffedSignedFormula z)
@@ -563,6 +533,13 @@ validateGammaRule z =
             (checkPredicate Formula.isGamma
                 (semanticsProblem z "Referenced formula is not γ")
             )
+        |> Result.map (always z)
+        |> Result.andThen
+            (checkIsPointingOnSelf
+                isPointingOnSelf
+                (semanticsProblem z "γ can not be premise")
+            )
+        |> Result.andThen (\z -> getReffedSignedFormula z)
         |> Result.map2 (,) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substituable
@@ -685,6 +662,13 @@ validateDeltaRule z =
             (checkPredicate Formula.isDelta
                 (semanticsProblem z "Referenced formula is not delta")
             )
+        |> Result.map (always z)
+        |> Result.andThen
+            (checkIsPointingOnSelf
+                isPointingOnSelf
+                (semanticsProblem z "delta can not be premise")
+            )
+        |> Result.andThen (\z -> getReffedSignedFormula z)
         |> Result.map (always z)
         |> Result.andThen
             -- checking existing variable above + if new constant is variable or function

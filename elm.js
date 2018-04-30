@@ -13036,78 +13036,117 @@ var _moarwick$elm_webpack_starter$Zipper$setClosed = F3(
 			},
 			z);
 	});
-var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (z) {
-	return _elm_lang$core$Native_Utils.eq(
-		_moarwick$elm_webpack_starter$Zipper$up(z),
-		z) ? A2(
-		_moarwick$elm_webpack_starter$Zipper$modifyNode,
-		function (tableau) {
-			var _p47 = tableau.ext;
-			switch (_p47.ctor) {
-				case 'Open':
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
-				case 'Closed':
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
-				case 'Alpha':
-					return _p47._0;
-				case 'Beta':
-					var _p49 = _p47._1;
-					var _p48 = _p47._0;
-					return _elm_lang$core$Native_Utils.eq(_p48.node.value, '') ? _p49 : (_elm_lang$core$Native_Utils.eq(_p49.node.value, '') ? _p48 : tableau);
-				case 'Gamma':
-					return _p47._0;
-				default:
-					return _p47._0;
+var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p47) {
+	var _p48 = _p47;
+	var _p58 = _p48;
+	var _p57 = _p48._1;
+	if (_elm_lang$core$Native_Utils.eq(
+		_moarwick$elm_webpack_starter$Zipper$up(_p58),
+		_p58)) {
+		return A2(
+			_moarwick$elm_webpack_starter$Zipper$modifyNode,
+			function (tableau) {
+				var _p49 = tableau.ext;
+				switch (_p49.ctor) {
+					case 'Open':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
+					case 'Closed':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
+					case 'Alpha':
+						return _p49._0;
+					case 'Beta':
+						var _p51 = _p49._1;
+						var _p50 = _p49._0;
+						return _elm_lang$core$Native_Utils.eq(_p50.node.value, '') ? _p51 : (_elm_lang$core$Native_Utils.eq(_p51.node.value, '') ? _p50 : tableau);
+					case 'Gamma':
+						return _p49._0;
+					default:
+						return _p49._0;
+				}
+			},
+			_p58);
+	} else {
+		var _p52 = A2(_elm_lang$core$Debug$log, 'bc', _p57);
+		var _p53 = _p57;
+		_v32_2:
+		do {
+			if (_p53.ctor === '::') {
+				switch (_p53._0.ctor) {
+					case 'BetaLeftCrumb':
+						return A2(
+							_moarwick$elm_webpack_starter$Zipper$modifyNode,
+							function (tableau) {
+								var _p54 = tableau.ext;
+								if (_p54.ctor === 'Beta') {
+									return _elm_lang$core$Native_Utils.eq(_p54._0.node.value, '') ? A2(
+										_moarwick$elm_webpack_starter$Tableau$Tableau,
+										tableau.node,
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p54._1)) : tableau;
+								} else {
+									return tableau;
+								}
+							},
+							_moarwick$elm_webpack_starter$Zipper$up(_p58));
+					case 'BetaRightCrumb':
+						return A2(
+							_moarwick$elm_webpack_starter$Zipper$modifyNode,
+							function (tableau) {
+								var _p55 = tableau.ext;
+								if (_p55.ctor === 'Beta') {
+									return _elm_lang$core$Native_Utils.eq(_p55._1.node.value, '') ? A2(
+										_moarwick$elm_webpack_starter$Tableau$Tableau,
+										tableau.node,
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p55._0)) : tableau;
+								} else {
+									return tableau;
+								}
+							},
+							_moarwick$elm_webpack_starter$Zipper$up(_p58));
+					default:
+						break _v32_2;
+				}
+			} else {
+				break _v32_2;
 			}
-		},
-		z) : A2(
-		_moarwick$elm_webpack_starter$Zipper$modifyNode,
-		function (tableau) {
-			var _p50 = tableau.ext;
-			switch (_p50.ctor) {
-				case 'Open':
-					return tableau;
-				case 'Closed':
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _moarwick$elm_webpack_starter$Tableau$Open);
-				case 'Alpha':
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p50._0.ext);
-				case 'Beta':
-					var _p52 = _p50._1;
-					var _p51 = _p50._0;
-					return _elm_lang$core$Native_Utils.eq(_p51.node.value, '') ? A2(
-						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p52)) : (_elm_lang$core$Native_Utils.eq(_p52.node.value, '') ? A2(
-						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p51)) : A2(
-						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p51, _p52)));
-				case 'Gamma':
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p50._0.ext);
-				default:
-					return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p50._0.ext);
-			}
-		},
-		_moarwick$elm_webpack_starter$Zipper$up(z));
+		} while(false);
+		return A2(
+			_moarwick$elm_webpack_starter$Zipper$modifyNode,
+			function (tableau) {
+				var _p56 = tableau.ext;
+				switch (_p56.ctor) {
+					case 'Open':
+						return tableau;
+					case 'Closed':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _moarwick$elm_webpack_starter$Tableau$Open);
+					case 'Alpha':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+					case 'Gamma':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+					case 'Delta':
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+					default:
+						return tableau;
+				}
+			},
+			_moarwick$elm_webpack_starter$Zipper$up(_p58));
+	}
 };
 var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 	function (newVariable, z) {
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p53 = tableau.ext;
-				switch (_p53.ctor) {
+				var _p59 = tableau.ext;
+				switch (_p59.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p53._0,
+								_p59._0,
 								_elm_lang$core$Native_Utils.update(
-									_p53._1,
+									_p59._1,
 									{forWhat: newVariable})));
 					case 'Delta':
 						return A2(
@@ -13115,9 +13154,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p53._0,
+								_p59._0,
 								_elm_lang$core$Native_Utils.update(
-									_p53._1,
+									_p59._1,
 									{forWhat: newVariable})));
 					default:
 						return tableau;
@@ -13130,17 +13169,17 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p54 = tableau.ext;
-				switch (_p54.ctor) {
+				var _p60 = tableau.ext;
+				switch (_p60.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p54._0,
+								_p60._0,
 								_elm_lang$core$Native_Utils.update(
-									_p54._1,
+									_p60._1,
 									{what: newTerm})));
 					case 'Delta':
 						return A2(
@@ -13148,9 +13187,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p54._0,
+								_p60._0,
 								_elm_lang$core$Native_Utils.update(
-									_p54._1,
+									_p60._1,
 									{what: newTerm})));
 					default:
 						return tableau;
@@ -13164,31 +13203,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToAlpha = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p55 = tableau.ext;
-			switch (_p55.ctor) {
+			var _p61 = tableau.ext;
+			switch (_p61.ctor) {
 				case 'Beta':
-					var _p57 = _p55._1;
-					var _p56 = _p55._0;
-					return _elm_lang$core$Native_Utils.eq(_p56.node.value, '') ? A2(
+					var _p63 = _p61._1;
+					var _p62 = _p61._0;
+					return _elm_lang$core$Native_Utils.eq(_p62.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p57)) : (_elm_lang$core$Native_Utils.eq(_p57.node.value, '') ? A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p63)) : (_elm_lang$core$Native_Utils.eq(_p63.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p56)) : A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p62)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p56, _p57)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p62, _p63)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p55._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p55._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
 				default:
 					return tableau;
 			}
@@ -13201,15 +13240,15 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p58 = tableau.ext;
-			switch (_p58.ctor) {
+			var _p64 = tableau.ext;
+			switch (_p64.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p58._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Gamma':
 					return A2(
@@ -13217,7 +13256,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p58._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Delta':
 					return A2(
@@ -13225,7 +13264,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p58._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				default:
 					return tableau;
@@ -13239,31 +13278,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToGamma = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p59 = tableau.ext;
-			switch (_p59.ctor) {
+			var _p65 = tableau.ext;
+			switch (_p65.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p59._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p61 = _p59._1;
-					var _p60 = _p59._0;
-					return _elm_lang$core$Native_Utils.eq(_p60.node.value, '') ? A2(
+					var _p67 = _p65._1;
+					var _p66 = _p65._0;
+					return _elm_lang$core$Native_Utils.eq(_p66.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p61, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p61.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p67, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p67.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p60, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p66, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p60, _p61)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p66, _p67)));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p59._0, _p59._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _p65._1));
 				default:
 					return tableau;
 			}
@@ -13276,31 +13315,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToDelta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p62 = tableau.ext;
-			switch (_p62.ctor) {
+			var _p68 = tableau.ext;
+			switch (_p68.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p62._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p64 = _p62._1;
-					var _p63 = _p62._0;
-					return _elm_lang$core$Native_Utils.eq(_p63.node.value, '') ? A2(
+					var _p70 = _p68._1;
+					var _p69 = _p68._0;
+					return _elm_lang$core$Native_Utils.eq(_p69.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p64, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p64.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p70, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p70.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p63, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p69, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p63, _p64)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p69, _p70)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p62._0, _p62._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _p68._1));
 				default:
 					return tableau;
 			}
@@ -13317,9 +13356,9 @@ var _moarwick$elm_webpack_starter$Zipper$zipper = function (t) {
 var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 	var prettifyNode = function (n) {
 		var newValue = function () {
-			var _p65 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
-			if (_p65.ctor === 'Ok') {
-				return _moarwick$elm_webpack_starter$Formula$strSigned(_p65._0);
+			var _p71 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
+			if (_p71.ctor === 'Ok') {
+				return _moarwick$elm_webpack_starter$Formula$strSigned(_p71._0);
 			} else {
 				return n.value;
 			}
@@ -13333,38 +13372,38 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 		A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p66 = tableau.ext;
-				switch (_p66.ctor) {
+				var _p72 = tableau.ext;
+				switch (_p72.ctor) {
 					case 'Alpha':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							_moarwick$elm_webpack_starter$Tableau$Alpha(
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p66._0)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0)));
 					case 'Beta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Beta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p66._0),
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p66._1)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._1)));
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p66._0),
-								_p66._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_p72._1));
 					case 'Delta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p66._0),
-								_p66._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_p72._1));
 					case 'Open':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -13374,7 +13413,7 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
-							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p66._0, _p66._1));
+							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p72._0, _p72._1));
 				}
 			},
 			z));
@@ -13391,97 +13430,97 @@ var _moarwick$elm_webpack_starter$Zipper$BetaRightCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaRightCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$right = function (_p67) {
-	var _p68 = _p67;
-	var _p71 = _p68._0;
-	var _p70 = _p68._1;
-	var _p69 = _p71.ext;
-	if (_p69.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$right = function (_p73) {
+	var _p74 = _p73;
+	var _p77 = _p74._0;
+	var _p76 = _p74._1;
+	var _p75 = _p77.ext;
+	if (_p75.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p69._1,
+			_0: _p75._1,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p71.node, _p69._0),
-				_1: _p70
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p77.node, _p75._0),
+				_1: _p76
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p71, _1: _p70};
+		return {ctor: '_Tuple2', _0: _p77, _1: _p76};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaLeftCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$left = function (_p72) {
-	var _p73 = _p72;
-	var _p76 = _p73._0;
-	var _p75 = _p73._1;
-	var _p74 = _p76.ext;
-	if (_p74.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$left = function (_p78) {
+	var _p79 = _p78;
+	var _p82 = _p79._0;
+	var _p81 = _p79._1;
+	var _p80 = _p82.ext;
+	if (_p80.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p74._0,
+			_0: _p80._0,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p76.node, _p74._1),
-				_1: _p75
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p82.node, _p80._1),
+				_1: _p81
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p76, _1: _p75};
+		return {ctor: '_Tuple2', _0: _p82, _1: _p81};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$AlphaCrumb = function (a) {
 	return {ctor: 'AlphaCrumb', _0: a};
 };
-var _moarwick$elm_webpack_starter$Zipper$down = function (_p77) {
-	var _p78 = _p77;
-	var _p81 = _p78._0;
-	var _p80 = _p78._1;
-	var _p79 = _p81.ext;
-	switch (_p79.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$down = function (_p83) {
+	var _p84 = _p83;
+	var _p87 = _p84._0;
+	var _p86 = _p84._1;
+	var _p85 = _p87.ext;
+	switch (_p85.ctor) {
 		case 'Alpha':
 			return {
 				ctor: '_Tuple2',
-				_0: _p79._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p81.node),
-					_1: _p80
+					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p87.node),
+					_1: _p86
 				}
 			};
 		case 'Gamma':
 			return {
 				ctor: '_Tuple2',
-				_0: _p79._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p81.node, _p79._1),
-					_1: _p80
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p87.node, _p85._1),
+					_1: _p86
 				}
 			};
 		case 'Delta':
 			return {
 				ctor: '_Tuple2',
-				_0: _p79._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p81.node, _p79._1),
-					_1: _p80
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p87.node, _p85._1),
+					_1: _p86
 				}
 			};
 		default:
-			return {ctor: '_Tuple2', _0: _p81, _1: _p80};
+			return {ctor: '_Tuple2', _0: _p87, _1: _p86};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
-	var _p82 = z;
-	var t = _p82._0;
-	var bs = _p82._1;
-	var _p83 = t.ext;
-	switch (_p83.ctor) {
+	var _p88 = z;
+	var t = _p88._0;
+	var bs = _p88._1;
+	var _p89 = t.ext;
+	switch (_p89.ctor) {
 		case 'Open':
 			return {ctor: '[]'};
 		case 'Closed':
@@ -13517,22 +13556,22 @@ var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
-	function (f, _p84) {
-		var _p85 = _p84;
-		var _p87 = _p85;
-		var _p86 = _p85._0.ext;
-		switch (_p86.ctor) {
+	function (f, _p90) {
+		var _p91 = _p90;
+		var _p93 = _p91;
+		var _p92 = _p91._0.ext;
+		switch (_p92.ctor) {
 			case 'Open':
-				return f(_p87);
+				return f(_p93);
 			case 'Closed':
-				return f(_p87);
+				return f(_p93);
 			case 'Alpha':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p87))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 			case 'Beta':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
@@ -13544,27 +13583,27 @@ var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
 									A2(
 										_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 										f,
-										_moarwick$elm_webpack_starter$Zipper$left(_p87)))))));
+										_moarwick$elm_webpack_starter$Zipper$left(_p93)))))));
 			case 'Gamma':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p87))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 			default:
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p87))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 		}
 	});
 var _moarwick$elm_webpack_starter$Zipper$fixRefs = _moarwick$elm_webpack_starter$Zipper$zWalkPost(
-	function (_p88) {
+	function (_p94) {
 		return _moarwick$elm_webpack_starter$Zipper$fixClosedRefs(
-			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p88));
+			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p94));
 	});
 var _moarwick$elm_webpack_starter$Zipper$renumber = function (tableau) {
 	return _moarwick$elm_webpack_starter$Zipper$zTableau(
@@ -13761,43 +13800,22 @@ var _moarwick$elm_webpack_starter$Validate$isNewVariableValid = F2(
 	});
 var _moarwick$elm_webpack_starter$Validate$checkIsPointingOnSelf = F3(
 	function (pred, x, z) {
-		var _p12 = A2(
-			_elm_lang$core$Debug$log,
-			'checking if is pointing on self',
-			pred(z));
-		var _p13 = pred(z);
-		if (_p13 === true) {
+		var _p12 = pred(z);
+		if (_p12 === true) {
 			return _elm_lang$core$Result$Err(x);
 		} else {
-			return _elm_lang$core$Result$Err(x);
+			return _elm_lang$core$Result$Ok(z);
 		}
 	});
-var _moarwick$elm_webpack_starter$Validate$isPointingOnOther = function ($this) {
-	var _p14 = A2(
-		_elm_lang$core$Debug$log,
-		'reference up',
-		function (_) {
-			return _.up;
-		}(
-			function (_) {
-				return _.reference;
-			}(
-				_moarwick$elm_webpack_starter$Zipper$zNode($this))));
-	var _p15 = A2(
-		_elm_lang$core$Debug$log,
-		'this id',
-		function (_) {
-			return _.id;
-		}(
-			_moarwick$elm_webpack_starter$Zipper$zNode($this)));
-	var _p16 = function (_) {
+var _moarwick$elm_webpack_starter$Validate$isPointingOnSelf = function ($this) {
+	var _p13 = function (_) {
 		return _.up;
 	}(
 		function (_) {
 			return _.reference;
 		}(
 			_moarwick$elm_webpack_starter$Zipper$zNode($this)));
-	if ((_p16.ctor === 'Just') && (_p16._0 === 0)) {
+	if ((_p13.ctor === 'Just') && (_p13._0 === 0)) {
 		return true;
 	} else {
 		return false;
@@ -13812,52 +13830,52 @@ var _moarwick$elm_webpack_starter$Validate$resultFromBool = F3(
 		return b ? _elm_lang$core$Result$Ok(a) : _elm_lang$core$Result$Err(x);
 	});
 var _moarwick$elm_webpack_starter$Validate$always2 = F3(
-	function (r, _p18, _p17) {
+	function (r, _p15, _p14) {
 		return r;
 	});
 var _moarwick$elm_webpack_starter$Validate$always3 = F4(
-	function (r, _p21, _p20, _p19) {
+	function (r, _p18, _p17, _p16) {
 		return r;
 	});
 var _moarwick$elm_webpack_starter$Validate$second = _elm_lang$core$Basics$curry(_elm_lang$core$Tuple$second);
 var _moarwick$elm_webpack_starter$Validate_ops = _moarwick$elm_webpack_starter$Validate_ops || {};
 _moarwick$elm_webpack_starter$Validate_ops['<++'] = F2(
-	function (_p22, f) {
-		var _p23 = _p22;
-		var _p24 = _p23._1;
+	function (_p19, f) {
+		var _p20 = _p19;
+		var _p21 = _p20._1;
 		return {
 			ctor: '_Tuple2',
 			_0: A2(
 				_elm_lang$core$Basics_ops['++'],
-				_p23._0,
-				f(_p24)),
-			_1: _p24
+				_p20._0,
+				f(_p21)),
+			_1: _p21
 		};
 	});
 var _moarwick$elm_webpack_starter$Validate$error = F2(
 	function (def, r) {
-		var _p25 = r;
-		if (_p25.ctor === 'Err') {
-			return _p25._0;
+		var _p22 = r;
+		if (_p22.ctor === 'Err') {
+			return _p22._0;
 		} else {
 			return def;
 		}
 	});
 var _moarwick$elm_webpack_starter$Validate_ops = _moarwick$elm_webpack_starter$Validate_ops || {};
 _moarwick$elm_webpack_starter$Validate_ops['<++?'] = F2(
-	function (_p26, f) {
-		var _p27 = _p26;
-		var _p28 = _p27._1;
+	function (_p23, f) {
+		var _p24 = _p23;
+		var _p25 = _p24._1;
 		return {
 			ctor: '_Tuple2',
 			_0: A2(
 				_elm_lang$core$Basics_ops['++'],
-				_p27._0,
+				_p24._0,
 				A2(
 					_moarwick$elm_webpack_starter$Validate$error,
 					{ctor: '[]'},
-					f(_p28))),
-			_1: _p28
+					f(_p25))),
+			_1: _p25
 		};
 	});
 var _moarwick$elm_webpack_starter$Validate$Problem = F3(
@@ -13888,7 +13906,7 @@ var _moarwick$elm_webpack_starter$Validate$checkFormula = F2(
 	function (str, z) {
 		return A2(
 			_elm_lang$core$Result$mapError,
-			function (_p29) {
+			function (_p26) {
 				return A2(
 					_moarwick$elm_webpack_starter$Validate$semanticsProblem,
 					z,
@@ -13928,12 +13946,12 @@ var _moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary = F3(
 				A3(_moarwick$elm_webpack_starter$Validate$checkReffedFormula, 'Second close', r2, z)));
 	});
 var _moarwick$elm_webpack_starter$Validate$areCorrectCloseRefs = function (z) {
-	var _p30 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
-	if (_p30.ctor === 'Closed') {
+	var _p27 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
+	if (_p27.ctor === 'Closed') {
 		return A2(
 			_elm_lang$core$Result$map,
 			_elm_lang$core$Basics$always(z),
-			A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p30._0, _p30._1, z));
+			A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p27._0, _p27._1, z));
 	} else {
 		return _elm_lang$core$Result$Ok(z);
 	}
@@ -13961,11 +13979,11 @@ var _moarwick$elm_webpack_starter$Validate$validateAlphaRule = function (z) {
 									0,
 									A2(
 										_elm_lang$core$Maybe$map,
-										function (_p31) {
+										function (_p28) {
 											return function (_) {
 												return _.id;
 											}(
-												_moarwick$elm_webpack_starter$Zipper$zNode(_p31));
+												_moarwick$elm_webpack_starter$Zipper$zNode(_p28));
 										},
 										A2(
 											_moarwick$elm_webpack_starter$Zipper$getReffed,
@@ -13998,7 +14016,7 @@ var _moarwick$elm_webpack_starter$Validate$validateAlphaRule = function (z) {
 };
 var _moarwick$elm_webpack_starter$Validate$betasHaveSameRef = F2(
 	function ($this, other) {
-		var getRef = function (_p32) {
+		var getRef = function (_p29) {
 			return A2(
 				_elm_lang$core$Result$fromMaybe,
 				{ctor: '[]'},
@@ -14008,7 +14026,7 @@ var _moarwick$elm_webpack_starter$Validate$betasHaveSameRef = F2(
 					function (_) {
 						return _.reference;
 					}(
-						_moarwick$elm_webpack_starter$Zipper$zNode(_p32))));
+						_moarwick$elm_webpack_starter$Zipper$zNode(_p29))));
 		};
 		var rt = getRef($this);
 		var ro = getRef(other);
@@ -14027,6 +14045,211 @@ var _moarwick$elm_webpack_starter$Validate$betasHaveSameRef = F2(
 				rt,
 				ro));
 	});
+var _moarwick$elm_webpack_starter$Validate$makeSemantic = _elm_lang$core$List$map(
+	function (p) {
+		return _elm_lang$core$Native_Utils.update(
+			p,
+			{typ: _moarwick$elm_webpack_starter$Validate$Semantics});
+	});
+var _moarwick$elm_webpack_starter$Validate$Syntax = {ctor: 'Syntax'};
+var _moarwick$elm_webpack_starter$Validate$syntaxProblem = F2(
+	function (z, s) {
+		return {
+			ctor: '::',
+			_0: {typ: _moarwick$elm_webpack_starter$Validate$Syntax, msg: s, zip: z},
+			_1: {ctor: '[]'}
+		};
+	});
+var _moarwick$elm_webpack_starter$Validate$isValidRef = F3(
+	function (str, r, z) {
+		return A2(
+			_elm_lang$core$Result$map,
+			_elm_lang$core$Basics$always(z),
+			A2(
+				_elm_lang$core$Result$fromMaybe,
+				A2(
+					_moarwick$elm_webpack_starter$Validate$syntaxProblem,
+					z,
+					A2(_elm_lang$core$Basics_ops['++'], str, ' reference is invalid.')),
+				r.up));
+	});
+var _moarwick$elm_webpack_starter$Validate$isValidNodeRef = function (z) {
+	return A3(
+		_moarwick$elm_webpack_starter$Validate$isValidRef,
+		'The',
+		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
+		z);
+};
+var _moarwick$elm_webpack_starter$Validate$areValidCloseRefs = function (z) {
+	var _p30 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
+	if (_p30.ctor === 'Closed') {
+		return A3(
+			_moarwick$elm_webpack_starter$Errors$merge2,
+			_moarwick$elm_webpack_starter$Validate$always2(z),
+			A3(_moarwick$elm_webpack_starter$Validate$isValidRef, 'First close', _p30._0, z),
+			A3(_moarwick$elm_webpack_starter$Validate$isValidRef, 'Second close', _p30._1, z));
+	} else {
+		return _elm_lang$core$Result$Ok(z);
+	}
+};
+var _moarwick$elm_webpack_starter$Validate$parseProblem = function (z) {
+	return function (_p31) {
+		return A2(
+			_moarwick$elm_webpack_starter$Validate$syntaxProblem,
+			z,
+			_moarwick$elm_webpack_starter$Formula$errorString(_p31));
+	};
+};
+var _moarwick$elm_webpack_starter$Validate$isValidFormula = function (z) {
+	return A2(
+		_elm_lang$core$Result$map,
+		_elm_lang$core$Basics$always(z),
+		A2(
+			_elm_lang$core$Result$mapError,
+			_moarwick$elm_webpack_starter$Validate$parseProblem(z),
+			function (_) {
+				return _.formula;
+			}(
+				_moarwick$elm_webpack_starter$Zipper$zNode(z))));
+};
+var _moarwick$elm_webpack_starter$Validate$isValidNode = function (z) {
+	return A4(
+		_moarwick$elm_webpack_starter$Errors$merge3,
+		_moarwick$elm_webpack_starter$Validate$always3(z),
+		_moarwick$elm_webpack_starter$Validate$isValidFormula(z),
+		_moarwick$elm_webpack_starter$Validate$isValidNodeRef(z),
+		_moarwick$elm_webpack_starter$Validate$areValidCloseRefs(z));
+};
+var _moarwick$elm_webpack_starter$Validate$validateFormula = function (z) {
+	return A2(
+		_elm_lang$core$Result$mapError,
+		_moarwick$elm_webpack_starter$Validate$parseProblem(z),
+		function (_) {
+			return _.formula;
+		}(
+			_moarwick$elm_webpack_starter$Zipper$zNode(z)));
+};
+var _moarwick$elm_webpack_starter$Validate$validateRef = F3(
+	function (str, r, z) {
+		var _p32 = r.up;
+		if (_p32.ctor === 'Nothing') {
+			return A2(_moarwick$elm_webpack_starter$Validate$syntaxProblem, z, str);
+		} else {
+			return {ctor: '[]'};
+		}
+	});
+var _moarwick$elm_webpack_starter$Validate$validateNodeRef = function (z) {
+	return A3(
+		_moarwick$elm_webpack_starter$Validate$validateRef,
+		'Invalid reference',
+		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
+		z);
+};
+var _moarwick$elm_webpack_starter$Validate$getReffedSignedFormula = function (z) {
+	var _p33 = A2(
+		_moarwick$elm_webpack_starter$Zipper$getReffed,
+		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
+		z);
+	if (_p33.ctor === 'Just') {
+		var _p34 = function (_) {
+			return _.formula;
+		}(
+			_moarwick$elm_webpack_starter$Zipper$zNode(_p33._0));
+		if (_p34.ctor === 'Ok') {
+			return _elm_lang$core$Result$Ok(_p34._0);
+		} else {
+			return _elm_lang$core$Result$Err(
+				A2(_moarwick$elm_webpack_starter$Validate$syntaxProblem, z, 'reffed formula incorrectly parsed'));
+		}
+	} else {
+		return _elm_lang$core$Result$Err(
+			A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'no reffed formula'));
+	}
+};
+var _moarwick$elm_webpack_starter$Validate$validateBeta = F2(
+	function ($this, other) {
+		var reffed = A2(
+			_elm_lang$core$Result$map,
+			_elm_lang$core$List$sortBy(_moarwick$elm_webpack_starter$Formula$strSigned),
+			A2(
+				_elm_lang$core$Result$map,
+				_moarwick$elm_webpack_starter$Formula$signedSubformulas,
+				A2(
+					_elm_lang$core$Result$andThen,
+					A2(
+						_moarwick$elm_webpack_starter$Validate$checkPredicate,
+						_moarwick$elm_webpack_starter$Formula$isBeta,
+						A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Referenced formula is not β')),
+					A2(
+						_elm_lang$core$Result$andThen,
+						function (z) {
+							return _moarwick$elm_webpack_starter$Validate$getReffedSignedFormula(z);
+						},
+						A2(
+							_elm_lang$core$Result$andThen,
+							A2(
+								_moarwick$elm_webpack_starter$Validate$checkIsPointingOnSelf,
+								_moarwick$elm_webpack_starter$Validate$isPointingOnSelf,
+								A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'β can not be premise')),
+							A2(
+								_elm_lang$core$Result$map,
+								_elm_lang$core$Basics$always($this),
+								A2(
+									_elm_lang$core$Result$andThen,
+									_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
+									A2(
+										_elm_lang$core$Result$fromMaybe,
+										A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Invalid reference'),
+										A2(
+											_moarwick$elm_webpack_starter$Zipper$getReffed,
+											_moarwick$elm_webpack_starter$Zipper$zNode($this).reference,
+											$this)))))))));
+		var fo = A2(_moarwick$elm_webpack_starter$Validate$checkFormula, 'The other β subformula', other);
+		var ft = A2(_moarwick$elm_webpack_starter$Validate$checkFormula, 'Formula', $this);
+		var children = A2(
+			_elm_lang$core$Result$map,
+			_elm_lang$core$List$sortBy(_moarwick$elm_webpack_starter$Formula$strSigned),
+			A3(
+				_elm_lang$core$Result$map2,
+				F2(
+					function (x, y) {
+						return {ctor: '::', _0: x, _1: y};
+					}),
+				fo,
+				A2(_elm_lang$core$Result$map, _elm_lang$core$List$singleton, ft)));
+		return A3(
+			_moarwick$elm_webpack_starter$Errors$merge2,
+			_moarwick$elm_webpack_starter$Validate$always2($this),
+			A2(_moarwick$elm_webpack_starter$Validate$betasHaveSameRef, $this, other),
+			A2(
+				_elm_lang$core$Result$andThen,
+				A2(
+					_moarwick$elm_webpack_starter$Validate$resultFromBool,
+					$this,
+					A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Wrong β subformulas.')),
+				A3(
+					_moarwick$elm_webpack_starter$Errors$merge2,
+					F2(
+						function (x, y) {
+							return _elm_lang$core$Native_Utils.eq(x, y);
+						}),
+					children,
+					reffed)));
+	});
+var _moarwick$elm_webpack_starter$Validate$validateBetaRuleLeft = function (z) {
+	return A2(
+		_moarwick$elm_webpack_starter$Validate$validateBeta,
+		z,
+		_moarwick$elm_webpack_starter$Zipper$right(
+			_moarwick$elm_webpack_starter$Zipper$up(z)));
+};
+var _moarwick$elm_webpack_starter$Validate$validateBetaRuleRight = function (z) {
+	return A2(
+		_moarwick$elm_webpack_starter$Validate$validateBeta,
+		z,
+		_moarwick$elm_webpack_starter$Zipper$left(
+			_moarwick$elm_webpack_starter$Zipper$up(z)));
+};
 var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 	return A2(
 		_elm_lang$core$Result$map,
@@ -14100,11 +14323,11 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 													0,
 													A2(
 														_elm_lang$core$Maybe$map,
-														function (_p33) {
+														function (_p35) {
 															return function (_) {
 																return _.id;
 															}(
-																_moarwick$elm_webpack_starter$Zipper$zNode(_p33));
+																_moarwick$elm_webpack_starter$Zipper$zNode(_p35));
 														},
 														A2(
 															_moarwick$elm_webpack_starter$Zipper$getReffed,
@@ -14160,11 +14383,11 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 												0,
 												A2(
 													_elm_lang$core$Maybe$map,
-													function (_p34) {
+													function (_p36) {
 														return function (_) {
 															return _.id;
 														}(
-															_moarwick$elm_webpack_starter$Zipper$zNode(_p34));
+															_moarwick$elm_webpack_starter$Zipper$zNode(_p36));
 													},
 													A2(
 														_moarwick$elm_webpack_starter$Zipper$getReffed,
@@ -14180,158 +14403,6 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 					A2(_moarwick$elm_webpack_starter$Validate$checkFormula, 'Formula', z),
 					A2(
 						_elm_lang$core$Result$andThen,
-						A2(
-							_moarwick$elm_webpack_starter$Validate$checkPredicate,
-							_moarwick$elm_webpack_starter$Formula$isGamma,
-							A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Referenced formula is not γ')),
-						A2(
-							_elm_lang$core$Result$andThen,
-							_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
-							A2(
-								_elm_lang$core$Result$fromMaybe,
-								A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Invalid reference.'),
-								A2(
-									_moarwick$elm_webpack_starter$Zipper$getReffed,
-									_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
-									z))))))));
-};
-var _moarwick$elm_webpack_starter$Validate$makeSemantic = _elm_lang$core$List$map(
-	function (p) {
-		return _elm_lang$core$Native_Utils.update(
-			p,
-			{typ: _moarwick$elm_webpack_starter$Validate$Semantics});
-	});
-var _moarwick$elm_webpack_starter$Validate$Syntax = {ctor: 'Syntax'};
-var _moarwick$elm_webpack_starter$Validate$syntaxProblem = F2(
-	function (z, s) {
-		return {
-			ctor: '::',
-			_0: {typ: _moarwick$elm_webpack_starter$Validate$Syntax, msg: s, zip: z},
-			_1: {ctor: '[]'}
-		};
-	});
-var _moarwick$elm_webpack_starter$Validate$isValidRef = F3(
-	function (str, r, z) {
-		return A2(
-			_elm_lang$core$Result$map,
-			_elm_lang$core$Basics$always(z),
-			A2(
-				_elm_lang$core$Result$fromMaybe,
-				A2(
-					_moarwick$elm_webpack_starter$Validate$syntaxProblem,
-					z,
-					A2(_elm_lang$core$Basics_ops['++'], str, ' reference is invalid.')),
-				r.up));
-	});
-var _moarwick$elm_webpack_starter$Validate$isValidNodeRef = function (z) {
-	return A3(
-		_moarwick$elm_webpack_starter$Validate$isValidRef,
-		'The',
-		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
-		z);
-};
-var _moarwick$elm_webpack_starter$Validate$areValidCloseRefs = function (z) {
-	var _p35 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
-	if (_p35.ctor === 'Closed') {
-		return A3(
-			_moarwick$elm_webpack_starter$Errors$merge2,
-			_moarwick$elm_webpack_starter$Validate$always2(z),
-			A3(_moarwick$elm_webpack_starter$Validate$isValidRef, 'First close', _p35._0, z),
-			A3(_moarwick$elm_webpack_starter$Validate$isValidRef, 'Second close', _p35._1, z));
-	} else {
-		return _elm_lang$core$Result$Ok(z);
-	}
-};
-var _moarwick$elm_webpack_starter$Validate$parseProblem = function (z) {
-	return function (_p36) {
-		return A2(
-			_moarwick$elm_webpack_starter$Validate$syntaxProblem,
-			z,
-			_moarwick$elm_webpack_starter$Formula$errorString(_p36));
-	};
-};
-var _moarwick$elm_webpack_starter$Validate$isValidFormula = function (z) {
-	return A2(
-		_elm_lang$core$Result$map,
-		_elm_lang$core$Basics$always(z),
-		A2(
-			_elm_lang$core$Result$mapError,
-			_moarwick$elm_webpack_starter$Validate$parseProblem(z),
-			function (_) {
-				return _.formula;
-			}(
-				_moarwick$elm_webpack_starter$Zipper$zNode(z))));
-};
-var _moarwick$elm_webpack_starter$Validate$isValidNode = function (z) {
-	return A4(
-		_moarwick$elm_webpack_starter$Errors$merge3,
-		_moarwick$elm_webpack_starter$Validate$always3(z),
-		_moarwick$elm_webpack_starter$Validate$isValidFormula(z),
-		_moarwick$elm_webpack_starter$Validate$isValidNodeRef(z),
-		_moarwick$elm_webpack_starter$Validate$areValidCloseRefs(z));
-};
-var _moarwick$elm_webpack_starter$Validate$validateFormula = function (z) {
-	return A2(
-		_elm_lang$core$Result$mapError,
-		_moarwick$elm_webpack_starter$Validate$parseProblem(z),
-		function (_) {
-			return _.formula;
-		}(
-			_moarwick$elm_webpack_starter$Zipper$zNode(z)));
-};
-var _moarwick$elm_webpack_starter$Validate$validateRef = F3(
-	function (str, r, z) {
-		var _p37 = r.up;
-		if (_p37.ctor === 'Nothing') {
-			return A2(_moarwick$elm_webpack_starter$Validate$syntaxProblem, z, str);
-		} else {
-			return {ctor: '[]'};
-		}
-	});
-var _moarwick$elm_webpack_starter$Validate$validateNodeRef = function (z) {
-	return A3(
-		_moarwick$elm_webpack_starter$Validate$validateRef,
-		'Invalid reference',
-		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
-		z);
-};
-var _moarwick$elm_webpack_starter$Validate$getReffedSignedFormula = function (z) {
-	var _p38 = A2(
-		_moarwick$elm_webpack_starter$Zipper$getReffed,
-		_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
-		z);
-	if (_p38.ctor === 'Just') {
-		var _p39 = function (_) {
-			return _.formula;
-		}(
-			_moarwick$elm_webpack_starter$Zipper$zNode(_p38._0));
-		if (_p39.ctor === 'Ok') {
-			return _elm_lang$core$Result$Ok(_p39._0);
-		} else {
-			return _elm_lang$core$Result$Err(
-				A2(_moarwick$elm_webpack_starter$Validate$syntaxProblem, z, 'reffed formula incorrectly parsed'));
-		}
-	} else {
-		return _elm_lang$core$Result$Err(
-			A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'no reffed formula'));
-	}
-};
-var _moarwick$elm_webpack_starter$Validate$validateBeta = F2(
-	function ($this, other) {
-		var reffed = A2(
-			_elm_lang$core$Result$map,
-			_elm_lang$core$List$sortBy(_moarwick$elm_webpack_starter$Formula$strSigned),
-			A2(
-				_elm_lang$core$Result$map,
-				_moarwick$elm_webpack_starter$Formula$signedSubformulas,
-				A2(
-					_elm_lang$core$Result$andThen,
-					A2(
-						_moarwick$elm_webpack_starter$Validate$checkPredicate,
-						_moarwick$elm_webpack_starter$Formula$isBeta,
-						A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Referenced formula is not β')),
-					A2(
-						_elm_lang$core$Result$andThen,
 						function (z) {
 							return _moarwick$elm_webpack_starter$Validate$getReffedSignedFormula(z);
 						},
@@ -14339,69 +14410,27 @@ var _moarwick$elm_webpack_starter$Validate$validateBeta = F2(
 							_elm_lang$core$Result$andThen,
 							A2(
 								_moarwick$elm_webpack_starter$Validate$checkIsPointingOnSelf,
-								_moarwick$elm_webpack_starter$Validate$isPointingOnOther,
-								A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'β can not be premise')),
+								_moarwick$elm_webpack_starter$Validate$isPointingOnSelf,
+								A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'γ can not be premise')),
 							A2(
 								_elm_lang$core$Result$map,
-								_elm_lang$core$Basics$always($this),
+								_elm_lang$core$Basics$always(z),
 								A2(
 									_elm_lang$core$Result$andThen,
-									_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
 									A2(
-										_elm_lang$core$Result$fromMaybe,
-										A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Invalid reference'),
-										A3(
-											_elm_lang$core$Debug$log,
-											'nee',
-											_moarwick$elm_webpack_starter$Zipper$getReffed(
-												_moarwick$elm_webpack_starter$Zipper$zNode($this).reference),
-											$this)))))))));
-		var _p40 = A2(_elm_lang$core$Debug$log, 'validate ', 'nh');
-		var fo = A2(_moarwick$elm_webpack_starter$Validate$checkFormula, 'The other β subformula', other);
-		var ft = A2(_moarwick$elm_webpack_starter$Validate$checkFormula, 'Formula', $this);
-		var children = A2(
-			_elm_lang$core$Result$map,
-			_elm_lang$core$List$sortBy(_moarwick$elm_webpack_starter$Formula$strSigned),
-			A3(
-				_elm_lang$core$Result$map2,
-				F2(
-					function (x, y) {
-						return {ctor: '::', _0: x, _1: y};
-					}),
-				fo,
-				A2(_elm_lang$core$Result$map, _elm_lang$core$List$singleton, ft)));
-		return A3(
-			_moarwick$elm_webpack_starter$Errors$merge2,
-			_moarwick$elm_webpack_starter$Validate$always2($this),
-			A2(_moarwick$elm_webpack_starter$Validate$betasHaveSameRef, $this, other),
-			A2(
-				_elm_lang$core$Result$andThen,
-				A2(
-					_moarwick$elm_webpack_starter$Validate$resultFromBool,
-					$this,
-					A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, $this, 'Wrong β subformulas.')),
-				A3(
-					_moarwick$elm_webpack_starter$Errors$merge2,
-					F2(
-						function (x, y) {
-							return _elm_lang$core$Native_Utils.eq(x, y);
-						}),
-					children,
-					reffed)));
-	});
-var _moarwick$elm_webpack_starter$Validate$validateBetaRuleLeft = function (z) {
-	return A2(
-		_moarwick$elm_webpack_starter$Validate$validateBeta,
-		z,
-		_moarwick$elm_webpack_starter$Zipper$right(
-			_moarwick$elm_webpack_starter$Zipper$up(z)));
-};
-var _moarwick$elm_webpack_starter$Validate$validateBetaRuleRight = function (z) {
-	return A2(
-		_moarwick$elm_webpack_starter$Validate$validateBeta,
-		z,
-		_moarwick$elm_webpack_starter$Zipper$left(
-			_moarwick$elm_webpack_starter$Zipper$up(z)));
+										_moarwick$elm_webpack_starter$Validate$checkPredicate,
+										_moarwick$elm_webpack_starter$Formula$isGamma,
+										A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Referenced formula is not γ')),
+									A2(
+										_elm_lang$core$Result$andThen,
+										_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
+										A2(
+											_elm_lang$core$Result$fromMaybe,
+											A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Invalid reference.'),
+											A2(
+												_moarwick$elm_webpack_starter$Zipper$getReffed,
+												_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
+												z)))))))))));
 };
 var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 	return A2(
@@ -14523,11 +14552,11 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 															0,
 															A2(
 																_elm_lang$core$Maybe$map,
-																function (_p41) {
+																function (_p37) {
 																	return function (_) {
 																		return _.id;
 																	}(
-																		_moarwick$elm_webpack_starter$Zipper$zNode(_p41));
+																		_moarwick$elm_webpack_starter$Zipper$zNode(_p37));
 																},
 																A2(
 																	_moarwick$elm_webpack_starter$Zipper$getReffed,
@@ -14583,11 +14612,11 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 														0,
 														A2(
 															_elm_lang$core$Maybe$map,
-															function (_p42) {
+															function (_p38) {
 																return function (_) {
 																	return _.id;
 																}(
-																	_moarwick$elm_webpack_starter$Zipper$zNode(_p42));
+																	_moarwick$elm_webpack_starter$Zipper$zNode(_p38));
 															},
 															A2(
 																_moarwick$elm_webpack_starter$Zipper$getReffed,
@@ -14617,51 +14646,65 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 										_elm_lang$core$Basics$always(z),
 										A2(
 											_elm_lang$core$Result$andThen,
-											A2(
-												_moarwick$elm_webpack_starter$Validate$checkPredicate,
-												_moarwick$elm_webpack_starter$Formula$isDelta,
-												A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Referenced formula is not delta')),
+											function (z) {
+												return _moarwick$elm_webpack_starter$Validate$getReffedSignedFormula(z);
+											},
 											A2(
 												_elm_lang$core$Result$andThen,
-												_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
 												A2(
-													_elm_lang$core$Result$fromMaybe,
-													A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Invalid reference.'),
+													_moarwick$elm_webpack_starter$Validate$checkIsPointingOnSelf,
+													_moarwick$elm_webpack_starter$Validate$isPointingOnSelf,
+													A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'delta can not be premise')),
+												A2(
+													_elm_lang$core$Result$map,
+													_elm_lang$core$Basics$always(z),
 													A2(
-														_moarwick$elm_webpack_starter$Zipper$getReffed,
-														_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
-														z)))))))))))));
+														_elm_lang$core$Result$andThen,
+														A2(
+															_moarwick$elm_webpack_starter$Validate$checkPredicate,
+															_moarwick$elm_webpack_starter$Formula$isDelta,
+															A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Referenced formula is not delta')),
+														A2(
+															_elm_lang$core$Result$andThen,
+															_moarwick$elm_webpack_starter$Validate$validateReffedFormula,
+															A2(
+																_elm_lang$core$Result$fromMaybe,
+																A2(_moarwick$elm_webpack_starter$Validate$semanticsProblem, z, 'Invalid reference.'),
+																A2(
+																	_moarwick$elm_webpack_starter$Zipper$getReffed,
+																	_moarwick$elm_webpack_starter$Zipper$zNode(z).reference,
+																	z))))))))))))))));
 };
-var _moarwick$elm_webpack_starter$Validate$isCorrectRule = function (_p43) {
-	var _p44 = _p43;
-	var _p47 = _p44;
-	var _p45 = _p44._0.node.reference.up;
-	if ((_p45.ctor === 'Just') && (_p45._0 === 0)) {
-		return _elm_lang$core$Result$Ok(_p47);
-	} else {
-		var _p46 = _p44._1;
-		if (_p46.ctor === '::') {
-			switch (_p46._0.ctor) {
-				case 'AlphaCrumb':
-					return _moarwick$elm_webpack_starter$Validate$validateAlphaRule(_p47);
-				case 'BetaLeftCrumb':
-					return _moarwick$elm_webpack_starter$Validate$validateBetaRuleLeft(_p47);
-				case 'BetaRightCrumb':
-					return _moarwick$elm_webpack_starter$Validate$validateBetaRuleRight(_p47);
-				case 'GammaCrumb':
-					return _moarwick$elm_webpack_starter$Validate$validateGammaRule(_p47);
-				default:
-					return _moarwick$elm_webpack_starter$Validate$validateDeltaRule(_p47);
-			}
-		} else {
-			return _elm_lang$core$Result$Ok(_p47);
+var _moarwick$elm_webpack_starter$Validate$isCorrectRule = function (_p39) {
+	var _p40 = _p39;
+	var _p43 = _p40;
+	var _p41 = _p40._1;
+	if (_p41.ctor === '::') {
+		switch (_p41._0.ctor) {
+			case 'AlphaCrumb':
+				var _p42 = _p40._0.node.reference.up;
+				if ((_p42.ctor === 'Just') && (_p42._0 === 0)) {
+					return _elm_lang$core$Result$Ok(_p43);
+				} else {
+					return _moarwick$elm_webpack_starter$Validate$validateAlphaRule(_p43);
+				}
+			case 'BetaLeftCrumb':
+				return _moarwick$elm_webpack_starter$Validate$validateBetaRuleLeft(_p43);
+			case 'BetaRightCrumb':
+				return _moarwick$elm_webpack_starter$Validate$validateBetaRuleRight(_p43);
+			case 'GammaCrumb':
+				return _moarwick$elm_webpack_starter$Validate$validateGammaRule(_p43);
+			default:
+				return _moarwick$elm_webpack_starter$Validate$validateDeltaRule(_p43);
 		}
+	} else {
+		return _elm_lang$core$Result$Ok(_p43);
 	}
 };
 var _moarwick$elm_webpack_starter$Validate$isCorrectNode = function (z) {
 	return A2(
 		_elm_lang$core$Result$andThen,
-		function (_p48) {
+		function (_p44) {
 			return A3(
 				_moarwick$elm_webpack_starter$Errors$merge2,
 				_moarwick$elm_webpack_starter$Validate$second,
@@ -16227,7 +16270,11 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 									_moarwick$elm_webpack_starter$Zipper$delete(_p12._0))
 							});
 					case 'DeleteMe':
-						return _elm_lang$core$Native_Utils.update(
+						var _p13 = _p12._0;
+						var newZipp = _moarwick$elm_webpack_starter$Zipper$deleteMe(_p13);
+						return (!_elm_lang$core$Native_Utils.eq(
+							newZipp,
+							_moarwick$elm_webpack_starter$Zipper$up(_p13))) ? _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
@@ -16240,7 +16287,12 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 													return x - y;
 												}),
 											1),
-										_moarwick$elm_webpack_starter$Zipper$deleteMe(_p12._0)))
+										_moarwick$elm_webpack_starter$Zipper$deleteMe(_p13)))
+							}) : _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
+									_moarwick$elm_webpack_starter$Zipper$deleteMe(_p13))
 							});
 					case 'MakeClosed':
 						return _elm_lang$core$Native_Utils.update(
@@ -16325,17 +16377,17 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 					case 'Redo':
 						return model;
 					case 'JsonRead':
-						var _p13 = _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Decode$decode(_p12._0.contents);
-						if (_p13.ctor === 'Ok') {
+						var _p14 = _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Decode$decode(_p12._0.contents);
+						if (_p14.ctor === 'Ok') {
 							return _elm_lang$core$Native_Utils.update(
 								model,
-								{jsonImporting: false, tableau: _p13._0});
+								{jsonImporting: false, tableau: _p14._0});
 						} else {
 							return _elm_lang$core$Native_Utils.update(
 								model,
 								{
 									jsonImporting: false,
-									jsonImportError: _elm_lang$core$Basics$toString(_p13._0)
+									jsonImportError: _elm_lang$core$Basics$toString(_p14._0)
 								});
 						}
 					default:
@@ -16349,33 +16401,33 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 			}());
 	});
 var _moarwick$elm_webpack_starter$Editor$update = F2(
-	function (msg, _p14) {
-		var _p15 = _p14;
-		var _p18 = _p15.present;
-		var _p17 = _p15;
-		var _p16 = msg;
-		switch (_p16.ctor) {
+	function (msg, _p15) {
+		var _p16 = _p15;
+		var _p19 = _p16.present;
+		var _p18 = _p16;
+		var _p17 = msg;
+		switch (_p17.ctor) {
 			case 'JsonSelected':
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_elm_community$undo_redo$UndoList$new,
 						_elm_lang$core$Native_Utils.update(
-							_p18,
+							_p19,
 							{jsonImportError: '', jsonImporting: true}),
-						_p17),
-					_1: _moarwick$elm_webpack_starter$Helpers_Exporting_Ports$fileSelected(_p18.jsonImportId)
+						_p18),
+					_1: _moarwick$elm_webpack_starter$Helpers_Exporting_Ports$fileSelected(_p19.jsonImportId)
 				};
 			case 'Undo':
 				return {
 					ctor: '_Tuple2',
-					_0: _elm_community$undo_redo$UndoList$undo(_p17),
+					_0: _elm_community$undo_redo$UndoList$undo(_p18),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Redo':
 				return {
 					ctor: '_Tuple2',
-					_0: _elm_community$undo_redo$UndoList$redo(_p17),
+					_0: _elm_community$undo_redo$UndoList$redo(_p18),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
@@ -16387,9 +16439,9 @@ var _moarwick$elm_webpack_starter$Editor$update = F2(
 							_moarwick$elm_webpack_starter$Editor$simpleUpdate,
 							msg,
 							_elm_lang$core$Native_Utils.update(
-								_p18,
+								_p19,
 								{jsonImportError: ''})),
-						_p17),
+						_p18),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
@@ -16448,8 +16500,8 @@ var _moarwick$elm_webpack_starter$Editor$subscriptions = function (model) {
 var _moarwick$elm_webpack_starter$Editor$JsonSelected = {ctor: 'JsonSelected'};
 var _moarwick$elm_webpack_starter$Editor$jsonImportControl = F2(
 	function (jsonImporting, jsonImportId) {
-		var _p19 = jsonImporting;
-		if (_p19 === true) {
+		var _p20 = jsonImporting;
+		if (_p20 === true) {
 			return _elm_lang$html$Html$text('Loading file...');
 		} else {
 			return A2(
@@ -16568,9 +16620,9 @@ var _moarwick$elm_webpack_starter$Editor$ExpandAlpha = function (a) {
 	return {ctor: 'ExpandAlpha', _0: a};
 };
 var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
-	var _p20 = z;
-	var t = _p20._0;
-	var bs = _p20._1;
+	var _p21 = z;
+	var t = _p21._0;
+	var bs = _p21._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -16579,22 +16631,22 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 			_1: {ctor: '[]'}
 		},
 		function () {
-			var _p21 = t.ext;
-			switch (_p21.ctor) {
+			var _p22 = t.ext;
+			switch (_p22.ctor) {
 				case 'Closed':
-					var _p23 = _p21._1;
-					var _p22 = _p21._0;
+					var _p24 = _p22._1;
+					var _p23 = _p22._0;
 					var compl = _moarwick$elm_webpack_starter$Errors$errors(
-						A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p22, _p23, z));
+						A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p23, _p24, z));
 					var ref1Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p22, z),
+							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p23, z),
 							compl));
 					var ref2Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p23, z),
+							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p24, z),
 							compl));
 					return {
 						ctor: '::',
@@ -16618,7 +16670,7 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 												_0: _elm_lang$html$Html_Attributes$size(1),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$value(_p22.str),
+													_0: _elm_lang$html$Html_Attributes$value(_p23.str),
 													_1: {
 														ctor: '::',
 														_0: _elm_lang$html$Html_Events$onInput(
@@ -16650,7 +16702,7 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 													_0: _elm_lang$html$Html_Attributes$size(1),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$value(_p23.str),
+														_0: _elm_lang$html$Html_Attributes$value(_p24.str),
 														_1: {
 															ctor: '::',
 															_0: _elm_lang$html$Html_Events$onInput(
@@ -16688,8 +16740,8 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 						}
 					};
 				case 'Beta':
-					var _p24 = t.node.gui.controlsShown;
-					if (_p24 === true) {
+					var _p25 = t.node.gui.controlsShown;
+					if (_p25 === true) {
 						return {
 							ctor: '::',
 							_0: A2(
@@ -17043,8 +17095,8 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 						return {ctor: '[]'};
 					}
 				default:
-					var _p25 = t.node.gui.controlsShown;
-					if (_p25 === true) {
+					var _p26 = t.node.gui.controlsShown;
+					if (_p26 === true) {
 						return {
 							ctor: '::',
 							_0: A2(
@@ -17389,9 +17441,9 @@ var _moarwick$elm_webpack_starter$Editor$ChangeText = F2(
 		return {ctor: 'ChangeText', _0: a, _1: b};
 	});
 var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
-	var _p26 = z;
-	var tableau = _p26._0;
-	var bs = _p26._1;
+	var _p27 = z;
+	var tableau = _p27._0;
+	var bs = _p27._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17449,7 +17501,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('substituting'),
+					_0: _elm_lang$html$Html$text('|'),
 					_1: {
 						ctor: '::',
 						_0: A2(
@@ -17599,8 +17651,8 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 		});
 };
 var _moarwick$elm_webpack_starter$Editor$viewChildren = function (z) {
-	var _p27 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
-	switch (_p27.ctor) {
+	var _p28 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
+	switch (_p28.ctor) {
 		case 'Open':
 			return _moarwick$elm_webpack_starter$Editor$viewOpen(z);
 		case 'Closed':
@@ -17631,9 +17683,9 @@ var _moarwick$elm_webpack_starter$Editor$viewAlpha = function (z) {
 		});
 };
 var _moarwick$elm_webpack_starter$Editor$viewNode = function (z) {
-	var _p28 = z;
-	var tableau = _p28._0;
-	var bs = _p28._1;
+	var _p29 = z;
+	var tableau = _p29._0;
+	var bs = _p29._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17796,9 +17848,9 @@ var _moarwick$elm_webpack_starter$Editor$viewGamma = function (z) {
 			_1: {ctor: '[]'}
 		});
 };
-var _moarwick$elm_webpack_starter$Editor$view = function (_p29) {
-	var _p30 = _p29;
-	var _p31 = _p30.present;
+var _moarwick$elm_webpack_starter$Editor$view = function (_p30) {
+	var _p31 = _p30;
+	var _p32 = _p31.present;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17853,10 +17905,10 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p29) {
 							}),
 						_1: {
 							ctor: '::',
-							_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p31.tableau),
+							_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p32.tableau),
 							_1: {
 								ctor: '::',
-								_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p31.jsonImporting, _p31.jsonImportId),
+								_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p32.jsonImporting, _p32.jsonImportId),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -17902,17 +17954,17 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p29) {
 				}),
 			_1: {
 				ctor: '::',
-				_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p31),
+				_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p32),
 				_1: {
 					ctor: '::',
 					_0: _moarwick$elm_webpack_starter$Editor$viewNode(
-						_moarwick$elm_webpack_starter$Zipper$zipper(_p31.tableau)),
+						_moarwick$elm_webpack_starter$Zipper$zipper(_p32.tableau)),
 					_1: {
 						ctor: '::',
-						_0: _moarwick$elm_webpack_starter$Editor$verdict(_p31.tableau),
+						_0: _moarwick$elm_webpack_starter$Editor$verdict(_p32.tableau),
 						_1: {
 							ctor: '::',
-							_0: _moarwick$elm_webpack_starter$Editor$problems(_p31.tableau),
+							_0: _moarwick$elm_webpack_starter$Editor$problems(_p32.tableau),
 							_1: {
 								ctor: '::',
 								_0: _moarwick$elm_webpack_starter$Rules$help,

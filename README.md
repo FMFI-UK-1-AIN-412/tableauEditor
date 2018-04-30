@@ -7,7 +7,7 @@ Here you can find other material to my bachelor thesis: https://nitrajka.github.
 
 ### Development server:
 ```
-elm-live src/Editor.elm src/Tableau.elm src/Zipper.elm src/Errors.elm src/Validate.elm src/Helpers/Helper.elm src/Helpers/Rules.elm src/Helpers/Exporting/Ports.elm src/Helpers/Exporting/Json/Encode.elm src/Helpers/Exporting/Json/Decode.elm --open --pushstate --output=src/static/elm.js
+elm-live src/Editor.elm src/Tableau.elm src/Zipper.elm src/Errors.elm src/Validate.elm src/Helpers/Helper.elm src/Helpers/Rules.elm src/Helpers/Exporting/Ports.elm src/Helpers/Exporting/Json/Encode.elm src/Helpers/Exporting/Json/Decode.elm --open --pushstate --output=elm.js
 ```
 * Access app at `http://localhost:8000/`
 
