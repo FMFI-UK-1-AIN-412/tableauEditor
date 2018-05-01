@@ -12208,29 +12208,53 @@ var _moarwick$elm_webpack_starter$Zipper$closeControls = function (oldNode) {
 			gui: {controlsShown: false}
 		});
 };
-var _moarwick$elm_webpack_starter$Zipper$renumberJustInRef = F3(
-	function (ref, func, lengthOfPathFromFather) {
-		var _p0 = ref.up;
-		if (_p0.ctor === 'Just') {
-			if (_p0._0 === 0) {
-				return ref;
+var _moarwick$elm_webpack_starter$Zipper$renumberJustInRef = F4(
+	function (ref, func, typ, lengthOfPathFromFather) {
+		if (_elm_lang$core$Native_Utils.eq(typ, 'DELETE')) {
+			var _p0 = ref.up;
+			if (_p0.ctor === 'Just') {
+				if (_p0._0 === 0) {
+					return ref;
+				} else {
+					var _p3 = _p0._0;
+					var _p1 = A2(_elm_lang$core$Debug$log, 'x-1', _p3 - 1);
+					var _p2 = A2(_elm_lang$core$Debug$log, 'length from father', lengthOfPathFromFather);
+					return (_elm_lang$core$Native_Utils.cmp(_p3 - 1, lengthOfPathFromFather) > -1) ? A2(
+						_moarwick$elm_webpack_starter$Tableau$Ref,
+						ref.str,
+						_elm_lang$core$Maybe$Just(
+							func(_p3))) : ref;
+				}
 			} else {
-				var _p1 = _p0._0;
-				return (_elm_lang$core$Native_Utils.cmp(_p1, lengthOfPathFromFather) > -1) ? A2(
-					_moarwick$elm_webpack_starter$Tableau$Ref,
-					ref.str,
-					_elm_lang$core$Maybe$Just(
-						func(_p1))) : ref;
+				return ref;
 			}
 		} else {
-			return ref;
+			if (_elm_lang$core$Native_Utils.eq(typ, 'EXPAND')) {
+				var _p4 = ref.up;
+				if (_p4.ctor === 'Just') {
+					if (_p4._0 === 0) {
+						return ref;
+					} else {
+						var _p5 = _p4._0;
+						return (_elm_lang$core$Native_Utils.cmp(_p5 + 1, lengthOfPathFromFather) > -1) ? A2(
+							_moarwick$elm_webpack_starter$Tableau$Ref,
+							ref.str,
+							_elm_lang$core$Maybe$Just(
+								func(_p5))) : ref;
+					}
+				} else {
+					return ref;
+				}
+			} else {
+				return ref;
+			}
 		}
 	});
-var _moarwick$elm_webpack_starter$Zipper$renumberJust = F3(
-	function (t, f, lengthOfPathFromFather) {
-		var _p2 = t.node.reference.up;
-		if (_p2.ctor === 'Just') {
-			if (_p2._0 === 0) {
+var _moarwick$elm_webpack_starter$Zipper$renumberJust = F4(
+	function (t, f, typ, lengthOfPathFromFather) {
+		var _p6 = t.node.reference.up;
+		if (_p6.ctor === 'Just') {
+			if (_p6._0 === 0) {
 				return t;
 			} else {
 				var oldNode = t.node;
@@ -12238,7 +12262,7 @@ var _moarwick$elm_webpack_starter$Zipper$renumberJust = F3(
 				var newNode = _elm_lang$core$Native_Utils.update(
 					oldNode,
 					{
-						reference: A3(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, oldReference, f, lengthOfPathFromFather)
+						reference: A4(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, oldReference, f, typ, lengthOfPathFromFather)
 					});
 				var newTableau = _elm_lang$core$Native_Utils.update(
 					t,
@@ -12249,19 +12273,20 @@ var _moarwick$elm_webpack_starter$Zipper$renumberJust = F3(
 			return t;
 		}
 	});
-var _moarwick$elm_webpack_starter$Zipper$renumberJusts = F3(
-	function (tableau, f, lengthOfPathFromFather) {
-		var _p3 = tableau.ext;
-		switch (_p3.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$renumberJusts = F4(
+	function (tableau, f, typ, lengthOfPathFromFather) {
+		var _p7 = tableau.ext;
+		switch (_p7.ctor) {
 			case 'Alpha':
 				return A2(
 					_moarwick$elm_webpack_starter$Tableau$Tableau,
 					tableau.node,
 					_moarwick$elm_webpack_starter$Tableau$Alpha(
-						A3(
+						A4(
 							_moarwick$elm_webpack_starter$Zipper$renumberJusts,
-							A3(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p3._0, f, lengthOfPathFromFather),
+							A4(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p7._0, f, typ, lengthOfPathFromFather + 1),
 							f,
+							typ,
 							lengthOfPathFromFather + 1)));
 			case 'Beta':
 				return A2(
@@ -12269,15 +12294,17 @@ var _moarwick$elm_webpack_starter$Zipper$renumberJusts = F3(
 					tableau.node,
 					A2(
 						_moarwick$elm_webpack_starter$Tableau$Beta,
-						A3(
+						A4(
 							_moarwick$elm_webpack_starter$Zipper$renumberJusts,
-							A3(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p3._0, f, lengthOfPathFromFather),
+							A4(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p7._0, f, typ, lengthOfPathFromFather + 1),
 							f,
+							typ,
 							lengthOfPathFromFather + 1),
-						A3(
+						A4(
 							_moarwick$elm_webpack_starter$Zipper$renumberJusts,
-							A3(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p3._1, f, lengthOfPathFromFather),
+							A4(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p7._1, f, typ, lengthOfPathFromFather + 1),
 							f,
+							typ,
 							lengthOfPathFromFather + 1)));
 			case 'Gamma':
 				return A2(
@@ -12285,40 +12312,56 @@ var _moarwick$elm_webpack_starter$Zipper$renumberJusts = F3(
 					tableau.node,
 					A2(
 						_moarwick$elm_webpack_starter$Tableau$Gamma,
-						A3(
+						A4(
 							_moarwick$elm_webpack_starter$Zipper$renumberJusts,
-							A3(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p3._0, f, lengthOfPathFromFather),
+							A4(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p7._0, f, typ, lengthOfPathFromFather + 1),
 							f,
+							typ,
 							lengthOfPathFromFather + 1),
-						_p3._1));
+						_p7._1));
 			case 'Delta':
 				return A2(
 					_moarwick$elm_webpack_starter$Tableau$Tableau,
 					tableau.node,
 					A2(
 						_moarwick$elm_webpack_starter$Tableau$Delta,
-						A3(
+						A4(
 							_moarwick$elm_webpack_starter$Zipper$renumberJusts,
-							A3(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p3._0, f, lengthOfPathFromFather),
+							A4(_moarwick$elm_webpack_starter$Zipper$renumberJust, _p7._0, f, typ, lengthOfPathFromFather + 1),
 							f,
+							typ,
 							lengthOfPathFromFather + 1),
-						_p3._1));
+						_p7._1));
 			case 'Open':
 				return tableau;
 			default:
+				var _p15 = _p7._1;
+				var _p14 = _p7._0;
+				var _p8 = A2(
+					_elm_lang$core$Debug$log,
+					'renumbered r2',
+					A4(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p15, f, typ, lengthOfPathFromFather));
+				var _p9 = A2(
+					_elm_lang$core$Debug$log,
+					'renumbered r1',
+					A4(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p14, f, typ, lengthOfPathFromFather));
+				var _p10 = A2(_elm_lang$core$Debug$log, 'length of path from father', lengthOfPathFromFather);
+				var _p11 = A2(_elm_lang$core$Debug$log, 'r2', _p15);
+				var _p12 = A2(_elm_lang$core$Debug$log, 'r1', _p14);
+				var _p13 = A2(_elm_lang$core$Debug$log, 'renumbering', 'closed');
 				return A2(
 					_moarwick$elm_webpack_starter$Tableau$Tableau,
 					tableau.node,
 					A2(
 						_moarwick$elm_webpack_starter$Tableau$Closed,
-						A3(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p3._0, f, lengthOfPathFromFather + 1),
-						A3(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p3._1, f, lengthOfPathFromFather + 1)));
+						A4(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p14, f, typ, lengthOfPathFromFather),
+						A4(_moarwick$elm_webpack_starter$Zipper$renumberJustInRef, _p15, f, typ, lengthOfPathFromFather)));
 		}
 	});
 var _moarwick$elm_webpack_starter$Zipper$setPair = F4(
 	function (which, ref, r1, r2) {
-		var _p4 = which;
-		if (_p4 === 0) {
+		var _p16 = which;
+		if (_p16 === 0) {
 			return {ctor: '_Tuple2', _0: ref, _1: r2};
 		} else {
 			return {ctor: '_Tuple2', _0: r1, _1: ref};
@@ -12326,8 +12369,8 @@ var _moarwick$elm_webpack_starter$Zipper$setPair = F4(
 	});
 var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 	function (tableau, num) {
-		var _p5 = tableau.ext;
-		switch (_p5.ctor) {
+		var _p17 = tableau.ext;
+		switch (_p17.ctor) {
 			case 'Open':
 				var ext = tableau.ext;
 				var node = tableau.node;
@@ -12343,9 +12386,9 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 				};
 			case 'Alpha':
 				var node = tableau.node;
-				var _p6 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p5._0, num + 1);
-				var new_tableau = _p6._0;
-				var num1 = _p6._1;
+				var _p18 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p17._0, num + 1);
+				var new_tableau = _p18._0;
+				var num1 = _p18._1;
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
@@ -12358,12 +12401,12 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 				};
 			case 'Beta':
 				var node = tableau.node;
-				var _p7 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p5._0, num + 1);
-				var new_left = _p7._0;
-				var num1 = _p7._1;
-				var _p8 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p5._1, num1);
-				var new_right = _p8._0;
-				var num2 = _p8._1;
+				var _p19 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p17._0, num + 1);
+				var new_left = _p19._0;
+				var num1 = _p19._1;
+				var _p20 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p17._1, num1);
+				var new_right = _p20._0;
+				var num2 = _p20._1;
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
@@ -12376,9 +12419,9 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 				};
 			case 'Gamma':
 				var node = tableau.node;
-				var _p9 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p5._0, num + 1);
-				var new_tableau = _p9._0;
-				var num1 = _p9._1;
+				var _p21 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p17._0, num + 1);
+				var new_tableau = _p21._0;
+				var num1 = _p21._1;
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
@@ -12386,14 +12429,14 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 						_elm_lang$core$Native_Utils.update(
 							node,
 							{id: num + 1}),
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, new_tableau, _p5._1)),
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, new_tableau, _p17._1)),
 					_1: num1
 				};
 			case 'Delta':
 				var node = tableau.node;
-				var _p10 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p5._0, num + 1);
-				var new_tableau = _p10._0;
-				var num1 = _p10._1;
+				var _p22 = A2(_moarwick$elm_webpack_starter$Zipper$renumber2, _p17._0, num + 1);
+				var new_tableau = _p22._0;
+				var num1 = _p22._1;
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
@@ -12401,7 +12444,7 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 						_elm_lang$core$Native_Utils.update(
 							node,
 							{id: num + 1}),
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, new_tableau, _p5._1)),
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, new_tableau, _p17._1)),
 					_1: num1
 				};
 			default:
@@ -12419,32 +12462,32 @@ var _moarwick$elm_webpack_starter$Zipper$renumber2 = F2(
 				};
 		}
 	});
-var _moarwick$elm_webpack_starter$Zipper$zSubstitution = function (_p11) {
-	var _p12 = _p11;
-	var _p13 = _p12._0.ext;
-	switch (_p13.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$zSubstitution = function (_p23) {
+	var _p24 = _p23;
+	var _p25 = _p24._0.ext;
+	switch (_p25.ctor) {
 		case 'Gamma':
-			return _elm_lang$core$Maybe$Just(_p13._1);
+			return _elm_lang$core$Maybe$Just(_p25._1);
 		case 'Delta':
-			return _elm_lang$core$Maybe$Just(_p13._1);
+			return _elm_lang$core$Maybe$Just(_p25._1);
 		default:
 			return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _moarwick$elm_webpack_starter$Zipper$zTableau = function (_p14) {
-	var _p15 = _p14;
-	return _p15._0;
+var _moarwick$elm_webpack_starter$Zipper$zTableau = function (_p26) {
+	var _p27 = _p26;
+	return _p27._0;
 };
 var _moarwick$elm_webpack_starter$Zipper$zNode = function (z) {
 	return _moarwick$elm_webpack_starter$Zipper$zTableau(z).node;
 };
 var _moarwick$elm_webpack_starter$Zipper$modifyNode = F2(
-	function (f, _p16) {
-		var _p17 = _p16;
+	function (f, _p28) {
+		var _p29 = _p28;
 		return {
 			ctor: '_Tuple2',
-			_0: f(_p17._0),
-			_1: _p17._1
+			_0: f(_p29._0),
+			_1: _p29._1
 		};
 	});
 var _moarwick$elm_webpack_starter$Zipper$modifyRef = F2(
@@ -12463,12 +12506,12 @@ var _moarwick$elm_webpack_starter$Zipper$modifyRef = F2(
 			},
 			z);
 	});
-var _moarwick$elm_webpack_starter$Zipper$renumberJustInReferences = F2(
-	function (f, z) {
+var _moarwick$elm_webpack_starter$Zipper$renumberJustInReferences = F3(
+	function (f, typ, z) {
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				return A3(_moarwick$elm_webpack_starter$Zipper$renumberJusts, tableau, f, 0);
+				return A4(_moarwick$elm_webpack_starter$Zipper$renumberJusts, tableau, f, typ, 0);
 			},
 			z);
 	});
@@ -12492,8 +12535,8 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p18 = tableau.ext;
-			switch (_p18.ctor) {
+			var _p30 = tableau.ext;
+			switch (_p30.ctor) {
 				case 'Open':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12508,7 +12551,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								_moarwick$elm_webpack_starter$Tableau$Alpha(_p18._0))));
+								_moarwick$elm_webpack_starter$Tableau$Alpha(_p30._0))));
 				case 'Beta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12517,7 +12560,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p18._0, _p18._1))));
+								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p30._0, _p30._1))));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12526,7 +12569,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p18._0, _p18._1))));
+								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p30._0, _p30._1))));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12535,7 +12578,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p18._0, _p18._1))));
+								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p30._0, _p30._1))));
 				default:
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12544,7 +12587,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendAlpha = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p18._0, _p18._1))));
+								A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p30._0, _p30._1))));
 			}
 		},
 		z);
@@ -12553,8 +12596,8 @@ var _moarwick$elm_webpack_starter$Zipper$extendBeta = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p19 = tableau.ext;
-			switch (_p19.ctor) {
+			var _p31 = tableau.ext;
+			switch (_p31.ctor) {
 				case 'Open':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12572,7 +12615,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendBeta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								_moarwick$elm_webpack_starter$Tableau$Alpha(_p19._0)),
+								_moarwick$elm_webpack_starter$Tableau$Alpha(_p31._0)),
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Beta':
 					return A2(
@@ -12583,7 +12626,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendBeta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p19._0, _p19._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p31._0, _p31._1)),
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Gamma':
 					return A2(
@@ -12594,7 +12637,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendBeta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p19._0, _p19._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p31._0, _p31._1)),
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Delta':
 					return A2(
@@ -12605,7 +12648,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendBeta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p19._0, _p19._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p31._0, _p31._1)),
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				default:
 					return tableau;
@@ -12617,8 +12660,8 @@ var _moarwick$elm_webpack_starter$Zipper$extendGamma = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p20 = tableau.ext;
-			switch (_p20.ctor) {
+			var _p32 = tableau.ext;
+			switch (_p32.ctor) {
 				case 'Open':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12636,7 +12679,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendGamma = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								_moarwick$elm_webpack_starter$Tableau$Alpha(_p20._0)),
+								_moarwick$elm_webpack_starter$Tableau$Alpha(_p32._0)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
 					return A2(
@@ -12647,7 +12690,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendGamma = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p20._0, _p20._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p32._0, _p32._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Gamma':
 					return A2(
@@ -12658,7 +12701,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendGamma = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p20._0, _p20._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p32._0, _p32._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Delta':
 					return A2(
@@ -12669,7 +12712,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendGamma = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p20._0, _p20._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p32._0, _p32._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				default:
 					return tableau;
@@ -12681,8 +12724,8 @@ var _moarwick$elm_webpack_starter$Zipper$extendDelta = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p21 = tableau.ext;
-			switch (_p21.ctor) {
+			var _p33 = tableau.ext;
+			switch (_p33.ctor) {
 				case 'Open':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -12700,7 +12743,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendDelta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								_moarwick$elm_webpack_starter$Tableau$Alpha(_p21._0)),
+								_moarwick$elm_webpack_starter$Tableau$Alpha(_p33._0)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
 					return A2(
@@ -12711,7 +12754,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendDelta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p21._0, _p21._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p33._0, _p33._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Gamma':
 					return A2(
@@ -12722,7 +12765,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendDelta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p21._0, _p21._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p33._0, _p33._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Delta':
 					return A2(
@@ -12733,7 +12776,7 @@ var _moarwick$elm_webpack_starter$Zipper$extendDelta = function (z) {
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Tableau,
 								_moarwick$elm_webpack_starter$Tableau$defNode,
-								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p21._0, _p21._1)),
+								A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p33._0, _p33._1)),
 							_moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				default:
 					return tableau;
@@ -12753,7 +12796,7 @@ var _moarwick$elm_webpack_starter$Zipper$makeClosed = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p22 = tableau.ext;
+			var _p34 = tableau.ext;
 			return A2(
 				_moarwick$elm_webpack_starter$Tableau$Tableau,
 				tableau.node,
@@ -12765,8 +12808,8 @@ var _moarwick$elm_webpack_starter$Zipper$makeOpen = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p23 = tableau.ext;
-			if (_p23.ctor === 'Closed') {
+			var _p35 = tableau.ext;
+			if (_p35.ctor === 'Closed') {
 				return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _moarwick$elm_webpack_starter$Tableau$Open);
 			} else {
 				return tableau;
@@ -12778,12 +12821,12 @@ var _moarwick$elm_webpack_starter$Zipper$switchBetas = function (z) {
 	return A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p24 = tableau.ext;
-			if (_p24.ctor === 'Beta') {
+			var _p36 = tableau.ext;
+			if (_p36.ctor === 'Beta') {
 				return A2(
 					_moarwick$elm_webpack_starter$Tableau$Tableau,
 					tableau.node,
-					A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p24._1, _p24._0));
+					A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p36._1, _p36._0));
 			} else {
 				return tableau;
 			}
@@ -12808,76 +12851,76 @@ var _moarwick$elm_webpack_starter$Zipper$changeButtonAppearance = function (z) {
 		},
 		z);
 };
-var _moarwick$elm_webpack_starter$Zipper$up = function (_p25) {
-	var _p26 = _p25;
-	var _p29 = _p26._0;
-	var _p28 = _p26._1;
-	var _p27 = _p28;
-	if (_p27.ctor === '::') {
-		switch (_p27._0.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$up = function (_p37) {
+	var _p38 = _p37;
+	var _p41 = _p38._0;
+	var _p40 = _p38._1;
+	var _p39 = _p40;
+	if (_p39.ctor === '::') {
+		switch (_p39._0.ctor) {
 			case 'AlphaCrumb':
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						_p27._0._0,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p29)),
-					_1: _p27._1
+						_p39._0._0,
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p41)),
+					_1: _p39._1
 				};
 			case 'BetaLeftCrumb':
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						_p27._0._0,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p29, _p27._0._1)),
-					_1: _p27._1
+						_p39._0._0,
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p41, _p39._0._1)),
+					_1: _p39._1
 				};
 			case 'BetaRightCrumb':
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						_p27._0._0,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p27._0._1, _p29)),
-					_1: _p27._1
+						_p39._0._0,
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p39._0._1, _p41)),
+					_1: _p39._1
 				};
 			case 'GammaCrumb':
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						_p27._0._0,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p29, _p27._0._1)),
-					_1: _p27._1
+						_p39._0._0,
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p41, _p39._0._1)),
+					_1: _p39._1
 				};
 			default:
 				return {
 					ctor: '_Tuple2',
 					_0: A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
-						_p27._0._0,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p29, _p27._0._1)),
-					_1: _p27._1
+						_p39._0._0,
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p41, _p39._0._1)),
+					_1: _p39._1
 				};
 		}
 	} else {
-		return {ctor: '_Tuple2', _0: _p29, _1: _p28};
+		return {ctor: '_Tuple2', _0: _p41, _1: _p40};
 	}
 };
-var _moarwick$elm_webpack_starter$Zipper$top = function (_p30) {
+var _moarwick$elm_webpack_starter$Zipper$top = function (_p42) {
 	top:
 	while (true) {
-		var _p31 = _p30;
-		var _p34 = _p31._0;
-		var _p33 = _p31._1;
-		var _p32 = _p33;
-		if (_p32.ctor === '[]') {
-			return {ctor: '_Tuple2', _0: _p34, _1: _p33};
+		var _p43 = _p42;
+		var _p46 = _p43._0;
+		var _p45 = _p43._1;
+		var _p44 = _p45;
+		if (_p44.ctor === '[]') {
+			return {ctor: '_Tuple2', _0: _p46, _1: _p45};
 		} else {
-			var _v20 = _moarwick$elm_webpack_starter$Zipper$up(
-				{ctor: '_Tuple2', _0: _p34, _1: _p33});
-			_p30 = _v20;
+			var _v21 = _moarwick$elm_webpack_starter$Zipper$up(
+				{ctor: '_Tuple2', _0: _p46, _1: _p45});
+			_p42 = _v21;
 			continue top;
 		}
 	}
@@ -12886,37 +12929,37 @@ var _moarwick$elm_webpack_starter$Zipper$above = F2(
 	function (n, z) {
 		above:
 		while (true) {
-			var _p35 = n;
-			if (_p35 === 0) {
+			var _p47 = n;
+			if (_p47 === 0) {
 				return z;
 			} else {
-				var _v22 = _p35 - 1,
-					_v23 = _moarwick$elm_webpack_starter$Zipper$up(z);
-				n = _v22;
-				z = _v23;
+				var _v23 = _p47 - 1,
+					_v24 = _moarwick$elm_webpack_starter$Zipper$up(z);
+				n = _v23;
+				z = _v24;
 				continue above;
 			}
 		}
 	});
 var _moarwick$elm_webpack_starter$Zipper$getFixedRef = F2(
-	function (_p36, z) {
-		var _p37 = _p36;
-		var _p39 = _p37;
-		var _p38 = _p37.up;
-		if (_p38.ctor === 'Nothing') {
+	function (_p48, z) {
+		var _p49 = _p48;
+		var _p51 = _p49;
+		var _p50 = _p49.up;
+		if (_p50.ctor === 'Nothing') {
 			return _elm_lang$core$Native_Utils.update(
-				_p39,
+				_p51,
 				{str: ''});
 		} else {
 			return _elm_lang$core$Native_Utils.update(
-				_p39,
+				_p51,
 				{
 					str: _elm_lang$core$Basics$toString(
 						function (_) {
 							return _.id;
 						}(
 							_moarwick$elm_webpack_starter$Zipper$zNode(
-								A2(_moarwick$elm_webpack_starter$Zipper$above, _p38._0, z))))
+								A2(_moarwick$elm_webpack_starter$Zipper$above, _p50._0, z))))
 				});
 		}
 	});
@@ -12943,15 +12986,15 @@ var _moarwick$elm_webpack_starter$Zipper$fixClosedRefs = function (z) {
 		function (t) {
 			var node = t.node;
 			var ext = t.ext;
-			var _p40 = ext;
-			if (_p40.ctor === 'Closed') {
+			var _p52 = ext;
+			if (_p52.ctor === 'Closed') {
 				return A2(
 					_moarwick$elm_webpack_starter$Tableau$Tableau,
 					node,
 					A2(
 						_moarwick$elm_webpack_starter$Tableau$Closed,
-						A2(_moarwick$elm_webpack_starter$Zipper$getFixedRef, _p40._0, z),
-						A2(_moarwick$elm_webpack_starter$Zipper$getFixedRef, _p40._1, z)));
+						A2(_moarwick$elm_webpack_starter$Zipper$getFixedRef, _p52._0, z),
+						A2(_moarwick$elm_webpack_starter$Zipper$getFixedRef, _p52._1, z)));
 			} else {
 				return t;
 			}
@@ -12966,16 +13009,16 @@ var _moarwick$elm_webpack_starter$Zipper$getReffed = F2(
 			r.up);
 	});
 var _moarwick$elm_webpack_starter$Zipper$findAbove = F2(
-	function (ref, _p41) {
-		var _p42 = _p41;
-		var _p45 = _p42._0;
-		var _p44 = _p42._1;
-		var node = _p45.node;
+	function (ref, _p53) {
+		var _p54 = _p53;
+		var _p57 = _p54._0;
+		var _p56 = _p54._1;
+		var node = _p57.node;
 		if (_elm_lang$core$Native_Utils.eq(node.id, ref)) {
 			return _elm_lang$core$Maybe$Just(0);
 		} else {
-			var _p43 = _p44;
-			if (_p43.ctor === '::') {
+			var _p55 = _p56;
+			if (_p55.ctor === '::') {
 				return A2(
 					_elm_lang$core$Maybe$map,
 					F2(
@@ -12986,7 +13029,7 @@ var _moarwick$elm_webpack_starter$Zipper$findAbove = F2(
 						_moarwick$elm_webpack_starter$Zipper$findAbove,
 						ref,
 						_moarwick$elm_webpack_starter$Zipper$up(
-							{ctor: '_Tuple2', _0: _p45, _1: _p44})));
+							{ctor: '_Tuple2', _0: _p57, _1: _p56})));
 			} else {
 				return _elm_lang$core$Maybe$Nothing;
 			}
@@ -13015,14 +13058,14 @@ var _moarwick$elm_webpack_starter$Zipper$setClosed = F3(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p46 = tableau.ext;
-				if (_p46.ctor === 'Closed') {
+				var _p58 = tableau.ext;
+				if (_p58.ctor === 'Closed') {
 					var newRef = A4(
 						_moarwick$elm_webpack_starter$Zipper$setPair,
 						which,
 						A2(_moarwick$elm_webpack_starter$Zipper$getRef, newRefStr, z),
-						_p46._0,
-						_p46._1);
+						_p58._0,
+						_p58._1);
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
@@ -13036,99 +13079,99 @@ var _moarwick$elm_webpack_starter$Zipper$setClosed = F3(
 			},
 			z);
 	});
-var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p47) {
-	var _p48 = _p47;
-	var _p58 = _p48;
-	var _p57 = _p48._1;
+var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p59) {
+	var _p60 = _p59;
+	var _p70 = _p60;
+	var _p69 = _p60._1;
 	if (_elm_lang$core$Native_Utils.eq(
-		_moarwick$elm_webpack_starter$Zipper$up(_p58),
-		_p58)) {
+		_moarwick$elm_webpack_starter$Zipper$up(_p70),
+		_p70)) {
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p49 = tableau.ext;
-				switch (_p49.ctor) {
+				var _p61 = tableau.ext;
+				switch (_p61.ctor) {
 					case 'Open':
 						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
 					case 'Closed':
 						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open);
 					case 'Alpha':
-						return _p49._0;
+						return _p61._0;
 					case 'Beta':
-						var _p51 = _p49._1;
-						var _p50 = _p49._0;
-						return _elm_lang$core$Native_Utils.eq(_p50.node.value, '') ? _p51 : (_elm_lang$core$Native_Utils.eq(_p51.node.value, '') ? _p50 : tableau);
+						var _p63 = _p61._1;
+						var _p62 = _p61._0;
+						return _elm_lang$core$Native_Utils.eq(_p62.node.value, '') ? _p63 : (_elm_lang$core$Native_Utils.eq(_p63.node.value, '') ? _p62 : tableau);
 					case 'Gamma':
-						return _p49._0;
+						return _p61._0;
 					default:
-						return _p49._0;
+						return _p61._0;
 				}
 			},
-			_p58);
+			_p70);
 	} else {
-		var _p52 = A2(_elm_lang$core$Debug$log, 'bc', _p57);
-		var _p53 = _p57;
-		_v32_2:
+		var _p64 = A2(_elm_lang$core$Debug$log, 'bc', _p69);
+		var _p65 = _p69;
+		_v33_2:
 		do {
-			if (_p53.ctor === '::') {
-				switch (_p53._0.ctor) {
+			if (_p65.ctor === '::') {
+				switch (_p65._0.ctor) {
 					case 'BetaLeftCrumb':
 						return A2(
 							_moarwick$elm_webpack_starter$Zipper$modifyNode,
 							function (tableau) {
-								var _p54 = tableau.ext;
-								if (_p54.ctor === 'Beta') {
-									return _elm_lang$core$Native_Utils.eq(_p54._0.node.value, '') ? A2(
+								var _p66 = tableau.ext;
+								if (_p66.ctor === 'Beta') {
+									return _elm_lang$core$Native_Utils.eq(_p66._0.node.value, '') ? A2(
 										_moarwick$elm_webpack_starter$Tableau$Tableau,
 										tableau.node,
-										_moarwick$elm_webpack_starter$Tableau$Alpha(_p54._1)) : tableau;
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p66._1)) : tableau;
 								} else {
 									return tableau;
 								}
 							},
-							_moarwick$elm_webpack_starter$Zipper$up(_p58));
+							_moarwick$elm_webpack_starter$Zipper$up(_p70));
 					case 'BetaRightCrumb':
 						return A2(
 							_moarwick$elm_webpack_starter$Zipper$modifyNode,
 							function (tableau) {
-								var _p55 = tableau.ext;
-								if (_p55.ctor === 'Beta') {
-									return _elm_lang$core$Native_Utils.eq(_p55._1.node.value, '') ? A2(
+								var _p67 = tableau.ext;
+								if (_p67.ctor === 'Beta') {
+									return _elm_lang$core$Native_Utils.eq(_p67._1.node.value, '') ? A2(
 										_moarwick$elm_webpack_starter$Tableau$Tableau,
 										tableau.node,
-										_moarwick$elm_webpack_starter$Tableau$Alpha(_p55._0)) : tableau;
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p67._0)) : tableau;
 								} else {
 									return tableau;
 								}
 							},
-							_moarwick$elm_webpack_starter$Zipper$up(_p58));
+							_moarwick$elm_webpack_starter$Zipper$up(_p70));
 					default:
-						break _v32_2;
+						break _v33_2;
 				}
 			} else {
-				break _v32_2;
+				break _v33_2;
 			}
 		} while(false);
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p56 = tableau.ext;
-				switch (_p56.ctor) {
+				var _p68 = tableau.ext;
+				switch (_p68.ctor) {
 					case 'Open':
 						return tableau;
 					case 'Closed':
 						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _moarwick$elm_webpack_starter$Tableau$Open);
 					case 'Alpha':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p68._0.ext);
 					case 'Gamma':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p68._0.ext);
 					case 'Delta':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p56._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p68._0.ext);
 					default:
 						return tableau;
 				}
 			},
-			_moarwick$elm_webpack_starter$Zipper$up(_p58));
+			_moarwick$elm_webpack_starter$Zipper$up(_p70));
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
@@ -13136,17 +13179,17 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p59 = tableau.ext;
-				switch (_p59.ctor) {
+				var _p71 = tableau.ext;
+				switch (_p71.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p59._0,
+								_p71._0,
 								_elm_lang$core$Native_Utils.update(
-									_p59._1,
+									_p71._1,
 									{forWhat: newVariable})));
 					case 'Delta':
 						return A2(
@@ -13154,9 +13197,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p59._0,
+								_p71._0,
 								_elm_lang$core$Native_Utils.update(
-									_p59._1,
+									_p71._1,
 									{forWhat: newVariable})));
 					default:
 						return tableau;
@@ -13169,17 +13212,17 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p60 = tableau.ext;
-				switch (_p60.ctor) {
+				var _p72 = tableau.ext;
+				switch (_p72.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p60._0,
+								_p72._0,
 								_elm_lang$core$Native_Utils.update(
-									_p60._1,
+									_p72._1,
 									{what: newTerm})));
 					case 'Delta':
 						return A2(
@@ -13187,9 +13230,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p60._0,
+								_p72._0,
 								_elm_lang$core$Native_Utils.update(
-									_p60._1,
+									_p72._1,
 									{what: newTerm})));
 					default:
 						return tableau;
@@ -13203,31 +13246,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToAlpha = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p61 = tableau.ext;
-			switch (_p61.ctor) {
+			var _p73 = tableau.ext;
+			switch (_p73.ctor) {
 				case 'Beta':
-					var _p63 = _p61._1;
-					var _p62 = _p61._0;
-					return _elm_lang$core$Native_Utils.eq(_p62.node.value, '') ? A2(
+					var _p75 = _p73._1;
+					var _p74 = _p73._0;
+					return _elm_lang$core$Native_Utils.eq(_p74.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p63)) : (_elm_lang$core$Native_Utils.eq(_p63.node.value, '') ? A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p75)) : (_elm_lang$core$Native_Utils.eq(_p75.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p62)) : A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p74)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p62, _p63)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p74, _p75)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p73._0));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p73._0));
 				default:
 					return tableau;
 			}
@@ -13240,15 +13283,15 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p64 = tableau.ext;
-			switch (_p64.ctor) {
+			var _p76 = tableau.ext;
+			switch (_p76.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p64._0,
+							_p76._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Gamma':
 					return A2(
@@ -13256,7 +13299,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p64._0,
+							_p76._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Delta':
 					return A2(
@@ -13264,7 +13307,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p64._0,
+							_p76._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				default:
 					return tableau;
@@ -13278,31 +13321,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToGamma = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p65 = tableau.ext;
-			switch (_p65.ctor) {
+			var _p77 = tableau.ext;
+			switch (_p77.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p77._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p67 = _p65._1;
-					var _p66 = _p65._0;
-					return _elm_lang$core$Native_Utils.eq(_p66.node.value, '') ? A2(
+					var _p79 = _p77._1;
+					var _p78 = _p77._0;
+					return _elm_lang$core$Native_Utils.eq(_p78.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p67, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p67.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p79, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p79.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p66, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p78, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p66, _p67)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p78, _p79)));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _p65._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p77._0, _p77._1));
 				default:
 					return tableau;
 			}
@@ -13315,31 +13358,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToDelta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p68 = tableau.ext;
-			switch (_p68.ctor) {
+			var _p80 = tableau.ext;
+			switch (_p80.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p80._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p70 = _p68._1;
-					var _p69 = _p68._0;
-					return _elm_lang$core$Native_Utils.eq(_p69.node.value, '') ? A2(
+					var _p82 = _p80._1;
+					var _p81 = _p80._0;
+					return _elm_lang$core$Native_Utils.eq(_p81.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p70, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p70.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p82, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p82.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p69, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p81, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p69, _p70)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p81, _p82)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _p68._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p80._0, _p80._1));
 				default:
 					return tableau;
 			}
@@ -13356,9 +13399,9 @@ var _moarwick$elm_webpack_starter$Zipper$zipper = function (t) {
 var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 	var prettifyNode = function (n) {
 		var newValue = function () {
-			var _p71 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
-			if (_p71.ctor === 'Ok') {
-				return _moarwick$elm_webpack_starter$Formula$strSigned(_p71._0);
+			var _p83 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
+			if (_p83.ctor === 'Ok') {
+				return _moarwick$elm_webpack_starter$Formula$strSigned(_p83._0);
 			} else {
 				return n.value;
 			}
@@ -13372,38 +13415,38 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 		A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p72 = tableau.ext;
-				switch (_p72.ctor) {
+				var _p84 = tableau.ext;
+				switch (_p84.ctor) {
 					case 'Alpha':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							_moarwick$elm_webpack_starter$Tableau$Alpha(
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p84._0)));
 					case 'Beta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Beta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._1)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p84._0),
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p84._1)));
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
-								_p72._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p84._0),
+								_p84._1));
 					case 'Delta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
-								_p72._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p84._0),
+								_p84._1));
 					case 'Open':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -13413,7 +13456,7 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
-							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p72._0, _p72._1));
+							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p84._0, _p84._1));
 				}
 			},
 			z));
@@ -13430,97 +13473,97 @@ var _moarwick$elm_webpack_starter$Zipper$BetaRightCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaRightCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$right = function (_p73) {
-	var _p74 = _p73;
-	var _p77 = _p74._0;
-	var _p76 = _p74._1;
-	var _p75 = _p77.ext;
-	if (_p75.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$right = function (_p85) {
+	var _p86 = _p85;
+	var _p89 = _p86._0;
+	var _p88 = _p86._1;
+	var _p87 = _p89.ext;
+	if (_p87.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p75._1,
+			_0: _p87._1,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p77.node, _p75._0),
-				_1: _p76
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p89.node, _p87._0),
+				_1: _p88
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p77, _1: _p76};
+		return {ctor: '_Tuple2', _0: _p89, _1: _p88};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaLeftCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$left = function (_p78) {
-	var _p79 = _p78;
-	var _p82 = _p79._0;
-	var _p81 = _p79._1;
-	var _p80 = _p82.ext;
-	if (_p80.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$left = function (_p90) {
+	var _p91 = _p90;
+	var _p94 = _p91._0;
+	var _p93 = _p91._1;
+	var _p92 = _p94.ext;
+	if (_p92.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p80._0,
+			_0: _p92._0,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p82.node, _p80._1),
-				_1: _p81
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p94.node, _p92._1),
+				_1: _p93
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p82, _1: _p81};
+		return {ctor: '_Tuple2', _0: _p94, _1: _p93};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$AlphaCrumb = function (a) {
 	return {ctor: 'AlphaCrumb', _0: a};
 };
-var _moarwick$elm_webpack_starter$Zipper$down = function (_p83) {
-	var _p84 = _p83;
-	var _p87 = _p84._0;
-	var _p86 = _p84._1;
-	var _p85 = _p87.ext;
-	switch (_p85.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$down = function (_p95) {
+	var _p96 = _p95;
+	var _p99 = _p96._0;
+	var _p98 = _p96._1;
+	var _p97 = _p99.ext;
+	switch (_p97.ctor) {
 		case 'Alpha':
 			return {
 				ctor: '_Tuple2',
-				_0: _p85._0,
+				_0: _p97._0,
 				_1: {
 					ctor: '::',
-					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p87.node),
-					_1: _p86
+					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p99.node),
+					_1: _p98
 				}
 			};
 		case 'Gamma':
 			return {
 				ctor: '_Tuple2',
-				_0: _p85._0,
+				_0: _p97._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p87.node, _p85._1),
-					_1: _p86
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p99.node, _p97._1),
+					_1: _p98
 				}
 			};
 		case 'Delta':
 			return {
 				ctor: '_Tuple2',
-				_0: _p85._0,
+				_0: _p97._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p87.node, _p85._1),
-					_1: _p86
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p99.node, _p97._1),
+					_1: _p98
 				}
 			};
 		default:
-			return {ctor: '_Tuple2', _0: _p87, _1: _p86};
+			return {ctor: '_Tuple2', _0: _p99, _1: _p98};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
-	var _p88 = z;
-	var t = _p88._0;
-	var bs = _p88._1;
-	var _p89 = t.ext;
-	switch (_p89.ctor) {
+	var _p100 = z;
+	var t = _p100._0;
+	var bs = _p100._1;
+	var _p101 = t.ext;
+	switch (_p101.ctor) {
 		case 'Open':
 			return {ctor: '[]'};
 		case 'Closed':
@@ -13556,22 +13599,22 @@ var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
-	function (f, _p90) {
-		var _p91 = _p90;
-		var _p93 = _p91;
-		var _p92 = _p91._0.ext;
-		switch (_p92.ctor) {
+	function (f, _p102) {
+		var _p103 = _p102;
+		var _p105 = _p103;
+		var _p104 = _p103._0.ext;
+		switch (_p104.ctor) {
 			case 'Open':
-				return f(_p93);
+				return f(_p105);
 			case 'Closed':
-				return f(_p93);
+				return f(_p105);
 			case 'Alpha':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p105))));
 			case 'Beta':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
@@ -13583,27 +13626,27 @@ var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
 									A2(
 										_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 										f,
-										_moarwick$elm_webpack_starter$Zipper$left(_p93)))))));
+										_moarwick$elm_webpack_starter$Zipper$left(_p105)))))));
 			case 'Gamma':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p105))));
 			default:
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p105))));
 		}
 	});
 var _moarwick$elm_webpack_starter$Zipper$fixRefs = _moarwick$elm_webpack_starter$Zipper$zWalkPost(
-	function (_p94) {
+	function (_p106) {
 		return _moarwick$elm_webpack_starter$Zipper$fixClosedRefs(
-			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p94));
+			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p106));
 	});
 var _moarwick$elm_webpack_starter$Zipper$renumber = function (tableau) {
 	return _moarwick$elm_webpack_starter$Zipper$zTableau(
@@ -16208,12 +16251,13 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
-									A2(
+									A3(
 										_moarwick$elm_webpack_starter$Zipper$renumberJustInReferences,
 										F2(
 											function (x, y) {
 												return x + y;
 											})(1),
+										'EXPAND',
 										_moarwick$elm_webpack_starter$Zipper$extendAlpha(_p12._0)))
 							});
 					case 'ExpandBeta':
@@ -16221,12 +16265,13 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
-									A2(
+									A3(
 										_moarwick$elm_webpack_starter$Zipper$renumberJustInReferences,
 										F2(
 											function (x, y) {
 												return x + y;
 											})(1),
+										'EXPAND',
 										_moarwick$elm_webpack_starter$Zipper$extendBeta(_p12._0)))
 							});
 					case 'ExpandGamma':
@@ -16234,12 +16279,13 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
-									A2(
+									A3(
 										_moarwick$elm_webpack_starter$Zipper$renumberJustInReferences,
 										F2(
 											function (x, y) {
 												return x + y;
 											})(1),
+										'EXPAND',
 										_moarwick$elm_webpack_starter$Zipper$extendGamma(_p12._0)))
 							});
 					case 'ExpandDelta':
@@ -16247,12 +16293,13 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
-									A2(
+									A3(
 										_moarwick$elm_webpack_starter$Zipper$renumberJustInReferences,
 										F2(
 											function (x, y) {
 												return x + y;
 											})(1),
+										'EXPAND',
 										_moarwick$elm_webpack_starter$Zipper$extendDelta(_p12._0)))
 							});
 					case 'ChangeRef':
@@ -16278,7 +16325,7 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 							model,
 							{
 								tableau: _moarwick$elm_webpack_starter$Editor$topRenumbered(
-									A2(
+									A3(
 										_moarwick$elm_webpack_starter$Zipper$renumberJustInReferences,
 										A2(
 											_elm_lang$core$Basics$flip,
@@ -16287,6 +16334,7 @@ var _moarwick$elm_webpack_starter$Editor$simpleUpdate = F2(
 													return x - y;
 												}),
 											1),
+										'DELETE',
 										_moarwick$elm_webpack_starter$Zipper$deleteMe(_p13)))
 							}) : _elm_lang$core$Native_Utils.update(
 							model,

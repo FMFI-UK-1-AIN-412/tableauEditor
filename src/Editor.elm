@@ -127,16 +127,16 @@ simpleUpdate msg model =
                 { model | tableau = z |> Zipper.setFormula new |> top }
 
             ExpandAlpha z ->
-                { model | tableau = z |> Zipper.extendAlpha |> renumberJustInReferences ((+) 1) |> topRenumbered }
+                { model | tableau = z |> Zipper.extendAlpha |> renumberJustInReferences ((+) 1) "EXPAND" |> topRenumbered }
 
             ExpandBeta z ->
-                { model | tableau = z |> Zipper.extendBeta |> renumberJustInReferences ((+) 1) |> topRenumbered }
+                { model | tableau = z |> Zipper.extendBeta |> renumberJustInReferences ((+) 1) "EXPAND" |> topRenumbered }
 
             ExpandGamma z ->
-                { model | tableau = z |> Zipper.extendGamma |> renumberJustInReferences ((+) 1) |> topRenumbered }
+                { model | tableau = z |> Zipper.extendGamma |> renumberJustInReferences ((+) 1) "EXPAND" |> topRenumbered }
 
             ExpandDelta z ->
-                { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences ((+) 1) |> topRenumbered }
+                { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences ((+) 1) "EXPAND" |> topRenumbered }
 
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRef new |> top }
@@ -150,7 +150,7 @@ simpleUpdate msg model =
                         z |> Zipper.deleteMe
                 in
                 if newZipp /= (z |> up) then
-                    { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences (flip (-) 1) |> topRenumbered }
+                    { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences (flip (-) 1) "DELETE" |> topRenumbered }
                 else
                     { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
