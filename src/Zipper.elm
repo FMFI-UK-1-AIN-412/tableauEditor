@@ -382,115 +382,87 @@ setPair which ref r1 r2 =
             ( r1, ref )
 
 
-renumberJustInReferences : (Int -> Int) -> String -> Zipper -> Zipper
-renumberJustInReferences f typ z =
+renumberJustInReferences : (Ref -> Int -> Ref) -> Zipper -> Zipper
+renumberJustInReferences f z =
     modifyNode
         (\tableau ->
-            renumberJusts tableau f typ 0
+            renumberJusts tableau f 0
         )
         z
 
 
-renumberJusts : Tableau -> (Int -> Int) -> String -> Int -> Tableau
-renumberJusts tableau f typ lengthOfPathFromFather =
+renumberJusts : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
+renumberJusts tableau f lengthOfPathFromFather =
     case tableau.ext of
         Alpha t ->
             Tableau
                 tableau.node
-                (Alpha (renumberJusts (renumberJust t f typ (lengthOfPathFromFather + 1)) f typ (lengthOfPathFromFather + 1)))
+                (Alpha (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
         Beta lt rt ->
             Tableau
                 tableau.node
                 (Beta
-                    (renumberJusts (renumberJust lt f typ (lengthOfPathFromFather + 1)) f typ (lengthOfPathFromFather + 1))
-                    (renumberJusts (renumberJust rt f typ (lengthOfPathFromFather + 1)) f typ (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust lt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust rt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                 )
 
         Gamma t s ->
             Tableau
                 tableau.node
-                (Gamma (renumberJusts (renumberJust t f typ (lengthOfPathFromFather + 1)) f typ (lengthOfPathFromFather + 1)) s)
+                (Gamma (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
 
         Delta t s ->
             Tableau
                 tableau.node
-                (Delta (renumberJusts (renumberJust t f typ (lengthOfPathFromFather + 1)) f typ (lengthOfPathFromFather + 1)) s)
+                (Delta (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
 
         Open ->
             tableau
 
         Closed r1 r2 ->
-            let
-                _ =
-                    Debug.log "renumbering" "closed"
-
-                _ =
-                    Debug.log "r1" r1
-
-                _ =
-                    Debug.log "r2" r2
-
-                _ =
-                    Debug.log "length of path from father" lengthOfPathFromFather
-
-                _ =
-                    Debug.log "renumbered r1" (renumberJustInRef r1 f typ lengthOfPathFromFather)
-
-                _ =
-                    Debug.log "renumbered r2" (renumberJustInRef r2 f typ lengthOfPathFromFather)
-            in
             Tableau
                 tableau.node
                 (Closed
-                    (renumberJustInRef r1 f typ lengthOfPathFromFather)
-                    (renumberJustInRef r2 f typ lengthOfPathFromFather)
+                    (f r1 lengthOfPathFromFather)
+                    (f r2 lengthOfPathFromFather)
                 )
 
 
-renumberJustInRef : Ref -> (Int -> Int) -> String -> Int -> Ref
-renumberJustInRef ref func typ lengthOfPathFromFather =
-    if typ == "DELETE" then
-        case ref.up of
-            Just 0 ->
+renumberJustInRefWhenDeleting : Ref -> Int -> Ref
+renumberJustInRefWhenDeleting ref lengthOfPathFromFather =
+    case ref.up of
+        Just 0 ->
+            ref
+
+        Just x ->
+            if (x - 1) >= lengthOfPathFromFather then
+                Ref ref.str (Just (x - 1))
+            else
                 ref
 
-            Just x ->
-                let
-                    _ =
-                        Debug.log "length from father" lengthOfPathFromFather
+        Nothing ->
+            ref
 
-                    _ =
-                        Debug.log "x-1" (x - 1)
-                in
-                if (x - 1) >= lengthOfPathFromFather then
-                    -- plati len pri mazani nodu, co pri pridavani?
-                    Ref ref.str (Just (func x))
-                else
-                    ref
 
-            Nothing ->
-                ref
-    else if typ == "EXPAND" then
-        case ref.up of
-            Just 0 ->
+renumberJustInRefWhenExpanding : Ref -> Int -> Ref
+renumberJustInRefWhenExpanding ref lengthOfPathFromFather =
+    case ref.up of
+        Just 0 ->
+            ref
+
+        Just x ->
+            if x + 1 >= lengthOfPathFromFather then
+                Ref ref.str (Just (x + 1))
+            else
                 ref
 
-            Just x ->
-                if x + 1 >= lengthOfPathFromFather then
-                    -- plati len pri mazani nodu, co pri pridavani?
-                    Ref ref.str (Just (func x))
-                else
-                    ref
-
-            Nothing ->
-                ref
-    else
-        ref
+        Nothing ->
+            ref
 
 
-renumberJust : Tableau -> (Int -> Int) -> String -> Int -> Tableau
-renumberJust t f typ lengthOfPathFromFather =
+renumberJust : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
+renumberJust t f lengthOfPathFromFather =
     case t.node.reference.up of
         Just 0 ->
             t
@@ -504,7 +476,7 @@ renumberJust t f typ lengthOfPathFromFather =
                     t.node
 
                 newNode =
-                    { oldNode | reference = renumberJustInRef oldReference f typ lengthOfPathFromFather }
+                    { oldNode | reference = f oldReference lengthOfPathFromFather }
 
                 newTableau =
                     { t | node = newNode }
