@@ -28,20 +28,20 @@
 
 .formulaInput {
 	flex-grow: 1;
-	width: calc(100% - 80px);
+	width: calc(100% - 85px);
 }
 
 .formulaInputSubst {
 	flex-grow: 1;
-	width: calc(100% - 185px);
+	width: calc(100% - 208px);
 }
 
 .substitutedVariable {
-	width: 30px;
+	width: 45px;
 }
 
 .substitutedConstant {
-	width: 50px;
+	width: 45px;
 }
 
 .formulaReference {
@@ -114,6 +114,7 @@
 
 .onclick-menu.add:before {
 	content: "Add";
+	margin-left: 5px;
 }
 
 .onclick-menu:focus {

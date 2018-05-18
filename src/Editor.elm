@@ -116,10 +116,6 @@ update msg ({ present } as model) =
             ( UndoList.new (simpleUpdate msg { present | jsonImportError = "" }) model, Cmd.none )
 
 
-
---simpleUpdate : Msg -> Model -> (Model)
-
-
 simpleUpdate msg model =
     Debug.log "model"
         (case msg of
@@ -253,8 +249,6 @@ viewNode z =
             [ class "formulaReference"
             , value (Zipper.zNode z).reference.str
             , onInput <| ChangeRef z
-
-            --                , size ((String.length tableau.node.value) * 3 // 4 + 1)
             ]
             []
         , text "]"
@@ -267,7 +261,12 @@ viewNode z =
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
 viewButtonsAppearanceControlls z =
-    button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "E" ]
+    case (Zipper.zTableau z).ext of
+        Closed _ _ ->
+            div [] []
+
+        _ ->
+            button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "⚙" ]
 
 
 viewSubsNode : Zipper.Zipper -> Html Msg
@@ -289,18 +288,7 @@ viewSubsNode z =
             , onInput <| ChangeText z
             ]
             []
-        , text "|"
-        , input
-            [ classList
-                [ ( "substitutedVariable", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
-            , type_ "text"
-            , onInput <| ChangeTerm z
-            ]
-            []
-        , text "for"
+        , text "{"
         , input
             [ classList
                 [ ( "substitutedConstant", True )
@@ -311,7 +299,18 @@ viewSubsNode z =
             , onInput <| ChangeVariable z
             ]
             []
-        , text "["
+        , text "->"
+        , input
+            [ classList
+                [ ( "substitutedVariable", True )
+                , ( "semanticsProblem", Helper.hasReference z )
+                ]
+            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+            , type_ "text"
+            , onInput <| ChangeTerm z
+            ]
+            []
+        , text "}["
         , input
             [ class "formulaReference"
             , value (Zipper.zNode z).reference.str
@@ -419,45 +418,54 @@ viewControls z =
                     , onInput <| SetClosed 1 z
                     ]
                     []
-                , button [ class "button", onClick (MakeOpen z) ] [ text "o" ]
+                , button [ class "button", onClick (MakeOpen z) ] [ text "Open" ]
                 ]
 
-            Tableau.Beta lt rt ->
-                case t.node.gui.controlsShown of
-                    True ->
-                        [ div [ class "onclick-menu add", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
-                                ]
-                            ]
-                        , div [ class "onclick-menu change", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
-                                ]
-                            ]
-                        , div [ class "onclick-menu del", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (DeleteMe z) ] [ text "node" ] ]
-                                , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
-                                ]
-                            ]
-                        , button [ class "button", onClick (MakeClosed z) ] [ text "*" ]
-                        , button [ class "button", onClick (SwitchBetas z) ] [ text "->|<-" ]
-                        ]
-
-                    False ->
-                        []
-
             _ ->
+                let
+                    deleteMeButton =
+                        case (z |> Zipper.up) == z of
+                            False ->
+                                case z |> Zipper.up |> Zipper.zTableau |> .ext of
+                                    Beta _ _ ->
+                                        case t.node.value of
+                                            "" ->
+                                                case t.ext of
+                                                    Open ->
+                                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+
+                                                    _ ->
+                                                        div [] []
+
+                                            _ ->
+                                                div [] []
+
+                                    _ ->
+                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+
+                            True ->
+                                case t.ext of
+                                    Alpha _ ->
+                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+
+                                    Open ->
+                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+
+                                    _ ->
+                                        div [] []
+
+                    switchBetasButton =
+                        case t.ext of
+                            Beta _ _ ->
+                                button [ class "button", onClick (SwitchBetas z) ] [ text "->|<-" ]
+
+                            _ ->
+                                div [] []
+                in
                 case t.node.gui.controlsShown of
                     True ->
-                        [ div [ class "onclick-menu add", tabindex 0 ]
+                        [ button [ class "button", onClick (ExpandAlpha z) ] [ text "+" ]
+                        , div [ class "onclick-menu add", tabindex 0 ]
                             [ ul [ class "onclick-menu-content" ]
                                 [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
                                 , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
@@ -475,11 +483,12 @@ viewControls z =
                             ]
                         , div [ class "onclick-menu del", tabindex 0 ]
                             [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (DeleteMe z) ] [ text "node" ] ]
+                                [ li [] [ deleteMeButton ]
                                 , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
                                 ]
                             ]
-                        , button [ class "button", onClick (MakeClosed z) ] [ text "*" ]
+                        , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
+                        , switchBetasButton
                         ]
 
                     False ->

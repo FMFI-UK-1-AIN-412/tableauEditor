@@ -13054,11 +13054,10 @@ var _moarwick$elm_webpack_starter$Zipper$setClosed = F3(
 	});
 var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p49) {
 	var _p50 = _p49;
-	var _p60 = _p50;
-	var _p59 = _p50._1;
+	var _p58 = _p50;
 	if (_elm_lang$core$Native_Utils.eq(
-		_moarwick$elm_webpack_starter$Zipper$up(_p60),
-		_p60)) {
+		_moarwick$elm_webpack_starter$Zipper$up(_p58),
+		_p58)) {
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
@@ -13080,44 +13079,43 @@ var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p49) {
 						return _p51._0;
 				}
 			},
-			_p60);
+			_p58);
 	} else {
-		var _p54 = A2(_elm_lang$core$Debug$log, 'bc', _p59);
-		var _p55 = _p59;
+		var _p54 = _p50._1;
 		_v33_2:
 		do {
-			if (_p55.ctor === '::') {
-				switch (_p55._0.ctor) {
+			if (_p54.ctor === '::') {
+				switch (_p54._0.ctor) {
 					case 'BetaLeftCrumb':
+						return A2(
+							_moarwick$elm_webpack_starter$Zipper$modifyNode,
+							function (tableau) {
+								var _p55 = tableau.ext;
+								if (_p55.ctor === 'Beta') {
+									return _elm_lang$core$Native_Utils.eq(_p55._0.node.value, '') ? A2(
+										_moarwick$elm_webpack_starter$Tableau$Tableau,
+										tableau.node,
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p55._1)) : tableau;
+								} else {
+									return tableau;
+								}
+							},
+							_moarwick$elm_webpack_starter$Zipper$up(_p58));
+					case 'BetaRightCrumb':
 						return A2(
 							_moarwick$elm_webpack_starter$Zipper$modifyNode,
 							function (tableau) {
 								var _p56 = tableau.ext;
 								if (_p56.ctor === 'Beta') {
-									return _elm_lang$core$Native_Utils.eq(_p56._0.node.value, '') ? A2(
+									return _elm_lang$core$Native_Utils.eq(_p56._1.node.value, '') ? A2(
 										_moarwick$elm_webpack_starter$Tableau$Tableau,
 										tableau.node,
-										_moarwick$elm_webpack_starter$Tableau$Alpha(_p56._1)) : tableau;
+										_moarwick$elm_webpack_starter$Tableau$Alpha(_p56._0)) : tableau;
 								} else {
 									return tableau;
 								}
 							},
-							_moarwick$elm_webpack_starter$Zipper$up(_p60));
-					case 'BetaRightCrumb':
-						return A2(
-							_moarwick$elm_webpack_starter$Zipper$modifyNode,
-							function (tableau) {
-								var _p57 = tableau.ext;
-								if (_p57.ctor === 'Beta') {
-									return _elm_lang$core$Native_Utils.eq(_p57._1.node.value, '') ? A2(
-										_moarwick$elm_webpack_starter$Tableau$Tableau,
-										tableau.node,
-										_moarwick$elm_webpack_starter$Tableau$Alpha(_p57._0)) : tableau;
-								} else {
-									return tableau;
-								}
-							},
-							_moarwick$elm_webpack_starter$Zipper$up(_p60));
+							_moarwick$elm_webpack_starter$Zipper$up(_p58));
 					default:
 						break _v33_2;
 				}
@@ -13128,23 +13126,23 @@ var _moarwick$elm_webpack_starter$Zipper$deleteMe = function (_p49) {
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p58 = tableau.ext;
-				switch (_p58.ctor) {
+				var _p57 = tableau.ext;
+				switch (_p57.ctor) {
 					case 'Open':
 						return tableau;
 					case 'Closed':
 						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _moarwick$elm_webpack_starter$Tableau$Open);
 					case 'Alpha':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p58._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p57._0.ext);
 					case 'Gamma':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p58._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p57._0.ext);
 					case 'Delta':
-						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p58._0.ext);
+						return A2(_moarwick$elm_webpack_starter$Tableau$Tableau, tableau.node, _p57._0.ext);
 					default:
 						return tableau;
 				}
 			},
-			_moarwick$elm_webpack_starter$Zipper$up(_p60));
+			_moarwick$elm_webpack_starter$Zipper$up(_p58));
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
@@ -13152,17 +13150,17 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p61 = tableau.ext;
-				switch (_p61.ctor) {
+				var _p59 = tableau.ext;
+				switch (_p59.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p61._0,
+								_p59._0,
 								_elm_lang$core$Native_Utils.update(
-									_p61._1,
+									_p59._1,
 									{forWhat: newVariable})));
 					case 'Delta':
 						return A2(
@@ -13170,9 +13168,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p61._0,
+								_p59._0,
 								_elm_lang$core$Native_Utils.update(
-									_p61._1,
+									_p59._1,
 									{forWhat: newVariable})));
 					default:
 						return tableau;
@@ -13185,17 +13183,17 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 		return A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p62 = tableau.ext;
-				switch (_p62.ctor) {
+				var _p60 = tableau.ext;
+				switch (_p60.ctor) {
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_p62._0,
+								_p60._0,
 								_elm_lang$core$Native_Utils.update(
-									_p62._1,
+									_p60._1,
 									{what: newTerm})));
 					case 'Delta':
 						return A2(
@@ -13203,9 +13201,9 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 							tableau.node,
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_p62._0,
+								_p60._0,
 								_elm_lang$core$Native_Utils.update(
-									_p62._1,
+									_p60._1,
 									{what: newTerm})));
 					default:
 						return tableau;
@@ -13219,31 +13217,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToAlpha = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p63 = tableau.ext;
-			switch (_p63.ctor) {
+			var _p61 = tableau.ext;
+			switch (_p61.ctor) {
 				case 'Beta':
-					var _p65 = _p63._1;
-					var _p64 = _p63._0;
-					return _elm_lang$core$Native_Utils.eq(_p64.node.value, '') ? A2(
+					var _p63 = _p61._1;
+					var _p62 = _p61._0;
+					return _elm_lang$core$Native_Utils.eq(_p62.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p65)) : (_elm_lang$core$Native_Utils.eq(_p65.node.value, '') ? A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p63)) : (_elm_lang$core$Native_Utils.eq(_p63.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p64)) : A2(
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p62)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p64, _p65)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p62, _p63)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p63._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						_moarwick$elm_webpack_starter$Tableau$Alpha(_p63._0));
+						_moarwick$elm_webpack_starter$Tableau$Alpha(_p61._0));
 				default:
 					return tableau;
 			}
@@ -13256,15 +13254,15 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p66 = tableau.ext;
-			switch (_p66.ctor) {
+			var _p64 = tableau.ext;
+			switch (_p64.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p66._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Gamma':
 					return A2(
@@ -13272,7 +13270,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p66._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				case 'Delta':
 					return A2(
@@ -13280,7 +13278,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeToBeta = function (z) {
 						tableau.node,
 						A2(
 							_moarwick$elm_webpack_starter$Tableau$Beta,
-							_p66._0,
+							_p64._0,
 							A2(_moarwick$elm_webpack_starter$Tableau$Tableau, _moarwick$elm_webpack_starter$Tableau$defNode, _moarwick$elm_webpack_starter$Tableau$Open)));
 				default:
 					return tableau;
@@ -13294,31 +13292,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToGamma = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p67 = tableau.ext;
-			switch (_p67.ctor) {
+			var _p65 = tableau.ext;
+			switch (_p65.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p67._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p69 = _p67._1;
-					var _p68 = _p67._0;
-					return _elm_lang$core$Native_Utils.eq(_p68.node.value, '') ? A2(
+					var _p67 = _p65._1;
+					var _p66 = _p65._0;
+					return _elm_lang$core$Native_Utils.eq(_p66.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p69, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p69.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p67, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p67.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p68, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p66, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p68, _p69)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p66, _p67)));
 				case 'Delta':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p67._0, _p67._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Gamma, _p65._0, _p65._1));
 				default:
 					return tableau;
 			}
@@ -13331,31 +13329,31 @@ var _moarwick$elm_webpack_starter$Zipper$changeToDelta = function (z) {
 		z) ? z : A2(
 		_moarwick$elm_webpack_starter$Zipper$modifyNode,
 		function (tableau) {
-			var _p70 = tableau.ext;
-			switch (_p70.ctor) {
+			var _p68 = tableau.ext;
+			switch (_p68.ctor) {
 				case 'Alpha':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p70._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _moarwick$elm_webpack_starter$Tableau$defSubstitution));
 				case 'Beta':
-					var _p72 = _p70._1;
-					var _p71 = _p70._0;
-					return _elm_lang$core$Native_Utils.eq(_p71.node.value, '') ? A2(
+					var _p70 = _p68._1;
+					var _p69 = _p68._0;
+					return _elm_lang$core$Native_Utils.eq(_p69.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p72, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p72.node.value, '') ? A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p70, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : (_elm_lang$core$Native_Utils.eq(_p70.node.value, '') ? A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p71, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p69, _moarwick$elm_webpack_starter$Tableau$defSubstitution)) : A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p71, _p72)));
+						A2(_moarwick$elm_webpack_starter$Tableau$Beta, _p69, _p70)));
 				case 'Gamma':
 					return A2(
 						_moarwick$elm_webpack_starter$Tableau$Tableau,
 						tableau.node,
-						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p70._0, _p70._1));
+						A2(_moarwick$elm_webpack_starter$Tableau$Delta, _p68._0, _p68._1));
 				default:
 					return tableau;
 			}
@@ -13372,9 +13370,9 @@ var _moarwick$elm_webpack_starter$Zipper$zipper = function (t) {
 var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 	var prettifyNode = function (n) {
 		var newValue = function () {
-			var _p73 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
-			if (_p73.ctor === 'Ok') {
-				return _moarwick$elm_webpack_starter$Formula$strSigned(_p73._0);
+			var _p71 = _moarwick$elm_webpack_starter$Formula$parseSigned(n.value);
+			if (_p71.ctor === 'Ok') {
+				return _moarwick$elm_webpack_starter$Formula$strSigned(_p71._0);
 			} else {
 				return n.value;
 			}
@@ -13388,38 +13386,38 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 		A2(
 			_moarwick$elm_webpack_starter$Zipper$modifyNode,
 			function (tableau) {
-				var _p74 = tableau.ext;
-				switch (_p74.ctor) {
+				var _p72 = tableau.ext;
+				switch (_p72.ctor) {
 					case 'Alpha':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							_moarwick$elm_webpack_starter$Tableau$Alpha(
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p74._0)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0)));
 					case 'Beta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Beta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p74._0),
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p74._1)));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._1)));
 					case 'Gamma':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Gamma,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p74._0),
-								_p74._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_p72._1));
 					case 'Delta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
 							A2(
 								_moarwick$elm_webpack_starter$Tableau$Delta,
-								_moarwick$elm_webpack_starter$Zipper$prettify(_p74._0),
-								_p74._1));
+								_moarwick$elm_webpack_starter$Zipper$prettify(_p72._0),
+								_p72._1));
 					case 'Open':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -13429,7 +13427,7 @@ var _moarwick$elm_webpack_starter$Zipper$prettify = function (t) {
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
 							prettifyNode(tableau.node),
-							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p74._0, _p74._1));
+							A2(_moarwick$elm_webpack_starter$Tableau$Closed, _p72._0, _p72._1));
 				}
 			},
 			z));
@@ -13446,97 +13444,97 @@ var _moarwick$elm_webpack_starter$Zipper$BetaRightCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaRightCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$right = function (_p75) {
-	var _p76 = _p75;
-	var _p79 = _p76._0;
-	var _p78 = _p76._1;
-	var _p77 = _p79.ext;
-	if (_p77.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$right = function (_p73) {
+	var _p74 = _p73;
+	var _p77 = _p74._0;
+	var _p76 = _p74._1;
+	var _p75 = _p77.ext;
+	if (_p75.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p77._1,
+			_0: _p75._1,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p79.node, _p77._0),
-				_1: _p78
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaRightCrumb, _p77.node, _p75._0),
+				_1: _p76
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p79, _1: _p78};
+		return {ctor: '_Tuple2', _0: _p77, _1: _p76};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb = F2(
 	function (a, b) {
 		return {ctor: 'BetaLeftCrumb', _0: a, _1: b};
 	});
-var _moarwick$elm_webpack_starter$Zipper$left = function (_p80) {
-	var _p81 = _p80;
-	var _p84 = _p81._0;
-	var _p83 = _p81._1;
-	var _p82 = _p84.ext;
-	if (_p82.ctor === 'Beta') {
+var _moarwick$elm_webpack_starter$Zipper$left = function (_p78) {
+	var _p79 = _p78;
+	var _p82 = _p79._0;
+	var _p81 = _p79._1;
+	var _p80 = _p82.ext;
+	if (_p80.ctor === 'Beta') {
 		return {
 			ctor: '_Tuple2',
-			_0: _p82._0,
+			_0: _p80._0,
 			_1: {
 				ctor: '::',
-				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p84.node, _p82._1),
-				_1: _p83
+				_0: A2(_moarwick$elm_webpack_starter$Zipper$BetaLeftCrumb, _p82.node, _p80._1),
+				_1: _p81
 			}
 		};
 	} else {
-		return {ctor: '_Tuple2', _0: _p84, _1: _p83};
+		return {ctor: '_Tuple2', _0: _p82, _1: _p81};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$AlphaCrumb = function (a) {
 	return {ctor: 'AlphaCrumb', _0: a};
 };
-var _moarwick$elm_webpack_starter$Zipper$down = function (_p85) {
-	var _p86 = _p85;
-	var _p89 = _p86._0;
-	var _p88 = _p86._1;
-	var _p87 = _p89.ext;
-	switch (_p87.ctor) {
+var _moarwick$elm_webpack_starter$Zipper$down = function (_p83) {
+	var _p84 = _p83;
+	var _p87 = _p84._0;
+	var _p86 = _p84._1;
+	var _p85 = _p87.ext;
+	switch (_p85.ctor) {
 		case 'Alpha':
 			return {
 				ctor: '_Tuple2',
-				_0: _p87._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p89.node),
-					_1: _p88
+					_0: _moarwick$elm_webpack_starter$Zipper$AlphaCrumb(_p87.node),
+					_1: _p86
 				}
 			};
 		case 'Gamma':
 			return {
 				ctor: '_Tuple2',
-				_0: _p87._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p89.node, _p87._1),
-					_1: _p88
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$GammaCrumb, _p87.node, _p85._1),
+					_1: _p86
 				}
 			};
 		case 'Delta':
 			return {
 				ctor: '_Tuple2',
-				_0: _p87._0,
+				_0: _p85._0,
 				_1: {
 					ctor: '::',
-					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p89.node, _p87._1),
-					_1: _p88
+					_0: A2(_moarwick$elm_webpack_starter$Zipper$DeltaCrumb, _p87.node, _p85._1),
+					_1: _p86
 				}
 			};
 		default:
-			return {ctor: '_Tuple2', _0: _p89, _1: _p88};
+			return {ctor: '_Tuple2', _0: _p87, _1: _p86};
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
-	var _p90 = z;
-	var t = _p90._0;
-	var bs = _p90._1;
-	var _p91 = t.ext;
-	switch (_p91.ctor) {
+	var _p88 = z;
+	var t = _p88._0;
+	var bs = _p88._1;
+	var _p89 = t.ext;
+	switch (_p89.ctor) {
 		case 'Open':
 			return {ctor: '[]'};
 		case 'Closed':
@@ -13572,22 +13570,22 @@ var _moarwick$elm_webpack_starter$Zipper$children = function (z) {
 	}
 };
 var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
-	function (f, _p92) {
-		var _p93 = _p92;
-		var _p95 = _p93;
-		var _p94 = _p93._0.ext;
-		switch (_p94.ctor) {
+	function (f, _p90) {
+		var _p91 = _p90;
+		var _p93 = _p91;
+		var _p92 = _p91._0.ext;
+		switch (_p92.ctor) {
 			case 'Open':
-				return f(_p95);
+				return f(_p93);
 			case 'Closed':
-				return f(_p95);
+				return f(_p93);
 			case 'Alpha':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p95))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 			case 'Beta':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
@@ -13599,27 +13597,27 @@ var _moarwick$elm_webpack_starter$Zipper$zWalkPost = F2(
 									A2(
 										_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 										f,
-										_moarwick$elm_webpack_starter$Zipper$left(_p95)))))));
+										_moarwick$elm_webpack_starter$Zipper$left(_p93)))))));
 			case 'Gamma':
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p95))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 			default:
 				return f(
 					_moarwick$elm_webpack_starter$Zipper$up(
 						A2(
 							_moarwick$elm_webpack_starter$Zipper$zWalkPost,
 							f,
-							_moarwick$elm_webpack_starter$Zipper$down(_p95))));
+							_moarwick$elm_webpack_starter$Zipper$down(_p93))));
 		}
 	});
 var _moarwick$elm_webpack_starter$Zipper$fixRefs = _moarwick$elm_webpack_starter$Zipper$zWalkPost(
-	function (_p96) {
+	function (_p94) {
 		return _moarwick$elm_webpack_starter$Zipper$fixClosedRefs(
-			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p96));
+			_moarwick$elm_webpack_starter$Zipper$fixNodeRef(_p94));
 	});
 var _moarwick$elm_webpack_starter$Zipper$renumber = function (tableau) {
 	return _moarwick$elm_webpack_starter$Zipper$zTableau(
@@ -16471,23 +16469,31 @@ var _moarwick$elm_webpack_starter$Editor$ChangeButtonsAppearance = function (a) 
 	return {ctor: 'ChangeButtonsAppearance', _0: a};
 };
 var _moarwick$elm_webpack_starter$Editor$viewButtonsAppearanceControlls = function (z) {
-	return A2(
-		_elm_lang$html$Html$button,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('button'),
-			_1: {
+	var _p20 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
+	if (_p20.ctor === 'Closed') {
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{ctor: '[]'});
+	} else {
+		return A2(
+			_elm_lang$html$Html$button,
+			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Events$onClick(
-					_moarwick$elm_webpack_starter$Editor$ChangeButtonsAppearance(z)),
+				_0: _elm_lang$html$Html_Attributes$class('button'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$html$Html_Events$onClick(
+						_moarwick$elm_webpack_starter$Editor$ChangeButtonsAppearance(z)),
+					_1: {ctor: '[]'}
+				}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('⚙'),
 				_1: {ctor: '[]'}
-			}
-		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('E'),
-			_1: {ctor: '[]'}
-		});
+			});
+	}
 };
 var _moarwick$elm_webpack_starter$Editor$JsonRead = function (a) {
 	return {ctor: 'JsonRead', _0: a};
@@ -16498,8 +16504,8 @@ var _moarwick$elm_webpack_starter$Editor$subscriptions = function (model) {
 var _moarwick$elm_webpack_starter$Editor$JsonSelected = {ctor: 'JsonSelected'};
 var _moarwick$elm_webpack_starter$Editor$jsonImportControl = F2(
 	function (jsonImporting, jsonImportId) {
-		var _p20 = jsonImporting;
-		if (_p20 === true) {
+		var _p21 = jsonImporting;
+		if (_p21 === true) {
 			return _elm_lang$html$Html$text('Loading file...');
 		} else {
 			return A2(
@@ -16618,9 +16624,9 @@ var _moarwick$elm_webpack_starter$Editor$ExpandAlpha = function (a) {
 	return {ctor: 'ExpandAlpha', _0: a};
 };
 var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
-	var _p21 = z;
-	var t = _p21._0;
-	var bs = _p21._1;
+	var _p22 = z;
+	var t = _p22._0;
+	var bs = _p22._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -16629,26 +16635,57 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 			_1: {ctor: '[]'}
 		},
 		function () {
-			var _p22 = t.ext;
-			switch (_p22.ctor) {
-				case 'Closed':
-					var _p24 = _p22._1;
-					var _p23 = _p22._0;
-					var compl = _moarwick$elm_webpack_starter$Errors$errors(
-						A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p23, _p24, z));
-					var ref1Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p23, z),
-							compl));
-					var ref2Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p24, z),
-							compl));
-					return {
+			var _p23 = t.ext;
+			if (_p23.ctor === 'Closed') {
+				var _p25 = _p23._1;
+				var _p24 = _p23._0;
+				var compl = _moarwick$elm_webpack_starter$Errors$errors(
+					A3(_moarwick$elm_webpack_starter$Validate$areCloseRefsComplementary, _p24, _p25, z));
+				var ref1Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p24, z),
+						compl));
+				var ref2Cls = _moarwick$elm_webpack_starter$Editor$problemsClass(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						A3(_moarwick$elm_webpack_starter$Validate$validateRef, 'Invalid close ref. #1', _p25, z),
+						compl));
+				return {
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('* '),
+					_1: {
 						ctor: '::',
-						_0: _elm_lang$html$Html$text('* '),
+						_0: A2(
+							_elm_lang$html$Html$input,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class(
+									A2(_elm_lang$core$Basics_ops['++'], 'closed button ', ref1Cls)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$type_('text'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$placeholder('Ref'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$size(1),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$value(_p24.str),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onInput(
+														A2(_moarwick$elm_webpack_starter$Editor$SetClosed, 0, z)),
+													_1: {ctor: '[]'}
+												}
+											}
+										}
+									}
+								}
+							},
+							{ctor: '[]'}),
 						_1: {
 							ctor: '::',
 							_0: A2(
@@ -16656,7 +16693,7 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 								{
 									ctor: '::',
 									_0: _elm_lang$html$Html_Attributes$class(
-										A2(_elm_lang$core$Basics_ops['++'], 'closed button ', ref1Cls)),
+										A2(_elm_lang$core$Basics_ops['++'], 'closed button ', ref2Cls)),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Attributes$type_('text'),
@@ -16668,11 +16705,11 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 												_0: _elm_lang$html$Html_Attributes$size(1),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$value(_p23.str),
+													_0: _elm_lang$html$Html_Attributes$value(_p25.str),
 													_1: {
 														ctor: '::',
 														_0: _elm_lang$html$Html_Events$onInput(
-															A2(_moarwick$elm_webpack_starter$Editor$SetClosed, 0, z)),
+															A2(_moarwick$elm_webpack_starter$Editor$SetClosed, 1, z)),
 														_1: {ctor: '[]'}
 													}
 												}
@@ -16684,749 +16721,495 @@ var _moarwick$elm_webpack_starter$Editor$viewControls = function (z) {
 							_1: {
 								ctor: '::',
 								_0: A2(
-									_elm_lang$html$Html$input,
+									_elm_lang$html$Html$button,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class(
-											A2(_elm_lang$core$Basics_ops['++'], 'closed button ', ref2Cls)),
+										_0: _elm_lang$html$Html_Attributes$class('button'),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$type_('text'),
+											_0: _elm_lang$html$Html_Events$onClick(
+												_moarwick$elm_webpack_starter$Editor$MakeOpen(z)),
+											_1: {ctor: '[]'}
+										}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('Open'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				};
+			} else {
+				var switchBetasButton = function () {
+					var _p26 = t.ext;
+					if (_p26.ctor === 'Beta') {
+						return A2(
+							_elm_lang$html$Html$button,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('button'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_moarwick$elm_webpack_starter$Editor$SwitchBetas(z)),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('->|<-'),
+								_1: {ctor: '[]'}
+							});
+					} else {
+						return A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{ctor: '[]'});
+					}
+				}();
+				var deleteMeButton = function () {
+					var _p27 = _elm_lang$core$Native_Utils.eq(
+						_moarwick$elm_webpack_starter$Zipper$up(z),
+						z);
+					if (_p27 === false) {
+						var _p28 = function (_) {
+							return _.ext;
+						}(
+							_moarwick$elm_webpack_starter$Zipper$zTableau(
+								_moarwick$elm_webpack_starter$Zipper$up(z)));
+						if (_p28.ctor === 'Beta') {
+							var _p29 = t.node.value;
+							if (_p29 === '') {
+								var _p30 = t.ext;
+								if (_p30.ctor === 'Open') {
+									return A2(
+										_elm_lang$html$Html$button,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Events$onClick(
+												_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('node'),
+											_1: {ctor: '[]'}
+										});
+								} else {
+									return A2(
+										_elm_lang$html$Html$div,
+										{ctor: '[]'},
+										{ctor: '[]'});
+								}
+							} else {
+								return A2(
+									_elm_lang$html$Html$div,
+									{ctor: '[]'},
+									{ctor: '[]'});
+							}
+						} else {
+							return A2(
+								_elm_lang$html$Html$button,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('node'),
+									_1: {ctor: '[]'}
+								});
+						}
+					} else {
+						var _p31 = t.ext;
+						switch (_p31.ctor) {
+							case 'Alpha':
+								return A2(
+									_elm_lang$html$Html$button,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onClick(
+											_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('node'),
+										_1: {ctor: '[]'}
+									});
+							case 'Open':
+								return A2(
+									_elm_lang$html$Html$button,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onClick(
+											_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('node'),
+										_1: {ctor: '[]'}
+									});
+							default:
+								return A2(
+									_elm_lang$html$Html$div,
+									{ctor: '[]'},
+									{ctor: '[]'});
+						}
+					}
+				}();
+				var _p32 = t.node.gui.controlsShown;
+				if (_p32 === true) {
+					return {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$button,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$class('button'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_moarwick$elm_webpack_starter$Editor$ExpandAlpha(z)),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text('+'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('onclick-menu add'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$tabindex(0),
+										_1: {ctor: '[]'}
+									}
+								},
+								{
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$ul,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$li,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$button,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Events$onClick(
+																_moarwick$elm_webpack_starter$Editor$ExpandAlpha(z)),
+															_1: {ctor: '[]'}
+														},
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html$text('α'),
+															_1: {ctor: '[]'}
+														}),
+													_1: {ctor: '[]'}
+												}),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$placeholder('Ref'),
+												_0: A2(
+													_elm_lang$html$Html$li,
+													{ctor: '[]'},
+													{
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$button,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Events$onClick(
+																	_moarwick$elm_webpack_starter$Editor$ExpandBeta(z)),
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('β'),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$size(1),
+													_0: A2(
+														_elm_lang$html$Html$li,
+														{ctor: '[]'},
+														{
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$button,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(
+																		_moarwick$elm_webpack_starter$Editor$ExpandGamma(z)),
+																	_1: {ctor: '[]'}
+																},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text('γ'),
+																	_1: {ctor: '[]'}
+																}),
+															_1: {ctor: '[]'}
+														}),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$value(_p24.str),
+														_0: A2(
+															_elm_lang$html$Html$li,
+															{ctor: '[]'},
+															{
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$button,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Events$onClick(
+																			_moarwick$elm_webpack_starter$Editor$ExpandDelta(z)),
+																		_1: {ctor: '[]'}
+																	},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text('δ'),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$div,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('onclick-menu change'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$tabindex(0),
+											_1: {ctor: '[]'}
+										}
+									},
+									{
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$ul,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$li,
+													{ctor: '[]'},
+													{
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$button,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Events$onClick(
+																	_moarwick$elm_webpack_starter$Editor$ChangeToAlpha(z)),
+																_1: {ctor: '[]'}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text('α'),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}),
+												_1: {
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$li,
+														{ctor: '[]'},
+														{
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$button,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onClick(
+																		_moarwick$elm_webpack_starter$Editor$ChangeToBeta(z)),
+																	_1: {ctor: '[]'}
+																},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text('β'),
+																	_1: {ctor: '[]'}
+																}),
+															_1: {ctor: '[]'}
+														}),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$li,
+															{ctor: '[]'},
+															{
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$button,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Events$onClick(
+																			_moarwick$elm_webpack_starter$Editor$ChangeToGamma(z)),
+																		_1: {ctor: '[]'}
+																	},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text('γ'),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}),
 														_1: {
 															ctor: '::',
-															_0: _elm_lang$html$Html_Events$onInput(
-																A2(_moarwick$elm_webpack_starter$Editor$SetClosed, 1, z)),
+															_0: A2(
+																_elm_lang$html$Html$li,
+																{ctor: '[]'},
+																{
+																	ctor: '::',
+																	_0: A2(
+																		_elm_lang$html$Html$button,
+																		{
+																			ctor: '::',
+																			_0: _elm_lang$html$Html_Events$onClick(
+																				_moarwick$elm_webpack_starter$Editor$ChangeToDelta(z)),
+																			_1: {ctor: '[]'}
+																		},
+																		{
+																			ctor: '::',
+																			_0: _elm_lang$html$Html$text('δ'),
+																			_1: {ctor: '[]'}
+																		}),
+																	_1: {ctor: '[]'}
+																}),
 															_1: {ctor: '[]'}
 														}
 													}
 												}
-											}
-										}
-									},
-									{ctor: '[]'}),
+											}),
+										_1: {ctor: '[]'}
+									}),
 								_1: {
 									ctor: '::',
 									_0: A2(
-										_elm_lang$html$Html$button,
+										_elm_lang$html$Html$div,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('button'),
+											_0: _elm_lang$html$Html_Attributes$class('onclick-menu del'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(
-													_moarwick$elm_webpack_starter$Editor$MakeOpen(z)),
+												_0: _elm_lang$html$Html_Attributes$tabindex(0),
 												_1: {ctor: '[]'}
 											}
 										},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('o'),
+											_0: A2(
+												_elm_lang$html$Html$ul,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
+													_1: {ctor: '[]'}
+												},
+												{
+													ctor: '::',
+													_0: A2(
+														_elm_lang$html$Html$li,
+														{ctor: '[]'},
+														{
+															ctor: '::',
+															_0: deleteMeButton,
+															_1: {ctor: '[]'}
+														}),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$li,
+															{ctor: '[]'},
+															{
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$button,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Events$onClick(
+																			_moarwick$elm_webpack_starter$Editor$Delete(z)),
+																		_1: {ctor: '[]'}
+																	},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text('subtree'),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}
+												}),
 											_1: {ctor: '[]'}
 										}),
-									_1: {ctor: '[]'}
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$button,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class('button'),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onClick(
+														_moarwick$elm_webpack_starter$Editor$MakeClosed(z)),
+													_1: {ctor: '[]'}
+												}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Close'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {
+											ctor: '::',
+											_0: switchBetasButton,
+											_1: {ctor: '[]'}
+										}
+									}
 								}
 							}
 						}
 					};
-				case 'Beta':
-					var _p25 = t.node.gui.controlsShown;
-					if (_p25 === true) {
-						return {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('onclick-menu add'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$tabindex(0),
-										_1: {ctor: '[]'}
-									}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$ul,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-											_1: {ctor: '[]'}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$li,
-												{ctor: '[]'},
-												{
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$button,
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html_Events$onClick(
-																_moarwick$elm_webpack_starter$Editor$ExpandAlpha(z)),
-															_1: {ctor: '[]'}
-														},
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html$text('α'),
-															_1: {ctor: '[]'}
-														}),
-													_1: {ctor: '[]'}
-												}),
-											_1: {
-												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$li,
-													{ctor: '[]'},
-													{
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$button,
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(
-																	_moarwick$elm_webpack_starter$Editor$ExpandBeta(z)),
-																_1: {ctor: '[]'}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text('β'),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$ExpandGamma(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('γ'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$ExpandDelta(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('δ'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$div,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('onclick-menu change'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$tabindex(0),
-											_1: {ctor: '[]'}
-										}
-									},
-									{
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$ul,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$li,
-													{ctor: '[]'},
-													{
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$button,
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(
-																	_moarwick$elm_webpack_starter$Editor$ChangeToAlpha(z)),
-																_1: {ctor: '[]'}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text('α'),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$ChangeToBeta(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('β'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$ChangeToGamma(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('γ'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$li,
-																{ctor: '[]'},
-																{
-																	ctor: '::',
-																	_0: A2(
-																		_elm_lang$html$Html$button,
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html_Events$onClick(
-																				_moarwick$elm_webpack_starter$Editor$ChangeToDelta(z)),
-																			_1: {ctor: '[]'}
-																		},
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html$text('δ'),
-																			_1: {ctor: '[]'}
-																		}),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}
-													}
-												}
-											}),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('onclick-menu del'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$tabindex(0),
-												_1: {ctor: '[]'}
-											}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$ul,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-													_1: {ctor: '[]'}
-												},
-												{
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('node'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$Delete(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('subtree'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}
-												}),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$button,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('button'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Events$onClick(
-														_moarwick$elm_webpack_starter$Editor$MakeClosed(z)),
-													_1: {ctor: '[]'}
-												}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('*'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$button,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$class('button'),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(
-															_moarwick$elm_webpack_starter$Editor$SwitchBetas(z)),
-														_1: {ctor: '[]'}
-													}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text('->|<-'),
-													_1: {ctor: '[]'}
-												}),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						};
-					} else {
-						return {ctor: '[]'};
-					}
-				default:
-					var _p26 = t.node.gui.controlsShown;
-					if (_p26 === true) {
-						return {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('onclick-menu add'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$tabindex(0),
-										_1: {ctor: '[]'}
-									}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$ul,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-											_1: {ctor: '[]'}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$li,
-												{ctor: '[]'},
-												{
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$button,
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html_Events$onClick(
-																_moarwick$elm_webpack_starter$Editor$ExpandAlpha(z)),
-															_1: {ctor: '[]'}
-														},
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html$text('α'),
-															_1: {ctor: '[]'}
-														}),
-													_1: {ctor: '[]'}
-												}),
-											_1: {
-												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$li,
-													{ctor: '[]'},
-													{
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$button,
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(
-																	_moarwick$elm_webpack_starter$Editor$ExpandBeta(z)),
-																_1: {ctor: '[]'}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text('β'),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$ExpandGamma(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('γ'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$ExpandDelta(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('δ'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$div,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('onclick-menu change'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$tabindex(0),
-											_1: {ctor: '[]'}
-										}
-									},
-									{
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$ul,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$li,
-													{ctor: '[]'},
-													{
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$button,
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onClick(
-																	_moarwick$elm_webpack_starter$Editor$ChangeToAlpha(z)),
-																_1: {ctor: '[]'}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text('α'),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$ChangeToBeta(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('β'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$ChangeToGamma(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('γ'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$li,
-																{ctor: '[]'},
-																{
-																	ctor: '::',
-																	_0: A2(
-																		_elm_lang$html$Html$button,
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html_Events$onClick(
-																				_moarwick$elm_webpack_starter$Editor$ChangeToDelta(z)),
-																			_1: {ctor: '[]'}
-																		},
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html$text('δ'),
-																			_1: {ctor: '[]'}
-																		}),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}
-													}
-												}
-											}),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('onclick-menu del'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$tabindex(0),
-												_1: {ctor: '[]'}
-											}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$ul,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$class('onclick-menu-content'),
-													_1: {ctor: '[]'}
-												},
-												{
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$li,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$button,
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Events$onClick(
-																		_moarwick$elm_webpack_starter$Editor$DeleteMe(z)),
-																	_1: {ctor: '[]'}
-																},
-																{
-																	ctor: '::',
-																	_0: _elm_lang$html$Html$text('node'),
-																	_1: {ctor: '[]'}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$li,
-															{ctor: '[]'},
-															{
-																ctor: '::',
-																_0: A2(
-																	_elm_lang$html$Html$button,
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html_Events$onClick(
-																			_moarwick$elm_webpack_starter$Editor$Delete(z)),
-																		_1: {ctor: '[]'}
-																	},
-																	{
-																		ctor: '::',
-																		_0: _elm_lang$html$Html$text('subtree'),
-																		_1: {ctor: '[]'}
-																	}),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}
-												}),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$button,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('button'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html_Events$onClick(
-														_moarwick$elm_webpack_starter$Editor$MakeClosed(z)),
-													_1: {ctor: '[]'}
-												}
-											},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('*'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						};
-					} else {
-						return {ctor: '[]'};
-					}
+				} else {
+					return {ctor: '[]'};
+				}
 			}
 		}());
 };
@@ -17439,9 +17222,9 @@ var _moarwick$elm_webpack_starter$Editor$ChangeText = F2(
 		return {ctor: 'ChangeText', _0: a, _1: b};
 	});
 var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
-	var _p27 = z;
-	var tableau = _p27._0;
-	var bs = _p27._1;
+	var _p33 = z;
+	var tableau = _p33._0;
+	var bs = _p33._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17499,7 +17282,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html$text('|'),
+					_0: _elm_lang$html$Html$text('{'),
 					_1: {
 						ctor: '::',
 						_0: A2(
@@ -17509,7 +17292,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 								_0: _elm_lang$html$Html_Attributes$classList(
 									{
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'substitutedVariable', _1: true},
+										_0: {ctor: '_Tuple2', _0: 'substitutedConstant', _1: true},
 										_1: {
 											ctor: '::',
 											_0: {
@@ -17529,7 +17312,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 											A2(
 												_elm_lang$core$Maybe$map,
 												function (_) {
-													return _.what;
+													return _.forWhat;
 												},
 												_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 													_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -17539,7 +17322,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 										_1: {
 											ctor: '::',
 											_0: _elm_lang$html$Html_Events$onInput(
-												_moarwick$elm_webpack_starter$Editor$ChangeTerm(z)),
+												_moarwick$elm_webpack_starter$Editor$ChangeVariable(z)),
 											_1: {ctor: '[]'}
 										}
 									}
@@ -17548,7 +17331,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 							{ctor: '[]'}),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$html$Html$text('for'),
+							_0: _elm_lang$html$Html$text('->'),
 							_1: {
 								ctor: '::',
 								_0: A2(
@@ -17558,7 +17341,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 										_0: _elm_lang$html$Html_Attributes$classList(
 											{
 												ctor: '::',
-												_0: {ctor: '_Tuple2', _0: 'substitutedConstant', _1: true},
+												_0: {ctor: '_Tuple2', _0: 'substitutedVariable', _1: true},
 												_1: {
 													ctor: '::',
 													_0: {
@@ -17578,7 +17361,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 													A2(
 														_elm_lang$core$Maybe$map,
 														function (_) {
-															return _.forWhat;
+															return _.what;
 														},
 														_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 															_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -17588,7 +17371,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 												_1: {
 													ctor: '::',
 													_0: _elm_lang$html$Html_Events$onInput(
-														_moarwick$elm_webpack_starter$Editor$ChangeVariable(z)),
+														_moarwick$elm_webpack_starter$Editor$ChangeTerm(z)),
 													_1: {ctor: '[]'}
 												}
 											}
@@ -17597,7 +17380,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 									{ctor: '[]'}),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('['),
+									_0: _elm_lang$html$Html$text('}['),
 									_1: {
 										ctor: '::',
 										_0: A2(
@@ -17649,8 +17432,8 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 		});
 };
 var _moarwick$elm_webpack_starter$Editor$viewChildren = function (z) {
-	var _p28 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
-	switch (_p28.ctor) {
+	var _p34 = _moarwick$elm_webpack_starter$Zipper$zTableau(z).ext;
+	switch (_p34.ctor) {
 		case 'Open':
 			return _moarwick$elm_webpack_starter$Editor$viewOpen(z);
 		case 'Closed':
@@ -17681,9 +17464,9 @@ var _moarwick$elm_webpack_starter$Editor$viewAlpha = function (z) {
 		});
 };
 var _moarwick$elm_webpack_starter$Editor$viewNode = function (z) {
-	var _p29 = z;
-	var tableau = _p29._0;
-	var bs = _p29._1;
+	var _p35 = z;
+	var tableau = _p35._0;
+	var bs = _p35._1;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17846,9 +17629,9 @@ var _moarwick$elm_webpack_starter$Editor$viewGamma = function (z) {
 			_1: {ctor: '[]'}
 		});
 };
-var _moarwick$elm_webpack_starter$Editor$view = function (_p30) {
-	var _p31 = _p30;
-	var _p32 = _p31.present;
+var _moarwick$elm_webpack_starter$Editor$view = function (_p36) {
+	var _p37 = _p36;
+	var _p38 = _p37.present;
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -17903,10 +17686,10 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p30) {
 							}),
 						_1: {
 							ctor: '::',
-							_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p32.tableau),
+							_0: _moarwick$elm_webpack_starter$Editor$jsonExportControl(_p38.tableau),
 							_1: {
 								ctor: '::',
-								_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p32.jsonImporting, _p32.jsonImportId),
+								_0: A2(_moarwick$elm_webpack_starter$Editor$jsonImportControl, _p38.jsonImporting, _p38.jsonImportId),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -17952,17 +17735,17 @@ var _moarwick$elm_webpack_starter$Editor$view = function (_p30) {
 				}),
 			_1: {
 				ctor: '::',
-				_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p32),
+				_0: _moarwick$elm_webpack_starter$Editor$jsonImportError(_p38),
 				_1: {
 					ctor: '::',
 					_0: _moarwick$elm_webpack_starter$Editor$viewNode(
-						_moarwick$elm_webpack_starter$Zipper$zipper(_p32.tableau)),
+						_moarwick$elm_webpack_starter$Zipper$zipper(_p38.tableau)),
 					_1: {
 						ctor: '::',
-						_0: _moarwick$elm_webpack_starter$Editor$verdict(_p32.tableau),
+						_0: _moarwick$elm_webpack_starter$Editor$verdict(_p38.tableau),
 						_1: {
 							ctor: '::',
-							_0: _moarwick$elm_webpack_starter$Editor$problems(_p32.tableau),
+							_0: _moarwick$elm_webpack_starter$Editor$problems(_p38.tableau),
 							_1: {
 								ctor: '::',
 								_0: _moarwick$elm_webpack_starter$Rules$help,

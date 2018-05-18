@@ -658,10 +658,6 @@ deleteMe (( t, fatherbs ) as zip) =
             )
             zip
     else
-        let
-            _ =
-                Debug.log "bc" fatherbs
-        in
         case fatherbs of
             (BetaLeftCrumb fatherNode tr) :: bss ->
                 modifyNode
@@ -670,7 +666,6 @@ deleteMe (( t, fatherbs ) as zip) =
                             Beta lt rt ->
                                 if lt.node.value == "" then
                                     Tableau tableau.node (Alpha rt)
-                                    --  ( Tableau fatherNode (Beta tableau tr), bss )
                                 else
                                     tableau
 
@@ -686,7 +681,6 @@ deleteMe (( t, fatherbs ) as zip) =
                             Beta lt rt ->
                                 if rt.node.value == "" then
                                     Tableau tableau.node (Alpha lt)
-                                    --  ( Tableau fatherNode (Beta tableau tr), bss )
                                 else
                                     tableau
 
@@ -741,15 +735,6 @@ setClosed which newRefStr z =
                     let
                         newRef =
                             setPair which (z |> getRef newRefStr) r1 r2
-
-                        --
-                        --                        newR1 =
-                        --                            case Tuple.first newRef of
-                        --                                Just 0 ->
-                        --                                    Tuple.first newRef
-                        --
-                        --                                Just x ->
-                        --                                    {(Tuple.first newRef) |}
                     in
                     Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
 
