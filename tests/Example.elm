@@ -390,7 +390,7 @@ gammaExampleResult =
                     }
                 , ext = Open
                 }
-                { what = "", forWhat = "x" }
+                { term = "", var = "x" }
         }
 
 
@@ -424,7 +424,7 @@ validateGammaSubstituteFunction =
                     }
                 , ext = Open
                 }
-                { what = "f(Diana)", forWhat = "x" }
+                { term = "f(Diana)", var = "x" }
         }
 
 
@@ -457,7 +457,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                             }
                         , ext = Open
                         }
-                        { what = "k", forWhat = "z" }
+                        { term = "k", var = "z" }
                 }
         }
 
@@ -491,45 +491,234 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                             }
                         , ext = Open
                         }
-                        { what = "z", forWhat = "x" }
+                        { term = "z", var = "x" }
                 }
         }
 
 
-
---TODO: nema vypisat chybu uz pri pisani tretej formuly? -- nie, ale keby su tam 2 rovnake volne, tak je problem
--- todo tests:
--- extend on other than open
-
-
-validateParsingTheory =
+validateRenumberingAdding =
     zipper
         { node =
             { id = 1
-            , value = "T \\forall x P(x, k)"
+            , value = "T (a \\/ b)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T \\forall x P(x, k)"
-            , gui = { controlsShown = False }
+            , formula = Formula.parseSigned "T (a \\/ b)"
+            , gui = { controlsShown = True }
             }
         , ext =
             Alpha
                 { node =
                     { id = 2
-                    , value = "T \\forall z \\exists p Z(p, f(z))"
+                    , value = "T (a /\\ (b \\/ c))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , formula = Formula.parseSigned "T (a /\\ b)"
                     , gui = { controlsShown = False }
                     }
                 , ext =
                     Alpha
                         { node =
                             { id = 3
-                            , value = "F \\exists k \\forall p L(k, f(p))"
-                            , reference = { str = "3", up = Just 0 }
-                            , formula = Formula.parseSigned "F \\exists k \\forall p L(k, f(p))"
-                            , gui = defGUI
+                            , value = "T (b \\/ c)"
+                            , reference = { str = "2", up = Just 1 }
+                            , formula = Formula.parseSigned "T (b \\/ c)"
+                            , gui = { controlsShown = False }
                             }
-                        , ext = Open
+                        , ext =
+                            Beta
+                                { node =
+                                    { id = 4
+                                    , value = "T a"
+                                    , reference = { str = "1", up = Just 3 }
+                                    , formula = Formula.parseSigned "T a"
+                                    , gui = defGUI
+                                    }
+                                , ext = Open
+                                }
+                                { node =
+                                    { id = 4
+                                    , value = "T b"
+                                    , reference = { str = "1", up = Just 3 }
+                                    , formula = Formula.parseSigned "T b"
+                                    , gui = defGUI
+                                    }
+                                , ext = Open
+                                }
+                        }
+                }
+        }
+
+
+validateRenumberingAddingResult =
+    zipper
+        { node =
+            { id = 1
+            , value = "T (a \\/ b)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T (a \\/ b)"
+            , gui = { controlsShown = False }
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = ""
+                    , reference = { str = "", up = Nothing }
+                    , formula = Formula.parseSigned ""
+                    , gui = { controlsShown = True }
+                    }
+                , ext =
+                    Alpha
+                        { node =
+                            { id = 3
+                            , value = "T (a /\\ (b \\/ c))"
+                            , reference = { str = "3", up = Just 0 }
+                            , formula = Formula.parseSigned "T (a /\\ b)"
+                            , gui = { controlsShown = False }
+                            }
+                        , ext =
+                            Alpha
+                                { node =
+                                    { id = 4
+                                    , value = "T (b \\/ c)"
+                                    , reference = { str = "3", up = Just 1 }
+                                    , formula = Formula.parseSigned "T (b \\/ c)"
+                                    , gui = { controlsShown = False }
+                                    }
+                                , ext =
+                                    Beta
+                                        { node =
+                                            { id = 5
+                                            , value = "T a"
+                                            , reference = { str = "1", up = Just 4 }
+                                            , formula = Formula.parseSigned "T a"
+                                            , gui = defGUI
+                                            }
+                                        , ext = Open
+                                        }
+                                        { node =
+                                            { id = 6
+                                            , value = "T b"
+                                            , reference = { str = "1", up = Just 4 }
+                                            , formula = Formula.parseSigned "T b"
+                                            , gui = defGUI
+                                            }
+                                        , ext = Open
+                                        }
+                                }
+                        }
+                }
+        }
+
+
+validateRenumberingDeleting =
+    zipper
+        { node =
+            { id = 1
+            , value = "T (a\\/b)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T (a\\/b)"
+            , gui = { controlsShown = False }
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T (b/\\(c\\/a))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T (b/\\(c\\/a))"
+                    , gui = { controlsShown = False }
+                    }
+                , ext =
+                    Alpha
+                        { node =
+                            { id = 3
+                            , value = "Tb"
+                            , reference = { str = "2", up = Just 1 }
+                            , formula = Formula.parseSigned "T b"
+                            , gui = { controlsShown = True }
+                            }
+                        , ext =
+                            Alpha
+                                { node =
+                                    { id = 4
+                                    , value = "T (c\\/a)"
+                                    , reference = { str = "2", up = Just 2 }
+                                    , formula = Formula.parseSigned "T (c\\/a)"
+                                    , gui = { controlsShown = False }
+                                    }
+                                , ext =
+                                    Beta
+                                        { node =
+                                            { id = 5
+                                            , value = "Tc"
+                                            , reference = { str = "4", up = Just 1 }
+                                            , formula = Formula.parseSigned "Tc"
+                                            , gui = { controlsShown = True }
+                                            }
+                                        , ext = Open
+                                        }
+                                        { node =
+                                            { id = 6
+                                            , value = "Ta"
+                                            , reference = { str = "4", up = Just 1 }
+                                            , formula = Formula.parseSigned "Ta"
+                                            , gui = { controlsShown = True }
+                                            }
+                                        , ext = Open
+                                        }
+                                }
+                        }
+                }
+        }
+
+
+validateRenumberingDeletingResult =
+    zipper
+        { node =
+            { id = 1
+            , value = "T (a\\/b)"
+            , reference = { str = "1", up = Just 0 }
+            , formula = Formula.parseSigned "T (a\\/b)"
+            , gui = { controlsShown = False }
+            }
+        , ext =
+            Alpha
+                { node =
+                    { id = 2
+                    , value = "T (b/\\(c\\/a))"
+                    , reference = { str = "2", up = Just 0 }
+                    , formula = Formula.parseSigned "T (b/\\(c\\/a))"
+                    , gui = { controlsShown = False }
+                    }
+                , ext =
+                    Alpha
+                        { node =
+                            { id = 3
+                            , value = "T (c\\/a)"
+                            , reference = { str = "2", up = Just 1 }
+                            , formula = Formula.parseSigned "T (c\\/a)"
+                            , gui = { controlsShown = False }
+                            }
+                        , ext =
+                            Beta
+                                { node =
+                                    { id = 4
+                                    , value = "Tc"
+                                    , reference = { str = "3", up = Just 1 }
+                                    , formula = Formula.parseSigned "Tc"
+                                    , gui = { controlsShown = True }
+                                    }
+                                , ext = Open
+                                }
+                                { node =
+                                    { id = 5
+                                    , value = "Ta"
+                                    , reference = { str = "3", up = Just 1 }
+                                    , formula = Formula.parseSigned "Ta"
+                                    , gui = { controlsShown = True }
+                                    }
+                                , ext = Open
+                                }
                         }
                 }
         }
@@ -563,7 +752,7 @@ suiteZipper =
                     (testReferenceRewriting |> Zipper.extendAlpha |> Editor.top |> Zipper.renumber |> zipper)
             )
         , test "reference rewriting 2" (\() -> compareZippers (fixRefs fixRefsTest) fixRefsTestResult)
-        , test "gamma what test"
+        , test "gamma term test"
             (\() ->
                 compareZippers gammaExampleResult
                     (zipperExample |> Zipper.extendGamma |> Zipper.changeVariable "x")
@@ -630,5 +819,29 @@ suiteZipper =
                         )
                     )
                     False
+            )
+        , test "renumbering justs when adding a node"
+            (\() ->
+                Expect.equal
+                    validateRenumberingAddingResult
+                    (validateRenumberingAdding
+                        |> Zipper.extendAlpha
+                        |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding
+                        |> topRenumbered
+                        |> zipper
+                    )
+            )
+        , test "renumbering justs when deleting a node"
+            (\() ->
+                Expect.equal
+                    validateRenumberingDeletingResult
+                    (validateRenumberingDeleting
+                        |> Zipper.down
+                        |> Zipper.down
+                        |> Zipper.deleteMe
+                        |> renumberJustInReferences Zipper.renumberJustInRefWhenDeleting
+                        |> topRenumbered
+                        |> zipper
+                    )
             )
         ]
