@@ -5,8 +5,7 @@
     "license": "MIT",
     "source-directories": [
         "src",
-        "src/Helpers",
-        "../tablueau-parser/src"
+        "src/Helpers"
     ],
     "exposed-modules": [],
     "dependencies": {
@@ -15,7 +14,8 @@
         "elm-lang/http": "1.0.0 <= v < 2.0.0",
         "evancz/elm-markdown": "3.0.1 <= v < 4.0.0",
 		"elm-tools/parser": "2.0.1 <= v < 3.0.0",
-        "elm-community/undo-redo": "2.0.0 <= v < 3.0.0"
+        "elm-community/undo-redo": "2.0.0 <= v < 3.0.0",
+        "FMFI-UK-1-AIN-412/elm-formula": "1.0.0 <= v < 2.0.0"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"
 }
