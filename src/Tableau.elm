@@ -27,7 +27,7 @@ type alias Ref =
 
 
 type alias Substitution =
-    { what : String, forWhat : String }
+    { term : String, var : String }
 
 
 type Extension
@@ -41,7 +41,7 @@ type Extension
 
 defSubstitution : Substitution
 defSubstitution =
-    { what = "", forWhat = "" }
+    { term = "", var = "" }
 
 
 defRef : { str : String, up : Maybe a }

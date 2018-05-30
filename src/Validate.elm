@@ -447,9 +447,9 @@ makeS : Tableau.Substitution -> Formula.Substitution
 makeS subs =
     let
         newTerm =
-            subs.what |> Formula.parseTerm |> getTermFromResult
+            subs.term |> Formula.parseTerm |> getTermFromResult
     in
-    Dict.fromList [ ( subs.forWhat, newTerm ) ]
+    Dict.fromList [ ( subs.var, newTerm ) ]
 
 
 substitutionIsValid : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
@@ -559,7 +559,7 @@ validateGammaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .what
+                                |> Maybe.map .term
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -593,7 +593,7 @@ validateGammaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .what
+                                |> Maybe.map .term
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -607,7 +607,7 @@ validateGammaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .forWhat
+                                |> Maybe.map .var
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -628,7 +628,7 @@ validateGammaRule z =
 
 checkNewVariable : (String -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
 checkNewVariable pred x z =
-    case pred (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "") of
+    case pred (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "") of
         True ->
             Ok z
 
@@ -698,7 +698,7 @@ validateDeltaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .what
+                                |> Maybe.map .term
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -732,7 +732,7 @@ validateDeltaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .what
+                                |> Maybe.map .term
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -746,7 +746,7 @@ validateDeltaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .forWhat
+                                |> Maybe.map .var
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then
@@ -783,7 +783,7 @@ validateDeltaRule z =
                         ++ (z
                                 |> Zipper.up
                                 |> Zipper.zSubstitution
-                                |> Maybe.map .what
+                                |> Maybe.map .term
                                 |> Maybe.map
                                     (\s ->
                                         if s == "" then

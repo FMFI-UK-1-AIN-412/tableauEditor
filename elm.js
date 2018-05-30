@@ -12160,7 +12160,7 @@ var _moarwick$elm_webpack_starter$Tableau$defNode = {
 	formula: _moarwick$elm_webpack_starter$Formula$parseSigned(''),
 	gui: _moarwick$elm_webpack_starter$Tableau$defGUI
 };
-var _moarwick$elm_webpack_starter$Tableau$defSubstitution = {what: '', forWhat: ''};
+var _moarwick$elm_webpack_starter$Tableau$defSubstitution = {term: '', $var: ''};
 var _moarwick$elm_webpack_starter$Tableau$Tableau = F2(
 	function (a, b) {
 		return {node: a, ext: b};
@@ -12178,7 +12178,7 @@ var _moarwick$elm_webpack_starter$Tableau$Ref = F2(
 	});
 var _moarwick$elm_webpack_starter$Tableau$Substitution = F2(
 	function (a, b) {
-		return {what: a, forWhat: b};
+		return {term: a, $var: b};
 	});
 var _moarwick$elm_webpack_starter$Tableau$Delta = F2(
 	function (a, b) {
@@ -13161,7 +13161,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 								_p59._0,
 								_elm_lang$core$Native_Utils.update(
 									_p59._1,
-									{forWhat: newVariable})));
+									{$var: newVariable})));
 					case 'Delta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -13171,7 +13171,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeVariable = F2(
 								_p59._0,
 								_elm_lang$core$Native_Utils.update(
 									_p59._1,
-									{forWhat: newVariable})));
+									{$var: newVariable})));
 					default:
 						return tableau;
 				}
@@ -13194,7 +13194,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 								_p60._0,
 								_elm_lang$core$Native_Utils.update(
 									_p60._1,
-									{what: newTerm})));
+									{term: newTerm})));
 					case 'Delta':
 						return A2(
 							_moarwick$elm_webpack_starter$Tableau$Tableau,
@@ -13204,7 +13204,7 @@ var _moarwick$elm_webpack_starter$Zipper$changeTerm = F2(
 								_p60._0,
 								_elm_lang$core$Native_Utils.update(
 									_p60._1,
-									{what: newTerm})));
+									{term: newTerm})));
 					default:
 						return tableau;
 				}
@@ -13637,7 +13637,7 @@ var _moarwick$elm_webpack_starter$Validate$checkNewVariable = F3(
 				A2(
 					_elm_lang$core$Maybe$map,
 					function (_) {
-						return _.what;
+						return _.term;
 					},
 					_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 						_moarwick$elm_webpack_starter$Zipper$up(z)))));
@@ -13749,11 +13749,11 @@ var _moarwick$elm_webpack_starter$Validate$getTermFromResult = function (r) {
 };
 var _moarwick$elm_webpack_starter$Validate$makeS = function (subs) {
 	var newTerm = _moarwick$elm_webpack_starter$Validate$getTermFromResult(
-		_moarwick$elm_webpack_starter$Formula$parseTerm(subs.what));
+		_moarwick$elm_webpack_starter$Formula$parseTerm(subs.term));
 	return _elm_lang$core$Dict$fromList(
 		{
 			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: subs.forWhat, _1: newTerm},
+			_0: {ctor: '_Tuple2', _0: subs.$var, _1: newTerm},
 			_1: {ctor: '[]'}
 		});
 };
@@ -14302,7 +14302,7 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 									A2(
 										_elm_lang$core$Maybe$map,
 										function (_) {
-											return _.what;
+											return _.term;
 										},
 										_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 											_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14322,7 +14322,7 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 											A2(
 												_elm_lang$core$Maybe$map,
 												function (_) {
-													return _.forWhat;
+													return _.$var;
 												},
 												_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 													_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14382,7 +14382,7 @@ var _moarwick$elm_webpack_starter$Validate$validateGammaRule = function (z) {
 										A2(
 											_elm_lang$core$Maybe$map,
 											function (_) {
-												return _.what;
+												return _.term;
 											},
 											_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 												_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14489,7 +14489,7 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 									A2(
 										_elm_lang$core$Maybe$map,
 										function (_) {
-											return _.what;
+											return _.term;
 										},
 										_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 											_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14531,7 +14531,7 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 											A2(
 												_elm_lang$core$Maybe$map,
 												function (_) {
-													return _.what;
+													return _.term;
 												},
 												_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 													_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14551,7 +14551,7 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 													A2(
 														_elm_lang$core$Maybe$map,
 														function (_) {
-															return _.forWhat;
+															return _.$var;
 														},
 														_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 															_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -14611,7 +14611,7 @@ var _moarwick$elm_webpack_starter$Validate$validateDeltaRule = function (z) {
 												A2(
 													_elm_lang$core$Maybe$map,
 													function (_) {
-														return _.what;
+														return _.term;
 													},
 													_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 														_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -15084,15 +15084,15 @@ var _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Encode$jsonSubstitution
 			ctor: '::',
 			_0: {
 				ctor: '_Tuple2',
-				_0: 'what',
-				_1: _elm_lang$core$Json_Encode$string(_p1.what)
+				_0: 'term',
+				_1: _elm_lang$core$Json_Encode$string(_p1.term)
 			},
 			_1: {
 				ctor: '::',
 				_0: {
 					ctor: '_Tuple2',
-					_0: 'forWhat',
-					_1: _elm_lang$core$Json_Encode$string(_p1.forWhat)
+					_0: 'var',
+					_1: _elm_lang$core$Json_Encode$string(_p1.$var)
 				},
 				_1: {ctor: '[]'}
 			}
@@ -17312,7 +17312,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 											A2(
 												_elm_lang$core$Maybe$map,
 												function (_) {
-													return _.forWhat;
+													return _.$var;
 												},
 												_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 													_moarwick$elm_webpack_starter$Zipper$up(z))))),
@@ -17361,7 +17361,7 @@ var _moarwick$elm_webpack_starter$Editor$viewSubsNode = function (z) {
 													A2(
 														_elm_lang$core$Maybe$map,
 														function (_) {
-															return _.what;
+															return _.term;
 														},
 														_moarwick$elm_webpack_starter$Zipper$zSubstitution(
 															_moarwick$elm_webpack_starter$Zipper$up(z))))),

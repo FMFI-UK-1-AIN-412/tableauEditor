@@ -764,10 +764,10 @@ changeVariable newVariable z =
         (\tableau ->
             case tableau.ext of
                 Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | forWhat = newVariable })
+                    Tableau tableau.node (Gamma t { subs | var = newVariable })
 
                 Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | forWhat = newVariable })
+                    Tableau tableau.node (Delta t { subs | var = newVariable })
 
                 _ ->
                     tableau
@@ -781,10 +781,10 @@ changeTerm newTerm z =
         (\tableau ->
             case tableau.ext of
                 Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | what = newTerm })
+                    Tableau tableau.node (Gamma t { subs | term = newTerm })
 
                 Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | what = newTerm })
+                    Tableau tableau.node (Delta t { subs | term = newTerm })
 
                 _ ->
                     tableau

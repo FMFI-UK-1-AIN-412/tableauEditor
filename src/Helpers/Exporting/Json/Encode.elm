@@ -23,11 +23,11 @@ jsonNodeList n =
     [ ( "node", jsonNode n ) ]
 
 
-jsonSubstitution : { a | forWhat : String, what : String } -> Value
-jsonSubstitution { what, forWhat } =
+jsonSubstitution : { a | var : String, term : String } -> Value
+jsonSubstitution { term, var } =
     object
-        [ ( "what", string what )
-        , ( "forWhat", string forWhat )
+        [ ( "term", string term )
+        , ( "var", string var )
         ]
 
 

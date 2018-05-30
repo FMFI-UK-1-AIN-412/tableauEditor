@@ -294,7 +294,7 @@ viewSubsNode z =
                 [ ( "substitutedConstant", True )
                 , ( "semanticsProblem", Helper.hasReference z )
                 ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .forWhat |> Maybe.withDefault "")
+            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
             , type_ "text"
             , onInput <| ChangeVariable z
             ]
@@ -305,7 +305,7 @@ viewSubsNode z =
                 [ ( "substitutedVariable", True )
                 , ( "semanticsProblem", Helper.hasReference z )
                 ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .what |> Maybe.withDefault "")
+            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
             , type_ "text"
             , onInput <| ChangeTerm z
             ]
