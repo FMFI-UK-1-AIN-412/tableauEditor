@@ -241,7 +241,7 @@ button.delete {
 }
 
 .rulesHelp {
-	font-size: 10px;
+	font-size: smaller;
 }
 
 .rulesHelp .rule {
