@@ -113,35 +113,133 @@ renderDelta d =
         ]
 
 
+symbolsTable =
+    div [ class "half" ]
+        [ h3 [] [ text "Symbols of propositional and first-order logic" ]
+        , Html.table [ class "rulesHelpTable" ]
+            [ Html.tr []
+                [ Html.th [] [ text "Symbols of conjunction" ]
+                , Html.th [] [ text "Symbols of disjunction" ]
+                , Html.th [] [ text "Symbols of implication" ]
+                , Html.th [] [ text "Symbols of negation" ]
+                , Html.th [] [ text "Universal quantifier" ]
+                , Html.th [] [ text "Existential quantifier" ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "`&`, `/\\`, `∧`" ]
+                , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`|`, `\\/`, `∨`" ]
+                , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`->`, `→`" ]
+                , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`-`, `~`, `¬`" ]
+                , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`∀`, `\\A`, `\\forall`, `\\a`" ]
+                , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`∃`, `\\E`, `\\exists`, `\\e`" ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ text "strictly binary" ]
+                , Html.td [] [ text "strictly binary" ]
+                , Html.td [] [ text "strictly binary" ]
+                , Html.td [] [ text "unary" ]
+                , Html.td [] [ text "First order logic term" ]
+                , Html.td [] [ text "First order logic term" ]
+                ]
+            ]
+        ]
+
+
+notesTable =
+    div [ class "half" ]
+        [ Html.h3 [] [ text "Important notes" ]
+        , Html.table [ class "rulesHelpTable" ]
+            [ Html.tr []
+                [ Html.th [] [ text "Note" ]
+                , Html.th [] [ text "Example" ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "Each of the nodes contains a signed formula, i.e. it must be prefixed by `T` or `F`. " ]
+                , Html.td []
+                    [ Markdown.toHtml [ class "symbols" ] "T \\forall x P(x)"
+                    , Markdown.toHtml [ class "symbols" ] "F \\exists x \\forall p (K(x, q) ∧ G(p, x) )"
+                    ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "To enter a premise / assumption (which you want to prove), make it reference itself" ]
+                , Html.td []
+                    [ Markdown.toHtml [ class "symbols" ] "(1) T (a → b) [1]"
+                    , Markdown.toHtml [ class "symbols" ] """(i.e. "(1) F .................. [1]")"""
+                    ]
+                ]
+            ]
+        ]
+
+
+rulesTable =
+    div []
+        [ h3 [] [ text "Aplying rules" ]
+        , Html.table [ class "rulesHelpTable" ]
+            [ Html.tr []
+                [ Html.th [] [ text "" ]
+                , Html.th [] [ text "α-rule" ]
+                , Html.th [] [ text "β-rule" ]
+                , Html.th [] [ text "γ-rule" ]
+                , Html.th [] [ text "δ-rule" ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ text "rules" ]
+                , Html.td [] [ div [] (List.map renderAlpha alphas) ]
+                , Html.td [] [ div [] (List.map renderBeta betas) ]
+                , Html.td [] [ div [] (List.map renderGamma gammas) ]
+                , Html.td [] [ div [] (List.map renderDelta deltas) ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ text "example" ]
+                , Html.td []
+                    [ div [ class "formula" ]
+                        [ text "(1) T(a∧b) [1]"
+                        , div [ class "alpha" ]
+                            [ div [ class "formula" ]
+                                [ text "(2) T a [1]"
+                                , div [ class "alpha" ] [ div [ class "formula" ] [ text "(3) T b [1]" ] ]
+                                ]
+                            ]
+                        ]
+                    ]
+                , Html.td []
+                    [ div [ class "formula" ]
+                        [ text "(1) T(a∨b) [1]"
+                        , div [ class "beta" ]
+                            [ div [ class "formula" ] [ text "(2) T a [1]" ]
+                            , div [ class "formula" ] [ text "(3) T b [1]" ]
+                            ]
+                        ]
+                    ]
+                , Html.td []
+                    [ div [ class "formula" ]
+                        [ text "(1) T \\forall x P(x) [1]"
+                        , div [ class "gamma" ]
+                            [ div [ class "formula" ]
+                                [ text "(2) T P(k) {x→k} [1]" ]
+                            ]
+                        ]
+                    ]
+                , Html.td []
+                    [ div [ class "formula" ]
+                        [ text "(1) T \\forall x P(x) [1]"
+                        , div [ class "delta" ]
+                            [ div [ class "formula" ]
+                                [ text "(2) T P(k) {x→k} [1]" ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+
 help =
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
-        , Markdown.toHtml [] """
-Use `&`, `/\\` or `∧` for conjunction, `|`, `\\/` or `∨` for disjunction, `->` or `→` for implication,
-and `-`, `~` or `¬` for negation. Conjunction and disjunction are strictly binary. Each node of
-the tableau contains a signed formula, i.e. it must be prefixed by `T` or `F`.
-
-To write first order logic terms use '∀', '\\A', '\\forall', '\\a' and '∃', '\\E', '\\exists', '\\e' quantifiers.
-
-"""
-        , p []
-            [ text "To enter a premise / assumption (which you want to prove), make it reference itself"
-            , text """ (i.e. "(1) F ... [1]")."""
-            ]
-        , div [ class "rules" ]
-            [ div [ class "rule-wrapper" ]
-                [ h3 [] [ text "α-rules" ]
-                , div [] (List.map renderAlpha alphas)
-                , h3 [] [ text "β-rules" ]
-                , div [] (List.map renderBeta betas)
-                ]
-            , div [ class "rule-wrapper" ]
-                [ h3 [] [ text "γ-rules" ]
-                , div [] (List.map renderDelta deltas)
-                , h3 [] [ text "δ-rules - use completely new variable x in subformula" ]
-                , div [] (List.map renderGamma gammas)
-                ]
-            ]
+        , symbolsTable
+        , notesTable
+        , rulesTable
         ]
 
 

@@ -240,14 +240,6 @@ button.delete {
 	justify-content: center;
 }
 
-.rules {
-	with: 100%;
-}
-.rule-wrapper {
-	width: 50%;
-	display: inline-grid;
-}
-
 .rulesHelp .rule {
 	display: inline-block;
 	padding: 0.5em;
@@ -255,9 +247,43 @@ button.delete {
 	vertical-align: top;
 }
 
-p code {
-	background-color: lightgray;
-	padding: 0 0.2em;
+.rulesHelpTable {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+.rulesHelpTable th, td {
+	text-align: left;
+	padding: 0px;
+	border-bottom: 1px solid #ddd;
+}
+
+.symbols > p {
+	margin: 0px;
+}
+
+.rulesHelpTable  tr:nth-child(even){background-color: #def}
+
+.rulesHelpTable th {
+	background-color: #6193a2;
+	color: white;
+	padding: 4px;
+}
+
+.rulesHelpTable .formula {
+	text-align: center;
+}
+
+.half {
+	width: 48%;
+	float: left;
+	padding: 10px;
+}
+
+@media only screen and (max-width: 1180px) {
+	.half {
+		width:100%;
+	}
 }
 
 /**
