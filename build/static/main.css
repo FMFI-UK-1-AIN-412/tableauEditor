@@ -240,6 +240,10 @@ button.delete {
 	justify-content: center;
 }
 
+.rulesHelp {
+	font-size: 10px;
+}
+
 .rulesHelp .rule {
 	display: inline-block;
 	padding: 0.5em;
@@ -253,7 +257,7 @@ button.delete {
 }
 
 .rulesHelpTable th, td {
-	text-align: left;
+	text-align: center;
 	padding: 0px;
 	border-bottom: 1px solid #ddd;
 }
@@ -267,7 +271,7 @@ button.delete {
 .rulesHelpTable th {
 	background-color: #6193a2;
 	color: white;
-	padding: 4px;
+	padding: 2px;
 }
 
 .rulesHelpTable .formula {
