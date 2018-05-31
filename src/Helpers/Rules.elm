@@ -38,11 +38,11 @@ fD =
     Atom "P" [ Var "x" ]
 
 
-gammas =
+deltas =
     [ F (ForAll "x" fG), T (Exists "x" fD) ]
 
 
-deltas =
+gammas =
     [ T (ForAll "x" fD), F (Exists "x" fD) ]
 
 
@@ -165,6 +165,23 @@ notesTable =
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ] "(1) T (a → b) [1]"
                     , Markdown.toHtml [ class "symbols" ] """(i.e. "(1) F .................. [1]")"""
+                    ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "When substituting, choose only such term which does not contain a variable which looks like bound in referrenced formula." ]
+                , Html.td []
+                    [ Markdown.toHtml [ class "symbols" ] "wrong example: "
+                    , Markdown.toHtml [ class "symbols" ] "(1) T \\forall x \\exists k P(x,k) [1]"
+                    , Markdown.toHtml [ class "symbols" ] "(2) T \\exists k P(k,k) {x→k}[1]"
+                    ]
+                ]
+            , Html.tr []
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "When applying delta rule make sure to use completely new constant, which was not used as free (better bound as well) in a node somewhere above." ]
+                , Html.td []
+                    [ Markdown.toHtml [ class "symbols" ] "wrong example: "
+                    , Markdown.toHtml [ class "symbols" ] "(1) T L(p) [1]"
+                    , Markdown.toHtml [ class "symbols" ] "(2) T \\exists x \\forall k P(x,k) [2]"
+                    , Markdown.toHtml [ class "symbols" ] "(3) T \\forall k P(p,k) {x→p} [2]"
                     ]
                 ]
             ]

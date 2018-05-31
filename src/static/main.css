@@ -260,6 +260,7 @@ button.delete {
 	text-align: center;
 	padding: 0px;
 	border-bottom: 1px solid #ddd;
+	max-width: 400px;
 }
 
 .symbols > p {

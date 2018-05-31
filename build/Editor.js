@@ -15527,7 +15527,148 @@ var _moarwick$elm_webpack_starter$Rules$notesTable = A2(
 										_1: {ctor: '[]'}
 									}
 								}),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$tr,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$td,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: A2(
+													_evancz$elm_markdown$Markdown$toHtml,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$class('symbols'),
+														_1: {ctor: '[]'}
+													},
+													'When substituting, choose only such term which does not contain a variable which looks like bound in referrenced formula.'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$td,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: A2(
+														_evancz$elm_markdown$Markdown$toHtml,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$class('symbols'),
+															_1: {ctor: '[]'}
+														},
+														'wrong example: '),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_evancz$elm_markdown$Markdown$toHtml,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																_1: {ctor: '[]'}
+															},
+															'(1) T \\forall x \\exists k P(x,k) [1]'),
+														_1: {
+															ctor: '::',
+															_0: A2(
+																_evancz$elm_markdown$Markdown$toHtml,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																	_1: {ctor: '[]'}
+																},
+																'(2) T \\exists k P(k,k) {x→k}[1]'),
+															_1: {ctor: '[]'}
+														}
+													}
+												}),
+											_1: {ctor: '[]'}
+										}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$tr,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$td,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: A2(
+														_evancz$elm_markdown$Markdown$toHtml,
+														{
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$class('symbols'),
+															_1: {ctor: '[]'}
+														},
+														'When applying delta rule make sure to use completely new constant, which was not used as free (better bound as well) in a node somewhere above.'),
+													_1: {ctor: '[]'}
+												}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$td,
+													{ctor: '[]'},
+													{
+														ctor: '::',
+														_0: A2(
+															_evancz$elm_markdown$Markdown$toHtml,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																_1: {ctor: '[]'}
+															},
+															'wrong example: '),
+														_1: {
+															ctor: '::',
+															_0: A2(
+																_evancz$elm_markdown$Markdown$toHtml,
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																	_1: {ctor: '[]'}
+																},
+																'(1) T L(p) [1]'),
+															_1: {
+																ctor: '::',
+																_0: A2(
+																	_evancz$elm_markdown$Markdown$toHtml,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																		_1: {ctor: '[]'}
+																	},
+																	'(2) T \\exists x \\forall k P(x,k) [2]'),
+																_1: {
+																	ctor: '::',
+																	_0: A2(
+																		_evancz$elm_markdown$Markdown$toHtml,
+																		{
+																			ctor: '::',
+																			_0: _elm_lang$html$Html_Attributes$class('symbols'),
+																			_1: {ctor: '[]'}
+																		},
+																		'(3) T \\forall k P(p,k) {x→p} [2]'),
+																	_1: {ctor: '[]'}
+																}
+															}
+														}
+													}),
+												_1: {ctor: '[]'}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}
 						}
 					}
 				}),
@@ -16102,7 +16243,7 @@ var _moarwick$elm_webpack_starter$Rules$fD = A2(
 		_0: _FMFI_UK_1_AIN_412$elm_formula$Formula$Var('x'),
 		_1: {ctor: '[]'}
 	});
-var _moarwick$elm_webpack_starter$Rules$deltas = {
+var _moarwick$elm_webpack_starter$Rules$gammas = {
 	ctor: '::',
 	_0: _FMFI_UK_1_AIN_412$elm_formula$Formula$T(
 		A2(_FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', _moarwick$elm_webpack_starter$Rules$fD)),
@@ -16121,7 +16262,7 @@ var _moarwick$elm_webpack_starter$Rules$fG = A2(
 		_0: _FMFI_UK_1_AIN_412$elm_formula$Formula$Var('x'),
 		_1: {ctor: '[]'}
 	});
-var _moarwick$elm_webpack_starter$Rules$gammas = {
+var _moarwick$elm_webpack_starter$Rules$deltas = {
 	ctor: '::',
 	_0: _FMFI_UK_1_AIN_412$elm_formula$Formula$F(
 		A2(_FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', _moarwick$elm_webpack_starter$Rules$fG)),
