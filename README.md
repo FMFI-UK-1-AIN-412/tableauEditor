@@ -1,7 +1,7 @@
 # Tableau Editor
 
 In this repository is maintained the code to my bachelor thesis.
-
+Try live version is available at https://fmfi-uk-1-ain-412.github.io/tableauEditor/ .
 
 Here we can find other materials to my bachelor thesis: https://nitrajka.github.io/ .
 We don't need to install anything to see the build application in a browser. Just open `/build/index.html` in a browser.
