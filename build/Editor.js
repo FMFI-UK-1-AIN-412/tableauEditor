@@ -14926,8 +14926,8 @@ var _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Decode$reRefTableau = f
 var _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Decode$substitution = A3(
 	_elm_lang$core$Json_Decode$map2,
 	_moarwick$elm_webpack_starter$Tableau$Substitution,
-	A2(_elm_lang$core$Json_Decode$field, 'what', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 'forWhat', _elm_lang$core$Json_Decode$string));
+	A2(_elm_lang$core$Json_Decode$field, 'term', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 'var', _elm_lang$core$Json_Decode$string));
 var _moarwick$elm_webpack_starter$Helpers_Exporting_Json_Decode$mkRef = function (str) {
 	return {str: str, up: _elm_lang$core$Maybe$Nothing};
 };
