@@ -43,8 +43,8 @@ node =
 substitution : Decoder Tableau.Substitution
 substitution =
     map2 Tableau.Substitution
-        (field "what" string)
-        (field "forWhat" string)
+        (field "term" string)
+        (field "var" string)
 
 
 open : Decoder Tableau.Tableau
