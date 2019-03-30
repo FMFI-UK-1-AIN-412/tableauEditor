@@ -182,9 +182,9 @@ strFormula f =
     FF -> "False"
     Atom a -> a
     Neg f -> "¬" ++ (strFormula f)
-    Conj lf rf -> "(" ++ (strFormula lf) ++ "∧" ++ (strFormula rf) ++ ")"
-    Disj lf rf -> "(" ++ (strFormula lf) ++ "∨" ++ (strFormula rf) ++ ")"
-    Impl lf rf -> "(" ++ (strFormula lf) ++ "→" ++ (strFormula rf) ++ ")"
+    Conj lf rf -> "(" ++ (strFormula lf) ++ " ∧ " ++ (strFormula rf) ++ ")"
+    Disj lf rf -> "(" ++ (strFormula lf) ++ " ∨ " ++ (strFormula rf) ++ ")"
+    Impl lf rf -> "(" ++ (strFormula lf) ++ " → " ++ (strFormula rf) ++ ")"
 
 --
 -- helper funcs

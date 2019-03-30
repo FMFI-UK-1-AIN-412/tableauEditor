@@ -15,6 +15,7 @@ import Http
 import Json.Decode
 
 import Formula exposing (Formula)
+import HtmlFormula exposing (htmlFormula)
 
 enableDebug = False
 
@@ -136,6 +137,9 @@ verdict t =
             Formula.F _ -> False
         )
         ass
+    htmlUnSignedFormulas =
+      HtmlFormula.joinMapA (text ", ")
+        (HtmlFormula.htmlFormula << Formula.signedGetFormula)
 
   in
     if List.isEmpty ass
@@ -147,11 +151,10 @@ verdict t =
           , text (textVerdict <| Tableau.zipper t)
           , text ":"
           ]
-        , p []
-          [ text (premises |> List.map (Formula.signedGetFormula >>  Formula.strFormula) |> String.join " , ")
-          , text " ⊦ "
-          , text (conclusions |> List.map (Formula.signedGetFormula >>  Formula.strFormula) |> String.join " , ")
-          ]
+        , p [] <|
+            htmlUnSignedFormulas premises <|
+            text " ⊦ " ::
+            htmlUnSignedFormulas conclusions []
         ]
 
 textVerdict t =

@@ -52,9 +52,12 @@ help =
   div [ class "rulesHelp" ]
   [ h2 [] [ text "Help" ]
   , Markdown.toHtml [] """
-Use `&`, `/\\` or `∧` for conjunction, `|`, `\\/` or `∨` for disjunction, `->` or `→` for implication,
-and `-`, `~` or `¬` for negation. Conjunction and disjunction are strictly binary. Each node of
-the tableau contains a signed formula, i.e. it must be prefixed by `T` or `F`.
+Use `&`, `/\\`, or `∧` for conjunction, `|`, `\\/`, or `∨` for disjunction,
+`->` or `→` for implication, `-`, `~` or `¬` for negation.
+Conjunction and disjunction are strictly binary.
+
+Each node of the tableau contains a signed formula, i.e., it must be
+prefixed by `T` or `F`.
 """
   , p []
     [ text "To enter a premise / assumption (which you want to prove), make it reference itself"
