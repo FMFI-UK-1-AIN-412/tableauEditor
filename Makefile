@@ -26,7 +26,7 @@ $(OUT_DIR)/index.html: $(SRC_DIR)/index.html
 
 $(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm)
 	mkdir -p $(OUT_DIR)
-	elm-make --yes $(ELM_MAIN)  --output=$@
+	elm make $(ELM_MAIN)  --output=$@
 
 $(OUT_DIR)/%: $(SRC_DIR)/$*
 	mkdir -p $(OUT_DIR)
