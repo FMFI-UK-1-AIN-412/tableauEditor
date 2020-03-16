@@ -4,7 +4,7 @@ import Errors
 import Formula exposing (Formula)
 import Help
 import Browser
-import Html exposing (Attribute, Html, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul)
+import Html exposing (Attribute, Html, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sup)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onClick, onInput)
 import HtmlFormula exposing (htmlFormula)
@@ -309,6 +309,14 @@ isBeta ( t, _ ) =
         _ ->
             False
 
+isAlphaConclusion : Zipper -> Bool
+isAlphaConclusion z =
+    case z of
+        ( t, _ ) ->
+            Maybe.withDefault False
+                <| Maybe.map Formula.isAlpha
+                    (getReffedFormula (node t).ref z)
+
 
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl =
@@ -400,7 +408,11 @@ viewFormula z =
             , onInput <| Text z
             ]
             []
-        , text " ["
+        , text " "
+        , if isPremise z
+            then span [] [ var [] [text "S"], sup [] [text "+"] ]
+            else text (if isBeta <| up z then "β" else "α")
+        , text "["
         , input
             [ class ("refEdit " ++ errorClass (isValidNodeRef z))
             , type_ "text"
