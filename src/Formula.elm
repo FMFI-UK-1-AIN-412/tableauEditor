@@ -18,6 +18,9 @@ import Parser
         , spaces
         , map
         , andThen
+        , loop
+        , Step (..)
+        , backtrackable
         )
 import Set
 import Debug exposing (toString)
@@ -229,18 +232,14 @@ formula : Parser Formula
 formula =
     oneOf
         [ succeed Atom
-            |= variable
-                { start = Char.isLower
-                , inner = Char.isLower
-                , reserved = Set.fromList []
-                }
+            |= atom
         , succeed Neg
             |. oneOfSymbols [ "-", "¬", "~" ]
             |. spaces
             |= lazy (\_ -> formula)
-        , lazy (\_ -> binary [ "&", "∧", "/\\" ] Conj)
-        , lazy (\_ -> binary [ "|", "∨", "\\/" ] Disj)
-        , lazy (\_ -> binary [ "->", "→" ] Impl)
+        , backtrackable <| lazy (\_ -> binary [ "&", "∧", "/\\" ] Conj)
+        , backtrackable <| lazy (\_ -> binary [ "|", "∨", "\\/" ] Disj)
+        , backtrackable <| lazy (\_ -> binary [ "->", "→" ] Impl)
         , succeed identity
             |. symbol "("
             |. spaces
@@ -248,6 +247,49 @@ formula =
             |. spaces
             |. symbol ")"
         ]
+
+
+atom =
+    succeed (++)
+        |= identifier
+        |. spaces
+        |= oneOf
+            [ arguments
+            , succeed ""
+            ]
+
+
+arguments : Parser String
+arguments =
+    succeed (\arg args -> "(" ++ String.join ", " (arg :: args) ++ ")")
+        |. symbol "("
+        |. spaces
+        |= identifier
+        |. spaces
+        |= loop [] nextArg
+        |. symbol ")"
+
+
+nextArg : List String -> Parser (Step (List String) (List String))
+nextArg revArgs =
+    oneOf
+        [ succeed (\arg -> Loop (arg :: revArgs))
+            |. symbol ","
+            |. spaces
+            |= identifier
+            |. spaces
+        , succeed ()
+            |> map (\_ -> Done (List.reverse revArgs))
+        ]
+
+
+identifier : Parser String
+identifier =
+    variable
+        { start = Char.isAlpha
+        , inner = Char.isAlphaNum
+        , reserved = Set.fromList []
+        }
 
 
 binary conn constructor =

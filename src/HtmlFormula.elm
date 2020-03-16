@@ -91,7 +91,8 @@ htmlParen content hs =
 
 
 htmlVar name hs =
-    var [] [ text name ] :: hs
+    -- var [] [ text name ] :: hs
+    text name :: hs
 
 
 
