@@ -15,7 +15,7 @@
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     }
-    var app = Elm.Editor.fullscreen();
+    var app = Elm.Editor.init();
     app.ports.fileSelected.subscribe(function (id) {
       var node = document.getElementById(id);
       if (node === null) {
