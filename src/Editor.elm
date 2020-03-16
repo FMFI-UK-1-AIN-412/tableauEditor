@@ -147,6 +147,7 @@ simpleUpdate msg model =
                 in
                 if newZipp /= (z |> up) then
                     { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences Zipper.renumberJustInRefWhenDeleting |> topRenumbered }
+
                 else
                     { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
@@ -504,6 +505,7 @@ singleNodeProblems z =
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
+
     else
         div [ class "nodeProblems" ]
             (List.map
@@ -520,6 +522,7 @@ problems t =
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
+
     else
         div [ class "problems" ]
             [ p [] [ text "Problems" ]
@@ -639,6 +642,7 @@ verdict t =
     in
     if List.isEmpty ass then
         div [ class "verdict" ] [ p [] [ text "This tableau doesn't prove anything." ] ]
+
     else
         div [ class "verdict" ]
             [ p []

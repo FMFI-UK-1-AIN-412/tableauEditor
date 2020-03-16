@@ -53,7 +53,7 @@ error def r =
 
 second : a1 -> a2 -> a2
 second =
-    curry Tuple.second
+    \a b -> Tuple.second ( a, b )
 
 
 always3 : a -> b -> c -> d -> a
@@ -249,6 +249,7 @@ resultFromBool : a -> x -> Bool -> Result x a
 resultFromBool a x b =
     if b then
         Ok a
+
     else
         Err x
 
@@ -264,6 +265,7 @@ checkPredicate : (a -> Bool) -> x -> a -> Result x a
 checkPredicate pred x a =
     if pred a then
         Ok a
+
     else
         Err x
 
@@ -277,9 +279,9 @@ validateAlphaRule z =
             (checkPredicate Formula.isAlpha
                 (semanticsProblem z "Referenced formula is not α")
             )
-        |> Result.map2 (,) (checkFormula "Formula" z)
+        |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
-            (checkPredicate (uncurry Formula.isSignedSubformulaOf)
+            (checkPredicate (\( a, b ) -> Formula.isSignedSubformulaOf a b)
                 (semanticsProblem z
                     ("Is not an α-subformula of ("
                         ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
@@ -395,6 +397,7 @@ isSimilarAbove variable z =
             Set.member variable (Formula.freeFormula (parsed |> Formula.signedGetFormula))
                 || (if (z |> Zipper.up) == z then
                         False
+
                     else
                         isSimilarAbove variable (z |> Zipper.up)
                    )
@@ -498,12 +501,14 @@ isSubstituable s new original =
                 Formula.ForAll s f ->
                     if List.member s (Dict.keys substitution) then
                         removeQuantifierAndSubstitute substitution f
+
                     else
                         trySubs substitution original
 
                 Formula.Exists s f ->
                     if List.member s (Dict.keys substitution) then
                         removeQuantifierAndSubstitute substitution f
+
                     else
                         trySubs substitution original
 
@@ -540,19 +545,20 @@ validateGammaRule z =
                 (semanticsProblem z "γ can not be premise")
             )
         |> Result.andThen (\z -> getReffedSignedFormula z)
-        |> Result.map2 (,) (checkFormula "Formula" z)
+        |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substituable
             (checkPredicate
-                (uncurry
-                    (isSubstituable
+                (\( a, b ) ->
+                    isSubstituable
                         (z
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                    )
+                        a
+                        b
                 )
                 (semanticsProblem z
                     ("This is not substituable. Variable '"
@@ -564,6 +570,7 @@ validateGammaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -578,15 +585,16 @@ validateGammaRule z =
         |> Result.andThen
             -- checking valid substitution
             (checkPredicate
-                (uncurry
-                    (substitutionIsValid
+                (\( a, b ) ->
+                    substitutionIsValid
                         (z
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                    )
+                        a
+                        b
                 )
                 (semanticsProblem z
                     ("This isn't valid γ-subformula created by substituting '"
@@ -598,6 +606,7 @@ validateGammaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -612,6 +621,7 @@ validateGammaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -679,19 +689,20 @@ validateDeltaRule z =
                 )
             )
         |> Result.andThen (\z -> getReffedSignedFormula z)
-        |> Result.map2 (,) (checkFormula "Formula" z)
+        |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substitutable
             (checkPredicate
-                (uncurry
-                    (isSubstituable
+                (\( a, b ) ->
+                    isSubstituable
                         (z
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                    )
+                        a
+                        b
                 )
                 (semanticsProblem z
                     ("This is not substituable. Variable '"
@@ -703,6 +714,7 @@ validateDeltaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -717,15 +729,16 @@ validateDeltaRule z =
         |> Result.andThen
             -- checking valid substitution
             (checkPredicate
-                (uncurry
-                    (substitutionIsValid
+                (\( a, b ) ->
+                    substitutionIsValid
                         (z
                             |> Zipper.up
                             |> Zipper.zSubstitution
                             |> Maybe.map makeS
                             |> Maybe.withDefault (Dict.fromList [])
                         )
-                    )
+                        a
+                        b
                 )
                 (semanticsProblem z
                     ("This isn't valid delta-subformula created by substituting '"
@@ -737,6 +750,7 @@ validateDeltaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -751,6 +765,7 @@ validateDeltaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )
@@ -788,6 +803,7 @@ validateDeltaRule z =
                                     (\s ->
                                         if s == "" then
                                             "_"
+
                                         else
                                             s
                                     )

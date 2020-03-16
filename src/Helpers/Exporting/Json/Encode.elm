@@ -1,7 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(Alpha, Beta, Closed, Delta, Gamma, Open), GUI, Node, Tableau)
+import Tableau exposing (Extension(..), GUI, Node, Tableau)
 
 
 jsonRef : { a | str : String } -> Value

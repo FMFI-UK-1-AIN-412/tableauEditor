@@ -58,7 +58,7 @@ errors r =
 
 second : a1 -> a2 -> a2
 second =
-    curry Tuple.second
+    \a b -> Tuple.second ( a, b )
 
 
 isClosed : Zipper.Zipper -> Result (List Validate.Problem) Bool
@@ -101,6 +101,7 @@ assumptions z =
                     (\x ->
                         if x == 0 then
                             Just ()
+
                         else
                             Nothing
                     )
