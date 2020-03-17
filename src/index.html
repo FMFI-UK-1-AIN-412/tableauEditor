@@ -37,6 +37,16 @@
       });
       reader.readAsDataURL(file);
     });
+    app.ports.selectFile.subscribe(function (id) {
+      var node = document.getElementById(id);
+      if (node === null) {
+        return;
+      }
+      node.click();
+    });
+    app.ports.print.subscribe(function () {
+      window.print();
+    });
   </script>
 </html>
 <!-- vim: set sw=2 ts=2 sts=2 et : -->

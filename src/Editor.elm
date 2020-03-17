@@ -1,10 +1,10 @@
-port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, fileContentRead, fileSelected, init, isBeta, isPremise, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
+port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, init, isBeta, isPremise, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
 
 import Errors
 import Formula exposing (Formula)
 import Help
 import Browser
-import Html exposing (Attribute, Html, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sup)
+import Html exposing (Attribute, Html, h1, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sub, sup)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onClick, onInput)
 import HtmlFormula exposing (htmlFormula)
@@ -61,6 +61,8 @@ type Msg
     | SetClosed Int Tableau.Zipper String
     | Delete Tableau.Zipper
     | Prettify
+    | Print
+    | SelectJson
     | JsonSelected
     | JsonRead FileReaderPortData
 
@@ -71,10 +73,16 @@ type alias FileReaderPortData =
     }
 
 
+port selectFile : String -> Cmd msg
+
+
 port fileSelected : String -> Cmd msg
 
 
 port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
+
+
+port print : () -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -120,6 +128,9 @@ simpleUpdate msg model =
         Prettify ->
             { model | t = Tableau.prettify model.t }
 
+        SelectJson ->
+            model
+
         JsonSelected ->
             model
 
@@ -132,12 +143,21 @@ simpleUpdate msg model =
                 Err e ->
                     { model | jsonImporting = False, jsonImportError = toString e }
 
+        Print ->
+            model
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         JsonSelected ->
             ( { model | jsonImportError = "", jsonImporting = True }, fileSelected model.jsonImportId )
+
+        SelectJson ->
+            ( model, selectFile model.jsonImportId )
+
+        Print ->
+            ( model, print () )
 
         _ ->
             ( simpleUpdate msg { model | jsonImportError = "" }, Cmd.none )
@@ -151,12 +171,13 @@ documentView model =
 view : Model -> Html Msg
 view model =
     div []
-        [ viewTableau model.t
-        , verdict model.t
+        [ h1 [] [text "Tableau Editor"]
+        , viewTableau model.t
         , problems model.t
+        , verdict model.t
         , p [ class "actions" ]
             [ button [ onClick Prettify ] [ text "Prettify formulas" ]
-            , button [ attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+            , button [ onClick Print ] [ text "Print" ]
             , jsonExportControl model.t
             , jsonImportControl model
             ]
@@ -209,9 +230,11 @@ verdict t =
                 , text (textVerdict <| Tableau.zipper t)
                 , text ":"
                 ]
-            , p [] <|
+            , p [ class "provable" ] <|
                 htmlUnSignedFormulas premises <|
-                    text " ⊦ "
+                    text " ⊢"
+                        :: sub [] [text "p"]
+                        :: text " "
                         :: htmlUnSignedFormulas conclusions []
             ]
 
@@ -309,14 +332,6 @@ isBeta ( t, _ ) =
         _ ->
             False
 
-isAlphaConclusion : Zipper -> Bool
-isAlphaConclusion z =
-    case z of
-        ( t, _ ) ->
-            Maybe.withDefault False
-                <| Maybe.map Formula.isAlpha
-                    (getReffedFormula (node t).ref z)
-
 
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl =
@@ -352,7 +367,7 @@ tblCell depth tcell =
                     }
 
                 Just z ->
-                    { content = [ viewFormula z ] ++ expandControls z
+                    { content = viewFormula z :: expandControls z
                     , height = let
                                     ( t, bs ) =
                                         z
@@ -509,30 +524,24 @@ jsonExportControl t =
 
 jsonImportControl : Model -> Html Msg
 jsonImportControl model =
-    case model.jsonImporting of
-        True ->
-            text "Loading file..."
-
-        False ->
-            label [ for model.jsonImportId ]
-                [ button
-                    {- This is really ugly, but:
-                       - we really need the buton and onClick, if we want it to look like a button
-                         (embedding the label in a button or vice versa works in webkit but not in firefox)
-                       - Adding another Msg / Cmd just for this...
-                    -}
-                    [ attribute "onClick" ("javascript:document.getElementById('" ++ model.jsonImportId ++ "').click();") ]
-                    [ text "Import from JSON"
-                    ]
-                , input
-                    [ type_ "file"
-                    , id model.jsonImportId
-                    , accept "application/json"
-                    , on "change"
-                        (Json.Decode.succeed JsonSelected)
-                    ]
-                    []
+    if model.jsonImporting
+    then
+        text "Loading file..."
+    else
+        label [ for model.jsonImportId ]
+            [ button
+                [ onClick SelectJson ]
+                [ text "Import from JSON"
                 ]
+            , input
+                [ type_ "file"
+                , id model.jsonImportId
+                , accept "application/json"
+                , on "change"
+                    (Json.Decode.succeed JsonSelected)
+                ]
+                []
+            ]
 
 
 jsonImportError model =
