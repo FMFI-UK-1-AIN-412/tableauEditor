@@ -20,9 +20,9 @@ clean:
 .PHONY: build publish clean
 
 
-$(OUT_DIR)/index.html: $(SRC_DIR)/index.html
+$(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/editor.css $(OUT_DIR)/Editor.js
 	mkdir -p $(OUT_DIR)
-	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))",' $< >$@
+	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))?'"$$(sha1sum $(ELM_OUT) | grep -o '^[0-9a-f]\+')"'",; s,href="editor\.css",href="editor.css?'"$$(sha1sum $(OUT_DIR)/editor.css | grep -o '^[0-9a-f]\+')"'",' $< >$@
 
 $(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm)
 	mkdir -p $(OUT_DIR)
