@@ -1,4 +1,4 @@
-port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, init, isBeta, isPremise, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
+port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, cache, init, isBeta, isPremise, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
 
 import Errors
 import Formula exposing (Formula)
@@ -6,7 +6,7 @@ import Help
 import Browser
 import Html exposing (Attribute, Html, h1, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sub, sup)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick, onInput)
+import Html.Events exposing (on, onClick, onInput, onBlur)
 import HtmlFormula exposing (htmlFormula)
 import Url
 import Json.Decode
@@ -40,9 +40,24 @@ type alias Model =
     , jsonImportId : String
     }
 
-init : () -> (Model, Cmd Msg)
-init _ =
-    ( { t = Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing
+init : Maybe String -> (Model, Cmd Msg)
+init mts =
+    let
+        emptyT = Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing
+
+        initT =
+            case mts of
+                Nothing -> emptyT
+                Just ts ->
+                    case Tableau.Json.Decode.decode ts of
+                        Ok t ->
+                            t
+
+                        Err e ->
+                            emptyT
+    in
+    
+    ( { t = initT
       , jsonImporting = False
       , jsonImportError = ""
       , jsonImportId = "importJson"
@@ -65,6 +80,7 @@ type Msg
     | SelectJson
     | JsonSelected
     | JsonRead FileReaderPortData
+    | Cache
 
 
 type alias FileReaderPortData =
@@ -83,6 +99,9 @@ port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
 
 
 port print : () -> Cmd msg
+
+
+port cache : String -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -128,12 +147,6 @@ simpleUpdate msg model =
         Prettify ->
             { model | t = Tableau.prettify model.t }
 
-        SelectJson ->
-            model
-
-        JsonSelected ->
-            model
-
         -- actually handled upstairs
         JsonRead { contents } ->
             case contents |> Tableau.Json.Decode.decode of
@@ -143,7 +156,16 @@ simpleUpdate msg model =
                 Err e ->
                     { model | jsonImporting = False, jsonImportError = toString e }
 
+        SelectJson ->
+            model
+
+        JsonSelected ->
+            model
+
         Print ->
+            model
+
+        Cache ->
             model
 
 
@@ -156,8 +178,24 @@ update msg model =
         SelectJson ->
             ( model, selectFile model.jsonImportId )
 
+        JsonRead { contents } ->
+            case contents |> Tableau.Json.Decode.decode of
+                Ok t ->
+                    ( { model | jsonImporting = False, t = t }
+                    , cache contents
+                    )
+
+                Err e ->
+                    ( { model
+                        | jsonImporting = False
+                        , jsonImportError = toString e }
+                    , Cmd.none)
+
         Print ->
             ( model, print () )
+
+        Cache ->
+            ( model, cache (Tableau.Json.Encode.encode 2 model.t) )
 
         _ ->
             ( simpleUpdate msg { model | jsonImportError = "" }, Cmd.none )
@@ -421,6 +459,7 @@ viewFormula z =
             , value n.text
             , size (String.length n.text * 3 // 4 + 1)
             , onInput <| Text z
+            , onBlur <| Cache
             ]
             []
         , text " "
@@ -435,6 +474,7 @@ viewFormula z =
             , size 1
             , value n.ref.str
             , onInput <| Ref z
+            , onBlur <| Cache
             ]
             []
         , text "]"
@@ -476,6 +516,7 @@ expandControls z =
                             , size 1
                             , value r1.str
                             , onInput <| SetClosed 0 z
+                            , onBlur <| Cache
                             ]
                             []
                         , input
@@ -485,6 +526,7 @@ expandControls z =
                             , size 1
                             , value r2.str
                             , onInput <| SetClosed 1 z
+                            , onBlur <| Cache
                             ]
                             []
                         , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
