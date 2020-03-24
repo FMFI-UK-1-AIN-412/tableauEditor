@@ -454,6 +454,7 @@ viewFormula z =
         [ class "formula"
         ]
         [ text <| "(" ++ String.fromInt n.num ++ ")"
+        , text " "
         , input
             [ class
                 ("formulaEdit "
@@ -462,7 +463,7 @@ viewFormula z =
             , type_ "text"
             , placeholder "Formula"
             , value n.text
-            , size (String.length n.text * 3 // 4 + 1)
+            , size ((String.length n.text * 5 + 3) // 6 + 1)
             , onInput <| Text z
             , onBlur <| Cache
             ]

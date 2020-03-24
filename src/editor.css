@@ -26,10 +26,12 @@
 
 .formula {
   display: flex;
+  align-items: baseline;
 }
 
 .formulaEdit {
   flex-grow: 1;
+  margin: 0 0.0833em;
 }
 
 .formulaEdit, .refEdit {
