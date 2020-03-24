@@ -1,18 +1,21 @@
 module Tableau.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Tableau(..))
+import Tableau exposing (Finalization(..), Tableau(..))
 
 jsonRef r =
     string r.str
 
 
-jsonClosed mc =
-    case mc of
-        Nothing ->
+jsonFinalization fin =
+    case fin of
+        Unfinished ->
             []
 
-        Just ( r1, r2 ) ->
+        OpenComplete ->
+            [ ( "openComplete", bool True ) ]
+
+        Closed ( r1, r2 ) ->
             [ ( "closed"
               , list jsonRef [ r1, r2 ]
               )
@@ -33,10 +36,10 @@ jsonNodeList n =
 
 jsonTblList t =
     case t of
-        Leaf n mc ->
+        Leaf n fin ->
             [ ( "type", string "leaf" ) ]
                 ++ jsonNodeList n
-                ++ jsonClosed mc
+                ++ jsonFinalization fin
 
         Alpha n st ->
             [ ( "type", string "alpha" ) ]

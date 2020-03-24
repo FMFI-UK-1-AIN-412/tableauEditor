@@ -43,7 +43,7 @@ type alias Model =
 init : Maybe String -> (Model, Cmd Msg)
 init mts =
     let
-        emptyT = Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Nothing
+        emptyT = Tableau.Leaf { num = 1, text = "", ref = { str = "1", up = Just 0 } } Unfinished
 
         initT =
             case mts of
@@ -72,7 +72,8 @@ type Msg
     | ExpandAlpha Tableau.Zipper
     | ExpandBeta Tableau.Zipper
     | MakeClosed Tableau.Zipper
-    | MakeOpen Tableau.Zipper
+    | MakeUnfinished Tableau.Zipper
+    | MakeOpenComplete Tableau.Zipper
     | SetClosed Int Tableau.Zipper String
     | Delete Tableau.Zipper
     | Prettify
@@ -129,8 +130,11 @@ simpleUpdate msg model =
         MakeClosed z ->
             { model | t = z |> Tableau.makeClosed |> top }
 
-        MakeOpen z ->
-            { model | t = z |> Tableau.makeOpen |> top }
+        MakeOpenComplete z ->
+            { model | t = z |> Tableau.makeOpenComplete |> top }
+
+        MakeUnfinished z ->
+            { model | t = z |> Tableau.makeUnfinished |> top }
 
         Delete z ->
             { model | t = z |> Tableau.delete |> topRenumbered }
@@ -478,8 +482,12 @@ viewFormula z =
             ]
             []
         , text "]"
-        , button [ class "delete", onClick (Delete z) ] [ text "x" ]
+        , deleteButton (Delete z)
         ]
+
+
+deleteButton msg =
+    button [ class "delete", onClick msg ] [ text "×" ]
 
 
 expandControls z =
@@ -489,15 +497,16 @@ expandControls z =
     in
     [ div [ class "expandControls" ]
         (case t of
-            Tableau.Leaf n mc ->
-                case mc of
-                    Nothing ->
+            Tableau.Leaf _ fin ->
+                case fin of
+                    Unfinished ->
                         [ button [ onClick (ExpandAlpha z) ] [ text "α" ]
                         , button [ onClick (ExpandBeta z) ] [ text "β" ]
                         , button [ onClick (MakeClosed z) ] [ text "*" ]
+                        , button [ onClick (MakeOpenComplete z) ] [ text "O&C" ]
                         ]
 
-                    Just ( r1, r2 ) ->
+                    Closed ( r1, r2 ) ->
                         let
                             compl =
                                 Errors.errors <| areCloseRefsComplementary r1 r2 z
@@ -506,7 +515,7 @@ expandControls z =
                                 problemsClass <| validateRef "Invalid close ref. #1" r1 z ++ compl
 
                             ref2Cls =
-                                problemsClass <| validateRef "Invalid close ref. #1" r2 z ++ compl
+                                problemsClass <| validateRef "Invalid close ref. #2" r2 z ++ compl
                         in
                         [ text "* "
                         , input
@@ -529,8 +538,25 @@ expandControls z =
                             , onBlur <| Cache
                             ]
                             []
-                        , button [ class "delete", onClick (MakeOpen z) ] [ text "x" ]
+                        , deleteButton (MakeUnfinished z)
                         ]
+
+                    OpenComplete ->
+                        let
+                            cls = problemsClass
+                                <| Errors.errors (isCorrectOpenComplete z)
+                            ttl =
+                                if String.isEmpty cls then
+                                    [title "Open and complete branch"]
+                                else
+                                    []
+                        in
+                        
+                            [ span
+                                (class ("openComplete " ++ cls) :: ttl)
+                                [ text "O&C" ]
+                            , deleteButton (MakeUnfinished z)
+                            ]
 
             Tableau.Alpha _ _ ->
                 []

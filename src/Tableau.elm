@@ -1,4 +1,4 @@
-module Tableau exposing (Breadcrumbs, Cell, CellWidth, Closed, Crumb(..), Node, Ref, Row, Table, Tableau(..), Zipper, above, asHeadedTable, asTable, children, defClosed, defNode, defRef, delete, depth, down, extendAlpha, extendBeta, fAlpha, fBeta, fLeaf, findAbove, fixClosedRefs, fixNodeRef, fixRefs, fixedRef, formula, getRef, getReffed, getReffedFormula, indented, indentedClosed, indentedNode, indentedRef, left, makeClosed, makeOpen, mapNode, maxNum, merge, modify, modifyNode, modifyRef, node, prettify, renumber, renumber2, right, setClosed, setFormula, setPair1, setRef, tl, top, tt, up, width, zFormula, zNode, zTableau, zWalkPost, zipper)
+module Tableau exposing (Breadcrumbs, Cell, CellWidth, Closed, Finalization(..), Crumb(..), Node, Ref, Row, Table, Tableau(..), Zipper, above, asHeadedTable, asTable, children, defClosed, defNode, defRef, delete, depth, down, extendAlpha, extendBeta, fAlpha, fBeta, fLeaf, findAbove, fixClosedRefs, fixNodeRef, fixRefs, fixedRef, formula, getRef, getReffed, getReffedFormula, indented, indentedFinalization, indentedNode, indentedRef, left, makeClosed, makeOpenComplete, makeUnfinished, mapNode, maxNum, merge, modify, modifyNode, modifyRef, node, prettify, renumber, renumber2, right, setClosed, setFormula, setPair1, setRef, tl, top, tt, up, width, zFormula, zNode, zTableau, zWalkPost, zipper)
 
 import Formula exposing (Formula, Signed(..))
 import Parser
@@ -31,11 +31,17 @@ type alias Closed =
 
 
 defClosed =
-    ( defRef, defRef )
+    (defRef, defRef)
+
+
+type Finalization
+    = Unfinished
+    | Closed Closed
+    | OpenComplete
 
 
 type Tableau
-    = Leaf Node (Maybe Closed)
+    = Leaf Node Finalization
     | Alpha Node Tableau
     | Beta Node Tableau Tableau
 
@@ -62,8 +68,8 @@ formula t =
 mapNode : (Node -> Node) -> Tableau -> Tableau
 mapNode f t =
     case t of
-        Leaf n mc ->
-            Leaf (f n) mc
+        Leaf n fin ->
+            Leaf (f n) fin
 
         Alpha n ct ->
             Alpha (f n) (mapNode f ct)
@@ -288,8 +294,8 @@ modifyNode f =
     modify
         (\t ->
             case t of
-                Leaf n mc ->
-                    Leaf (f n) mc
+                Leaf n fin ->
+                    Leaf (f n) fin
 
                 Alpha n st ->
                     Alpha (f n) st
@@ -390,21 +396,34 @@ makeClosed =
     modify
         (\t ->
             case t of
-                Leaf n Nothing ->
-                    Leaf n (Just defClosed)
+                Leaf n _ ->
+                    Leaf n (Closed defClosed)
 
                 _ ->
                     t
         )
 
 
-makeOpen : Zipper -> Zipper
-makeOpen =
+makeUnfinished : Zipper -> Zipper
+makeUnfinished =
     modify
         (\t ->
             case t of
-                Leaf n (Just p) ->
-                    Leaf n Nothing
+                Leaf n _ ->
+                    Leaf n Unfinished
+
+                _ ->
+                    t
+        )
+
+
+makeOpenComplete : Zipper -> Zipper
+makeOpenComplete =
+    modify
+        (\t ->
+            case t of
+                Leaf n _ ->
+                    Leaf n OpenComplete
 
                 _ ->
                     t
@@ -431,8 +450,8 @@ setClosed which ref z =
         |> modify
             (\t ->
                 case t of
-                    Leaf n (Just p) ->
-                        Leaf n (Just (setPair1 which p (z |> getRef ref)))
+                    Leaf n (Closed p) as cls ->
+                        Leaf n (Closed (setPair1 which p (z |> getRef ref)))
 
                     _ ->
                         t
@@ -444,9 +463,9 @@ extendAlpha =
     modify
         (\t ->
             case t of
-                Leaf n mc ->
+                Leaf n fin ->
                     Alpha n
-                        (Leaf defNode mc)
+                        (Leaf defNode fin)
 
                 _ ->
                     t
@@ -458,10 +477,10 @@ extendBeta =
     modify
         (\t ->
             case t of
-                Leaf n mc ->
+                Leaf n fin ->
                     Beta n
-                        (Leaf defNode mc)
-                        (Leaf defNode mc)
+                        (Leaf defNode fin)
+                        (Leaf defNode fin)
 
                 _ ->
                     t
@@ -470,7 +489,7 @@ extendBeta =
 
 delete : Zipper -> Zipper
 delete =
-    modify (\t -> Leaf defNode Nothing)
+    modify (\t -> Leaf defNode Unfinished)
 
 
 renumber : Tableau -> Tableau
@@ -510,8 +529,8 @@ fixClosedRefs z =
         |> modify
             (\t ->
                 case t of
-                    Leaf n (Just ( a, b )) ->
-                        Leaf n (Just ( fixedRef a z, fixedRef b z ))
+                    Leaf n (Closed ( a, b )) ->
+                        Leaf n (Closed ( fixedRef a z, fixedRef b z ))
 
                     _ ->
                         t
@@ -521,8 +540,8 @@ fixClosedRefs z =
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 t num =
     case t of
-        Leaf n mc ->
-            ( Leaf { n | num = num + 1 } mc, num + 1 )
+        Leaf n fin ->
+            ( Leaf { n | num = num + 1 } fin, num + 1 )
 
         Alpha n st ->
             let
@@ -591,19 +610,22 @@ indentedNode ind n =
         ++ indentedRef n.ref
 
 
-indentedClosed mc =
+indentedFinalization mc =
     case mc of
-        Nothing ->
+        Unfinished ->
             ""
 
-        Just ( a, b ) ->
+        Closed ( a, b ) ->
             "*(" ++ a.str ++ "," ++ b.str ++ ")"
+
+        OpenComplete ->
+            "OC"
 
 
 indented ind t =
     case t of
-        Leaf n mc ->
-            indentedNode ind n ++ " " ++ indentedClosed mc ++ "\n"
+        Leaf n fin ->
+            indentedNode ind n ++ " " ++ indentedFinalization fin ++ "\n"
 
         Alpha n ct ->
             indentedNode ind n ++ "\n" ++ indented (ind + 2) ct
@@ -645,7 +667,7 @@ depth t =
 
 
 fLeaf text =
-    Leaf { defNode | text = text } Nothing
+    Leaf { defNode | text = text } Unfinished
 
 
 fAlpha text ct =

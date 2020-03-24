@@ -24,11 +24,11 @@ isClosed z =
                 (isClosed (left z))
                 (isClosed (right z))
 
-        Leaf _ Nothing ->
-            isCorrectNode z |> Result.map (always False)
-
-        Leaf _ (Just ( r1, r2 )) ->
+        Leaf _ (Closed _) ->
             isCorrectNode z |> Result.map (always True)
+
+        Leaf _ _ ->
+            isCorrectNode z |> Result.map (always False)
 
 
 assumptions : Zipper -> List (Signed Formula)

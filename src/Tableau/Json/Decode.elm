@@ -35,7 +35,23 @@ node =
 leaf =
     map2 Tableau.Leaf
         (field "node" node)
-        (maybe (field "closed" closed))
+        finalization
+
+
+finalization =
+    oneOf [finClosed, finOpenComplete, finUnfinished]
+
+
+finClosed =
+    map Tableau.Closed (field "closed" closed)
+
+
+finOpenComplete =
+    field "openComplete" (succeed Tableau.OpenComplete)
+
+
+finUnfinished =
+    succeed Tableau.Unfinished
 
 
 alpha =
@@ -100,9 +116,9 @@ reRef z =
         |> Tableau.modify
             (\t ->
                 case t of
-                    Tableau.Leaf n (Just ( r1, r2 )) ->
+                    Tableau.Leaf n (Tableau.Closed ( r1, r2 )) ->
                         Tableau.Leaf n
-                            (Just
+                            (Tableau.Closed
                                 ( z |> Tableau.getRef r1.str
                                 , z |> Tableau.getRef r2.str
                                 )

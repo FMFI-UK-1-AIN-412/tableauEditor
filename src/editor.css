@@ -77,19 +77,30 @@
 
 /** delete button */
 button.delete {
-  padding: 0 0.3em;
+  padding: 0 0.3em 0.1em;
   margin-left: 0.5em;
   border: thin solid lightgray;
+  border-radius: 2px;
   background-color: inherit;
   color: gray;
   height: 100%;
 }
 button.delete:hover, button.delete:focus {
   color: white;
+  border-color: #a12;
   background-color: #a12;
 }
 
 .premise { background-color: #def; }
+
+.openComplete {
+  font-family: sans-serif;
+  font-size: 90%;
+  display: inline-block;
+  padding: .1em .25em 0;
+  /* background-color: #eee #dea;
+  border-radius: 2px; */
+}
 
 /*.syntaxProblem    { background-color: lightpink; }
 .semanticsProblem { background-color: rgb(255, 211, 131); }*/

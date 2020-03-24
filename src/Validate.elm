@@ -1,9 +1,10 @@
-module Validate exposing (Problem, ProblemType(..), always2, always3, areCloseRefsComplementary, areCorrectCloseRefs, areValidCloseRefs, betasHaveSameRef, checkFormula, checkPredicate, checkReffedFormula, error, isCorectTableau, isCorrectFormula, isCorrectNode, isCorrectRule, isValidFormula, isValidNode, isValidNodeRef, isValidRef, makeSemantic, parseProblem, resultFromBool, second, semanticsProblem, syntaxProblem, validateAlphaRule, validateBeta, validateBetaRuleLeft, validateBetaRuleRight, validateFormula, validateNodeRef, validateRef, validateReffedFormula)
+module Validate exposing (Problem, ProblemType(..), always2, always3, areCloseRefsComplementary, areCorrectCloseRefs, areValidCloseRefs, isCorrectOpenComplete, betasHaveSameRef, checkFormula, checkPredicate, checkReffedFormula, error, isCorectTableau, isCorrectFormula, isCorrectNode, isCorrectRule, isValidFormula, isValidNode, isValidNodeRef, isValidRef, makeSemantic, parseProblem, resultFromBool, second, semanticsProblem, syntaxProblem, validateAlphaRule, validateBeta, validateBetaRuleLeft, validateBetaRuleRight, validateFormula, validateNodeRef, validateRef, validateReffedFormula)
 
 import Errors
-import Formula
+import Formula exposing (Signed(..), Formula)
 import Parser
 import Tableau exposing (..)
+import Tableau.OpenComplete
 
 
 type ProblemType
@@ -40,6 +41,10 @@ second =
     \a b -> Tuple.second ( a, b )
 
 
+third a b c =
+    c
+
+
 always3 r _ _ _ =
     r
 
@@ -72,8 +77,9 @@ isCorrectNode z =
     isValidNode z
         |> Result.andThen
             (\_ ->
-                Errors.merge2 second
+                Errors.merge3 third
                     (isCorrectRule z)
+                    (isCorrectOpenComplete z)
                     (areCorrectCloseRefs z)
             )
 
@@ -97,7 +103,7 @@ isValidNodeRef z =
 
 areValidCloseRefs z =
     case zTableau z of
-        Leaf _ (Just ( r1, r2 )) ->
+        Leaf _ (Closed ( r1, r2 )) ->
             Errors.merge2 (always2 z)
                 (isValidRef "First close" r1 z)
                 (isValidRef "Second close" r2 z)
@@ -114,8 +120,25 @@ isValidRef str r z =
 
 areCorrectCloseRefs z =
     case zTableau z of
-        Leaf _ (Just ( r1, r2 )) ->
+        Leaf _ (Closed ( r1, r2 )) ->
             areCloseRefsComplementary r1 r2 z |> Result.map (always z)
+
+        _ ->
+            Ok z
+
+
+isCorrectOpenComplete z =
+    case zTableau z of
+        Leaf _ OpenComplete ->
+            Tableau.OpenComplete.branch z
+                |> Result.andThen
+                    (\b -> Tableau.OpenComplete.isOpen b
+                        && Tableau.OpenComplete.isComplete b
+                        |> resultFromBool z [])
+                |> Result.mapError (\_ ->
+                        semanticsProblem
+                            z
+                            "Branch is not open or not complete")
 
         _ ->
             Ok z
@@ -126,12 +149,12 @@ parseProblem z =
     Formula.errorString >> syntaxProblem z
 
 
-validateFormula : Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+validateFormula : Zipper -> Result (List Problem) (Signed Formula)
 validateFormula z =
     z |> zFormula |> Result.mapError (parseProblem z)
 
 
-validateReffedFormula : Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+validateReffedFormula : Zipper -> Result (List Problem) (Signed Formula)
 validateReffedFormula z =
     z |> zFormula |> Result.mapError (\e -> semanticsProblem z "Referenced formula is invalid")
 
@@ -155,7 +178,7 @@ checkFormula str z =
         |> Result.mapError (\_ -> semanticsProblem z (str ++ " is invalid."))
 
 
-checkReffedFormula : String -> Tableau.Ref -> Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+checkReffedFormula : String -> Tableau.Ref -> Zipper -> Result (List Problem) (Signed Formula)
 checkReffedFormula str r z =
     z
         |> getReffed r
