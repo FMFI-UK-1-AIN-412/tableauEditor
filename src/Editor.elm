@@ -7,6 +7,7 @@ import Browser
 import Html exposing (Attribute, Html, h1, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sub, sup)
 import Html.Attributes exposing (..)
 import Html.Events exposing (on, onClick, onInput, onBlur)
+import Html.Lazy
 import HtmlFormula exposing (htmlFormula)
 import Url
 import Json.Decode
@@ -214,13 +215,13 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [text "Tableau Editor"]
-        , viewTableau model.t
-        , problems model.t
-        , verdict model.t
+        , Html.Lazy.lazy viewTableau model.t
+        , Html.Lazy.lazy problems model.t
+        , Html.Lazy.lazy verdict model.t
         , p [ class "actions" ]
             [ button [ onClick Prettify ] [ text "Prettify formulas" ]
             , button [ onClick Print ] [ text "Print" ]
-            , jsonExportControl model.t
+            , Html.Lazy.lazy jsonExportControl model.t
             , jsonImportControl model
             ]
         , jsonImportError model
@@ -382,7 +383,7 @@ viewTableau tbl =
             Tableau.asTable tbl
     in
     table [ class "tableau" ]
-        (List.map2 tblRow
+        (List.map2 (Html.Lazy.lazy2 tblRow)
             (List.reverse <| List.range 1 (List.length t))
             t
         )
