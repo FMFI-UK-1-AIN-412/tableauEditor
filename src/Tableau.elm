@@ -1,4 +1,4 @@
-module Tableau exposing (Breadcrumbs, Cell, CellWidth, Closed, Finalization(..), Crumb(..), Node, Ref, Row, Table, Tableau(..), Zipper, above, asHeadedTable, asTable, children, defClosed, defNode, defRef, delete, depth, down, extendAlpha, extendBeta, fAlpha, fBeta, fLeaf, findAbove, fixClosedRefs, fixNodeRef, fixRefs, fixedRef, formula, getRef, getReffed, getReffedFormula, indented, indentedFinalization, indentedNode, indentedRef, left, makeClosed, makeOpenComplete, makeUnfinished, mapNode, maxNum, merge, modify, modifyNode, modifyRef, node, prettify, renumber, renumber2, right, setClosed, setFormula, setPair1, setRef, tl, top, tt, up, width, zFormula, zNode, zTableau, zWalkPost, zipper)
+module Tableau exposing (Breadcrumbs, Cell, CellWidth, Closed, Finalization(..), Crumb(..), Node, Ref, Row, Table, Tableau(..), Zipper, above, asHeadedTable, asTable, children, defClosed, defNode, defRef, delete, depth, down, extendAlpha, extendBeta, fAlpha, fBeta, fLeaf, findAbove, fixClosedRefs, fixNodeRef, fixRefs, fixedRef, formula, getRef, getReffed, getReffedFormula, indented, indentedFinalization, indentedNode, indentedRef, isAlpha, isBeta, isLeaf, isLeftChild, isPremise, isRightChild, isRoot, left, makeClosed, makeOpenComplete, makeUnfinished, mapNode, maxNum, merge, modify, modifyNode, modifyRef, node, prettify, renumber, renumber2, right, setClosed, setFormula, setPair1, setRef, tl, top, tt, up, width, zFormula, zNode, zTableau, zWalkPost, zipper)
 
 import Formula exposing (Formula, Signed(..))
 import Parser
@@ -488,8 +488,21 @@ extendBeta =
 
 
 delete : Zipper -> Zipper
-delete =
+delete z =
+    if isRoot z then
+        resetAndDeleteBelow z
+    else
+        deleteBelow (up z)
+
+
+resetAndDeleteBelow : Zipper -> Zipper
+resetAndDeleteBelow =
     modify (\t -> Leaf defNode Unfinished)
+
+
+deleteBelow : Zipper -> Zipper
+deleteBelow =
+    modify (\t -> Leaf (node t) Unfinished)
 
 
 renumber : Tableau -> Tableau
@@ -575,6 +588,70 @@ prettify =
                             n.text
             }
         )
+
+
+
+--
+-- tests
+--
+
+
+isRoot (_, bs) =
+    List.isEmpty bs
+
+
+isPremise z =
+    case z |> zNode |> .ref |> .up of
+        Just 0 ->
+            True
+
+        _ ->
+            False
+
+
+isAlpha ( t, _ ) =
+    case t of
+        Alpha _ _ ->
+            True
+
+        _ ->
+            False
+
+
+isBeta ( t, _ ) =
+    case t of
+        Beta _ _ _ ->
+            True
+
+        _ ->
+            False
+
+
+isLeaf ( t, _ ) =
+    case t of
+        Leaf _ _ ->
+            True
+
+        _ ->
+            False
+
+
+isLeftChild ( _, bs ) =
+    case bs of
+        BetaLeftCrumb _ _ :: _ ->
+            True
+
+        _ ->
+            False
+
+
+isRightChild ( _, bs ) =
+    case bs of
+        BetaRightCrumb _ _ :: _ ->
+            True
+
+        _ ->
+            False
 
 
 

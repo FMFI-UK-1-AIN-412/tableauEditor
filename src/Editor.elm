@@ -1,4 +1,4 @@
-port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, cache, init, isBeta, isPremise, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
+port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, cache, init, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
 
 import Errors
 import Formula exposing (Formula)
@@ -358,24 +358,6 @@ problemColor p =
             "yellow"
 
 
-isPremise z =
-    case z |> zNode |> .ref |> .up of
-        Just 0 ->
-            True
-
-        _ ->
-            False
-
-
-isBeta ( t, _ ) =
-    case t of
-        Beta _ _ _ ->
-            True
-
-        _ ->
-            False
-
-
 viewTableau : Tableau.Tableau -> Html Msg
 viewTableau tbl =
     let
@@ -411,16 +393,11 @@ tblCell depth tcell =
 
                 Just z ->
                     { content = viewFormula z :: expandControls z
-                    , height = let
-                                    ( t, bs ) =
-                                        z
-                                in
-                                case t of
-                                    Tableau.Leaf _ _ ->
-                                        depth + 1
-
-                                    _ ->
-                                        1
+                    , height =
+                        if isLeaf z then
+                            depth + 1
+                        else
+                            1
                     , classes = [ ( "premise", isPremise z )
                                 , ( "beta", isBeta z ) ]
                     , title = z
@@ -484,12 +461,17 @@ viewFormula z =
             ]
             []
         , text "]"
-        , deleteButton (Delete z)
+        , if isBeta (up z) then
+            deleteButton
+                [ title "Delete this node and its sibling" ]
+                (Delete z)
+          else
+            deleteButton [] (Delete z)
         ]
 
 
-deleteButton msg =
-    button [ class "delete", onClick msg ] [ text "×" ]
+deleteButton attrs msg =
+    button (class "delete" :: onClick msg :: attrs) [ text "×" ]
 
 
 expandControls z =
@@ -540,7 +522,7 @@ expandControls z =
                             , onBlur <| Cache
                             ]
                             []
-                        , deleteButton (MakeUnfinished z)
+                        , deleteButton [] (MakeUnfinished z)
                         ]
 
                     OpenComplete ->
@@ -557,7 +539,7 @@ expandControls z =
                             [ span
                                 (class ("openComplete " ++ cls) :: ttl)
                                 [ text "O&C" ]
-                            , deleteButton (MakeUnfinished z)
+                            , deleteButton [] (MakeUnfinished z)
                             ]
 
             Tableau.Alpha _ _ ->

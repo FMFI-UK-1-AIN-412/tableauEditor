@@ -27,6 +27,7 @@
 .formula {
   display: flex;
   align-items: baseline;
+  position: relative;
 }
 
 .formulaEdit {
@@ -79,8 +80,9 @@
 
 /** delete button */
 button.delete {
+  font-size: 83.333%;
   padding: 0 0.3em 0.1em;
-  margin-left: 0.5em;
+  margin-left: 0.3em;
   border: thin solid lightgray;
   border-radius: 2px;
   background-color: inherit;
