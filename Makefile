@@ -25,11 +25,11 @@ $(OUT_DIR)/index.html: index.html
 	mkdir -p $(OUT_DIR)
 	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))",' $< >$@
 
-$(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm)
+$(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm) $(wildcard $(SRC_DIR)/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*/*.elm)
 	mkdir -p $(OUT_DIR)
-	elm-make --yes $(ELM_MAIN)  --output=$@
+	elm make --yes $(ELM_MAIN) --output=$@
 
-$(OUT_DIR)/%: $(SRC_DIR)/$*
+$(OUT_DIR)/%: $(SRC_DIR)/%
 	mkdir -p $(OUT_DIR)
 	cp -av $(SRC_DIR)/$* $@
 
