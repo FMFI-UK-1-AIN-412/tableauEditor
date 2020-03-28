@@ -1,17 +1,18 @@
-port module Editor exposing (FileReaderPortData, Model, Msg(..), enableDebug, errorClass, expandControls, selectFile, fileContentRead, fileSelected, cache, init, jsonDataUri, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
+port module Editor exposing (JsonImport(..), Model, Msg(..), enableDebug, errorClass, expandControls, cache, init, jsonExportControl, jsonImportControl, jsonImportError, main, problemClass, problemColor, problemItem, problemList, problems, problemsClass, simpleUpdate, subscriptions, tblCell, tblRow, textVerdict, top, topRenumbered, update, verdict, view, viewFormula, viewTableau)
 
 import Errors
-import Formula exposing (Formula)
+import Formula
 import Help
 import Browser
-import Html exposing (Attribute, Html, h1, a, button, div, input, label, li, p, pre, span, table, td, text, tr, ul, var, sub, sup)
+import Html exposing (Html, h1, button, div, input, li, p, pre, span, table, td, text, tr, ul, var, sub, sup)
 import Html.Attributes exposing (..)
-import Html.Events exposing (on, onClick, onInput, onBlur)
+import Html.Events exposing (onClick, onInput, onBlur)
 import Html.Lazy
 import HtmlFormula exposing (htmlFormula)
-import Url
-import Json.Decode
-import Result
+import File exposing (File)
+import File.Select as Select
+import File.Download as Download
+import Task
 import Tableau exposing (..)
 import Tableau.Closed exposing (assumptions, isClosed)
 import Tableau.Json.Decode
@@ -34,11 +35,15 @@ main =
         }
 
 
+type JsonImport
+    = None
+    | InProgress String
+    | ImportErr String
+
+
 type alias Model =
     { t : Tableau.Tableau
-    , jsonImporting : Bool
-    , jsonImportError : String
-    , jsonImportId : String
+    , jsonImport : JsonImport
     }
 
 init : Maybe String -> (Model, Cmd Msg)
@@ -59,9 +64,7 @@ init mts =
     in
     
     ( { t = initT
-      , jsonImporting = False
-      , jsonImportError = ""
-      , jsonImportId = "importJson"
+      , jsonImport = None
       }
     , Cmd.none
     )
@@ -80,24 +83,10 @@ type Msg
     | Prettify
     | Print
     | SelectJson
-    | JsonSelected
-    | JsonRead FileReaderPortData
+    | JsonSelected File
+    | JsonRead String
+    | Export
     | Cache
-
-
-type alias FileReaderPortData =
-    { contents : String
-    , filename : String
-    }
-
-
-port selectFile : String -> Cmd msg
-
-
-port fileSelected : String -> Cmd msg
-
-
-port fileContentRead : (FileReaderPortData -> msg) -> Sub msg
 
 
 port print : () -> Cmd msg
@@ -107,8 +96,8 @@ port cache : String -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    fileContentRead JsonRead
+subscriptions _ =
+    Sub.none
 
 
 top =
@@ -153,57 +142,68 @@ simpleUpdate msg model =
             { model | t = Tableau.prettify model.t }
 
         -- actually handled upstairs
-        JsonRead { contents } ->
-            case contents |> Tableau.Json.Decode.decode of
-                Ok t ->
-                    { model | jsonImporting = False, t = t }
-
-                Err e ->
-                    { model | jsonImporting = False, jsonImportError = toString e }
-
         SelectJson ->
             model
 
-        JsonSelected ->
+        JsonRead _ ->
+            model
+
+        JsonSelected _ ->
             model
 
         Print ->
             model
 
         Cache ->
+            model
+        
+        Export ->
             model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        JsonSelected ->
-            ( { model | jsonImportError = "", jsonImporting = True }, fileSelected model.jsonImportId )
-
         SelectJson ->
-            ( model, selectFile model.jsonImportId )
+            ( model
+            , Select.file ["application/json"] JsonSelected
+            )
 
-        JsonRead { contents } ->
-            case contents |> Tableau.Json.Decode.decode of
+        JsonSelected file ->
+            ( { model | jsonImport = InProgress (File.name file) }
+            , Task.perform JsonRead (File.toString file)
+            )
+
+        JsonRead content ->
+            case content |> Tableau.Json.Decode.decode of
                 Ok t ->
-                    ( { model | jsonImporting = False, t = t }
-                    , cache contents
+                    ( { model | jsonImport = None, t = t }
+                    , cache content
                     )
 
                 Err e ->
-                    ( { model
-                        | jsonImporting = False
-                        , jsonImportError = toString e }
-                    , Cmd.none)
+                    ( { model | jsonImport = ImportErr (toString e) }
+                    , Cmd.none
+                    )
+
+        Export ->
+            ( model
+            , Download.string
+                "tableau.json"
+                "application/json"
+                <| Tableau.Json.Encode.encode 2 model.t)
 
         Print ->
-            ( model, print () )
+            ( model
+            , print () )
 
         Cache ->
-            ( model, cache (Tableau.Json.Encode.encode 2 model.t) )
+            ( model
+            , cache (Tableau.Json.Encode.encode 2 model.t) )
 
         _ ->
-            ( simpleUpdate msg { model | jsonImportError = "" }, Cmd.none )
+            ( simpleUpdate msg { model | jsonImport = None }
+            , Cmd.none )
 
 documentView : Model -> Browser.Document Msg
 documentView model =
@@ -551,17 +551,8 @@ expandControls z =
     ]
 
 
-jsonDataUri json =
-    "data:application/json;charset=utf-8," ++ Url.percentEncode json
-
-
 jsonExportControl t =
-    a
-        [ type_ "button"
-        , href <| jsonDataUri <| Tableau.Json.Encode.encode 2 t
-        , download "tableau.json"
-        ]
-        [ button [] [ text "Export as JSON" ] ]
+    button [onClick Export] [ text "Export as JSON" ]
 
 
 
@@ -576,35 +567,24 @@ jsonExportControl t =
 
 jsonImportControl : Model -> Html Msg
 jsonImportControl model =
-    if model.jsonImporting
-    then
-        text "Loading file..."
-    else
-        label [ for model.jsonImportId ]
-            [ button
+    case model.jsonImport of
+        InProgress fname ->
+            text <| "Importing tableau from file " ++ fname ++ "..."
+        _ ->
+            button
                 [ onClick SelectJson ]
-                [ text "Import from JSON"
-                ]
-            , input
-                [ type_ "file"
-                , id model.jsonImportId
-                , accept "application/json"
-                , on "change"
-                    (Json.Decode.succeed JsonSelected)
-                ]
-                []
-            ]
+                [ text "Import from JSON" ]
 
 
 jsonImportError model =
-    case model.jsonImportError of
-        "" ->
-            div [] []
-
-        _ ->
+    case model.jsonImport of
+        ImportErr e ->
             p
                 [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]
+                [ text <| "Error importing tableau: " ++ e ]
+
+        _ -> 
+            div [] []
 
 
 
