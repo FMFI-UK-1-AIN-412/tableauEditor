@@ -7,28 +7,28 @@ PUBLISH_URL = danka.ii.fmph.uniba.sk:/home/webmaster/dai/courses/lpi/tableauEdit
 
 SRC_DIR = src
 OUT_DIR = build
-STATIC_OUT = $(foreach f, $(STATIC_FILES), build/$(f))
+STATIC_OUT = $(foreach f, $(STATIC_FILES), $(OUT_DIR)/$(f))
 ELM_OUT = $(OUT_DIR)/$(basename $(notdir $(ELM_MAIN))).js
 
 
 
 build: $(STATIC_OUT) $(ELM_OUT)
 publish: build
-	rsync -av $(OUT_DIR)/ $(PUBLISH_URL)
+	rsync -avi --progress $(OUT_DIR)/ $(PUBLISH_URL)
 clean:
 	rm -r $(OUT_DIR)
 .PHONY: build publish clean
 
 
-$(OUT_DIR)/index.html: $(SRC_DIR)/index.html
+$(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/editor.css $(OUT_DIR)/Editor.js
 	mkdir -p $(OUT_DIR)
-	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))",' $< >$@
+	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))?'"$$(sha1sum $(ELM_OUT) | grep -o '^[0-9a-f]\+')"'",; s,href="editor\.css",href="editor.css?'"$$(sha1sum $(OUT_DIR)/editor.css | grep -o '^[0-9a-f]\+')"'",' $< >$@
 
 $(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm)
 	mkdir -p $(OUT_DIR)
-	elm-make --yes $(ELM_MAIN)  --output=$@
+	elm make $(ELM_MAIN)  --output=$@
 
-$(OUT_DIR)/%: $(SRC_DIR)/$*
+$(OUT_DIR)/%: $(SRC_DIR)/%
 	mkdir -p $(OUT_DIR)
 	cp -av $(SRC_DIR)/$* $@
 

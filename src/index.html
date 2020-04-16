@@ -15,7 +15,10 @@
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
     }
-    var app = Elm.Editor.fullscreen();
+    var cachedTableau = localStorage.getItem('oldTableauEditor');
+    var app = Elm.Editor.init({
+      flags: cachedTableau ? cachedTableau : null
+    });
     app.ports.fileSelected.subscribe(function (id) {
       var node = document.getElementById(id);
       if (node === null) {
@@ -36,6 +39,19 @@
         app.ports.fileContentRead.send(portData);
       });
       reader.readAsDataURL(file);
+    });
+    app.ports.selectFile.subscribe(function (id) {
+      var node = document.getElementById(id);
+      if (node === null) {
+        return;
+      }
+      node.click();
+    });
+    app.ports.print.subscribe(function () {
+      window.print();
+    });
+    app.ports.cache.subscribe(function (tableau) {
+      localStorage.setItem('oldTableauEditor', tableau);
     });
   </script>
 </html>
