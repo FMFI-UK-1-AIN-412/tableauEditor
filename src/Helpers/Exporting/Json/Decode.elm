@@ -133,7 +133,7 @@ tableau =
         )
 
 
-decode : String -> Result String Tableau.Tableau
+decode : String -> Result Error Tableau.Tableau
 decode s =
     let
         fn =

@@ -14,7 +14,7 @@ hasReference z =
 
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
-    ((Zipper.zNode z).id |> toString) == (Zipper.zNode z).reference.str
+    ((Zipper.zNode z).id |> String.fromInt) == (Zipper.zNode z).reference.str
 
 
 {-| Like `Result.map2` but merges errors (which must be lists).

@@ -31,24 +31,24 @@ semanticsProblem z s =
     [ { typ = Semantics, msg = s, zip = z } ]
 
 
-error : x -> Result x a -> x
-error def r =
-    case r of
-        Err x ->
-            x
+-- error : x -> Result x a -> x
+-- error def r =
+--     case r of
+--         Err x ->
+--             x
 
-        Ok _ ->
-            def
-
-
-(<++) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> List Problem) -> ( List Problem, Zipper.Zipper )
-(<++) ( lp, z ) f =
-    ( lp ++ f z, z )
+--         Ok _ ->
+--             def
 
 
-(<++?) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> Result (List Problem) a) -> ( List Problem, Zipper.Zipper )
-(<++?) ( lp, z ) f =
-    ( lp ++ error [] (f z), z )
+-- (<++) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> List Problem) -> ( List Problem, Zipper.Zipper )
+-- (<++) ( lp, z ) f =
+--     ( lp ++ f z, z )
+
+
+-- (<++?) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> Result (List Problem) a) -> ( List Problem, Zipper.Zipper )
+-- (<++?) ( lp, z ) f =
+--     ( lp ++ error [] (f z), z )
 
 
 second : a1 -> a2 -> a2
@@ -145,7 +145,7 @@ areCorrectCloseRefs z =
             Ok z
 
 
-parseProblem : Zipper.Zipper -> Parser.Error -> List Problem
+parseProblem : Zipper.Zipper -> (List Parser.DeadEnd) -> List Problem
 parseProblem z =
     Formula.errorString >> syntaxProblem z
 
@@ -240,7 +240,7 @@ isCorrectRule (( t, bs ) as z) =
 -- Top of the tableau, this must be a premise
 
 
-makeSemantic : List { b | typ : a } -> List { b | typ : ProblemType }
+makeSemantic : List { b | typ : ProblemType } -> List { b | typ : ProblemType }
 makeSemantic =
     List.map (\p -> { p | typ = Semantics })
 
@@ -284,7 +284,7 @@ validateAlphaRule z =
             (checkPredicate (\( a, b ) -> Formula.isSignedSubformulaOf a b)
                 (semanticsProblem z
                     ("Is not an α-subformula of ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
                 )
@@ -436,7 +436,7 @@ isNewVariableFunction variable =
             False
 
 
-getTermFromResult : Result Parser.Error Formula.Term -> Formula.Term
+getTermFromResult : Result (List Parser.DeadEnd) Formula.Term -> Formula.Term
 getTermFromResult r =
     case r of
         Ok term ->
@@ -463,13 +463,13 @@ substitutionIsValid substitution new original =
             -> Formula.Substitution
             -> Formula.Signed Formula.Formula
             -> Formula.Signed Formula.Formula
-        applyToSigned function substitution sf =
+        applyToSigned function subst sf =
             case sf of
                 Formula.T formula ->
-                    Formula.T (checkSubstitution (function substitution formula))
+                    Formula.T (checkSubstitution (function subst formula))
 
                 Formula.F formula ->
-                    Formula.F (checkSubstitution (function substitution formula))
+                    Formula.F (checkSubstitution (function subst formula))
 
         checkSubstitution : Result String Formula.Formula -> Formula.Formula
         checkSubstitution r =
@@ -484,7 +484,7 @@ substitutionIsValid substitution new original =
 
 
 isSubstituable : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
-isSubstituable s new original =
+isSubstituable substitution new original =
     let
         removeSign : Formula.Substitution -> Formula.Signed Formula.Formula -> Bool
         removeSign s sf =
@@ -496,35 +496,35 @@ isSubstituable s new original =
                     removeQuantifierAndSubstitute s formula
 
         removeQuantifierAndSubstitute : Formula.Substitution -> Formula.Formula -> Bool
-        removeQuantifierAndSubstitute substitution original =
-            case original of
-                Formula.ForAll s f ->
-                    if List.member s (Dict.keys substitution) then
-                        removeQuantifierAndSubstitute substitution f
+        removeQuantifierAndSubstitute s f =
+            case f of
+                Formula.ForAll v subf ->
+                    if List.member v (Dict.keys s) then
+                        removeQuantifierAndSubstitute s subf
 
                     else
-                        trySubs substitution original
+                        trySubs substitution f
 
-                Formula.Exists s f ->
-                    if List.member s (Dict.keys substitution) then
-                        removeQuantifierAndSubstitute substitution f
+                Formula.Exists v subf ->
+                    if List.member v (Dict.keys s) then
+                        removeQuantifierAndSubstitute s subf
 
                     else
-                        trySubs substitution original
+                        trySubs substitution f
 
                 _ ->
-                    trySubs substitution original
+                    trySubs substitution f
 
         trySubs : Formula.Substitution -> Formula.Formula -> Bool
         trySubs s f =
             case Formula.substitute s f of
-                Ok f ->
+                Ok _ ->
                     True
 
                 Err msg ->
                     False
     in
-    removeSign s original
+    removeSign substitution original
 
 
 validateGammaRule :
@@ -544,7 +544,7 @@ validateGammaRule z =
                 isPointingOnSelf
                 (semanticsProblem z "γ can not be premise")
             )
-        |> Result.andThen (\z -> getReffedSignedFormula z)
+        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substituable
@@ -577,7 +577,7 @@ validateGammaRule z =
                                 |> Maybe.withDefault ""
                            )
                         ++ "' is bound in referrenced formula ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ "). Choose another variable."
                     )
                 )
@@ -628,7 +628,7 @@ validateGammaRule z =
                                 |> Maybe.withDefault ""
                            )
                         ++ "' from ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
                 )
@@ -678,7 +678,7 @@ validateDeltaRule z =
                 isPointingOnSelf
                 (semanticsProblem z "delta can not be premise")
             )
-        |> Result.andThen (\z -> getReffedSignedFormula z)
+        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
         |> Result.map (always z)
         |> Result.andThen
             -- checking existing variable above + if new constant is variable or function
@@ -688,7 +688,7 @@ validateDeltaRule z =
                     "Your new variable can't be empty or function."
                 )
             )
-        |> Result.andThen (\z -> getReffedSignedFormula z)
+        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substitutable
@@ -721,7 +721,7 @@ validateDeltaRule z =
                                 |> Maybe.withDefault ""
                            )
                         ++ "' is bound in referrenced formula ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ "). Choose another variable."
                     )
                 )
@@ -772,7 +772,7 @@ validateDeltaRule z =
                                 |> Maybe.withDefault ""
                            )
                         ++ "' from ("
-                        ++ toString (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+                        ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
                         ++ ")."
                     )
                 )

@@ -47,10 +47,7 @@ jsonTblList tableau =
             [ ( "type", string "closed" ) ]
                 ++ jsonNodeList tableau.node
                 ++ [ ( "closed"
-                     , list
-                        [ jsonRef r1
-                        , jsonRef r2
-                        ]
+                     , list jsonRef [r1, r2]
                      )
                    ]
 

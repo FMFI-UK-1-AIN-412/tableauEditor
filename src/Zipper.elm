@@ -134,7 +134,7 @@ above n z =
         0 ->
             z
 
-        n ->
+        _ ->
             above (n - 1) (up z)
 
 
@@ -183,16 +183,16 @@ zWalkPost f (( t, bs ) as z) =
         Closed _ _ ->
             f z
 
-        Alpha t ->
+        Alpha _ ->
             z |> down |> zWalkPost f |> up |> f
 
         Beta tl tr ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
-        Gamma t subst ->
+        Gamma _ subst ->
             z |> down |> zWalkPost f |> up |> f
 
-        Delta t subst ->
+        Delta _ subst ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -206,13 +206,13 @@ fixRefs =
 
 
 getFixedRef : Ref -> Zipper -> Ref
-getFixedRef ({ str, up } as ref) z =
-    case up of
+getFixedRef ref z =
+    case ref.up of
         Nothing ->
             { ref | str = "" }
 
         Just n ->
-            { ref | str = z |> above n |> zNode |> .id |> toString }
+            { ref | str = z |> above n |> zNode |> .id |> String.fromInt }
 
 
 fixNodeRef : Zipper -> Zipper
@@ -363,7 +363,6 @@ getRef ref z =
     , up =
         ref
             |> String.toInt
-            |> Result.toMaybe
             |> Maybe.andThen (\a -> findAbove a z)
     }
 
@@ -642,8 +641,8 @@ deleteMe (( t, fatherbs ) as zip) =
                     Closed r1 r2 ->
                         Tableau defNode Open
 
-                    Alpha t ->
-                        t
+                    Alpha st ->
+                        st
 
                     Beta lt rt ->
                         -- mozem zmazat iba ked jedna z biet sa moze stat alfou
@@ -656,11 +655,11 @@ deleteMe (( t, fatherbs ) as zip) =
                         else
                             tableau
 
-                    Gamma t s ->
-                        t
+                    Gamma st s ->
+                        st
 
-                    Delta t s ->
-                        t
+                    Delta st s ->
+                        st
             )
             zip
 
@@ -709,14 +708,14 @@ deleteMe (( t, fatherbs ) as zip) =
                             Closed r1 r2 ->
                                 Tableau tableau.node Open
 
-                            Alpha t ->
-                                Tableau tableau.node t.ext
+                            Alpha st ->
+                                Tableau tableau.node st.ext
 
-                            Gamma t s ->
-                                Tableau tableau.node t.ext
+                            Gamma st s ->
+                                Tableau tableau.node st.ext
 
-                            Delta t s ->
-                                Tableau tableau.node t.ext
+                            Delta st s ->
+                                Tableau tableau.node st.ext
 
                             _ ->
                                 tableau

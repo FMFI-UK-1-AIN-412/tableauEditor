@@ -1,5 +1,7 @@
-port module Editor exposing (..)
+module Editor exposing (main)
+--, FileReaderPortData, fileContentRead, fileSelected
 
+import Browser
 import Errors
 import Formula
 import Helper
@@ -9,7 +11,7 @@ import Helpers.Exporting.Ports exposing (FileReaderPortData, fileContentRead, fi
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Http
+-- TOOD Export import Http
 import Json.Decode
 import Rules exposing (..)
 import Tableau exposing (..)
@@ -18,9 +20,9 @@ import Validate
 import Zipper exposing (..)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.document
         { init = init
         , update = update
         , view = view
@@ -37,8 +39,8 @@ type alias Model =
         }
 
 
-init : ( Model, Cmd msg )
-init =
+init : () -> ( Model, Cmd msg )
+init _ =
     ( UndoList.fresh
         { tableau =
             { node =
@@ -199,30 +201,34 @@ simpleUpdate msg model =
                         { model | jsonImporting = False, tableau = t }
 
                     Err e ->
-                        { model | jsonImporting = False, jsonImportError = toString e }
+                        { model | jsonImporting = False, jsonImportError = Json.Decode.errorToString e }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
         )
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view ({ present } as model) =
-    div [ class "tableau" ]
-        [ div [ class "actions" ]
-            [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-            , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
-            , jsonExportControl present.tableau
-            , jsonImportControl present.jsonImporting present.jsonImportId
-            , button [ class "button", onClick Undo ] [ text "Undo" ]
-            , button [ class "button", onClick Redo ] [ text "Redo" ]
+    { title = "Tableau Editor"
+    , body =
+        [ div [ class "tableau" ]
+            [ div [ class "actions" ]
+                [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+                , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+                , jsonExportControl present.tableau
+                , jsonImportControl present.jsonImporting present.jsonImportId
+                , button [ class "button", onClick Undo ] [ text "Undo" ]
+                , button [ class "button", onClick Redo ] [ text "Redo" ]
+                ]
+            , jsonImportError present
+            , viewNode (Zipper.zipper present.tableau)
+            , verdict present.tableau
+            , problems present.tableau
+            , Rules.help
             ]
-        , jsonImportError present
-        , viewNode (Zipper.zipper present.tableau)
-        , verdict present.tableau
-        , problems present.tableau
-        , Rules.help
         ]
+    }
 
 
 viewNode : Zipper.Zipper -> Html Msg
@@ -233,7 +239,7 @@ viewNode z =
     in
     div
         [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
+        [ text <| "(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")"
         , input
             [ classList
                 [ ( "formulaInput", True )
@@ -278,7 +284,7 @@ viewSubsNode z =
     in
     div
         [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
+        [ text <| "(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")"
         , input
             [ classList
                 [ ( "formulaInputSubst", True )
@@ -300,7 +306,7 @@ viewSubsNode z =
             , onInput <| ChangeVariable z
             ]
             []
-        , text "->"
+        , text "→"
         , input
             [ classList
                 [ ( "substitutedVariable", True )
@@ -539,7 +545,7 @@ problemItem : Validate.Problem -> Html Msg
 problemItem pi =
     li [ class (problemClass pi) ]
         [ text "("
-        , text <| toString <| .id <| Zipper.zNode <| pi.zip
+        , text <| String.fromInt <| .id <| Zipper.zNode <| pi.zip
         , text ") "
         , text <| pi.msg
         ]
@@ -567,7 +573,7 @@ problemClass { typ } =
 
 jsonDataUri : String -> String
 jsonDataUri json =
-    "data:application/json;charset=utf-8," ++ Http.encodeUri json
+    "data:application/json;charset=utf-8," -- TODO ++ Http.encodeUri json
 
 
 jsonExportControl : Tableau -> Html msg
@@ -575,7 +581,7 @@ jsonExportControl t =
     a
         [ type_ "button"
         , href <| jsonDataUri <| Helpers.Exporting.Json.Encode.encode 2 t
-        , downloadAs "tableau.json"
+        -- TODO , downloadAs "tableau.json"
         ]
         [ button [ class "button" ] [ text "Export as JSON" ] ]
 
@@ -619,7 +625,7 @@ jsonImportError model =
         _ ->
             p
                 [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]
+                [ text <| "Error importing tableau: " ++ model.jsonImportError ]
 
 
 verdict : Tableau -> Html msg
