@@ -6,6 +6,7 @@
 
 .formula {
 	display: block;
+	border-top: 0.5px solid transparent;
 }
 
 .beta {
@@ -20,43 +21,72 @@
 	display: inline-block;
 	min-width: 20px;
 	flex-grow: 1;
+	border-top: 0.5px solid black;
+	border-left: 0.5px solid black;
+	padding-left: 2.25px;
+}
+.beta > .formula:first-child {
+	border-left: none;
+	border-right: 0.5px solid black;
+	padding-left: 0;
+	padding-right: 2.25px;
+}
+
+.inputGroup {
+	display: flex;
+	margin-bottom: 0.125em;
+	margin-bottom: 0.125rem;
 }
 
 .formulaId {
-	width: 10px;
+	width: 0.625em;
 }
 
-.formulaInput {
-	flex-grow: 1;
-	width: calc(100% - 85px);
-}
-
-.formulaInputSubst {
-	flex-grow: 1;
-	width: calc(100% - 208px);
-}
-
-.substitutedVariable {
-	width: 45px;
-}
-
-.substitutedConstant {
-	width: 45px;
-}
-
-.formulaReference {
-	width: 11px;
-}
-
-.formulaInput, .formulaReference, .formulaInputSubst, .substitutedVariable, .substitutedConstant {
+.textInput {
 	text-align: center;
 	background-color: inherit;
 	border: 0;
-	border-bottom: thin dashed lightgray;
+	outline: 0;
+	padding-bottom: 1px;
+	border-bottom: 1px dashed lightgray;
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+}
+
+.textInput:focus {
+	background-color: rgba(0, 0, 0, 0.05);
+	padding-bottom: 0;
+	border-bottom: 2px solid #16a;
+}
+  
+.textInput:hover {
+	background-color: rgba(0, 0, 0, 0.075);
+	border-bottom-style: solid;
+}
+  
+.textInput:active {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-bottom-style: solid;
+}
+  
+.textInputFormula, .textInputFormulaWithSubst {
+	flex-grow: 1;
+	/* width: calc(100% - 5rem); */
+}
+
+.textInputFormulaWithSubst {
+	/* width: calc(100% - 11.25rem); */
+}
+
+.textInputVariable, .textInputTerm, .textInputReference {
+	flex: none;
+	min-width: 1rem;
 }
 
 .expandControls {
 	text-align: center;
+	margin-bottom: 0.125em;
+	margin-bottom: 0.125rem;
 }
 
 .actions button {
@@ -85,8 +115,8 @@
 
 .nodeProblems {
 	text-align: center;
-	color: #ff8b31;
-	font-weight: 900;
+	color: hsl(36, 100%, 40%);
+	font-weight: bold;
 	font-size: 12px;
 }
 
@@ -105,15 +135,15 @@
 }
 
 .onclick-menu.del:before {
-	content: "Delete";
+	content: "Delete ▾";
 }
 
 .onclick-menu.change:before {
-	content: "Change";
+	content: "▾";
 }
 
 .onclick-menu.add:before {
-	content: "Add";
+	content: "Add ▾";
 	margin-left: 5px;
 }
 
@@ -211,6 +241,7 @@ Eye candy
 	cursor: pointer;
 }
 .onclick-menu-content button:hover {
+	background-color: hsl(210, 20%, 45%);
 	color: #ff8c31;
 }
 
@@ -228,11 +259,50 @@ button.delete {
 	color: gray;
 }
 
-.premise { background-color: #def; }
+.premise {
+	background-color: #ddeeff;
+}
+.premise:focus.textInput {
+	background-color: #d2e8ff;
+}
+.premise:hover.textInput {
+	background-color: #c7e3ff;
+}
+.premise:active.textInput {
+	background-color: #bddeff;
+}
 
-.syntaxProblem    { background-color: #ff8c31; }
-.semanticsProblem { background-color: #ff8c3170; }
-
+.syntaxProblem {
+	background: rgb(255, 182, 193, 0.333);
+}
+.semanticsProblem {
+	background: rgba(255,211,131,0.333);
+}
+.syntaxProblem:focus.textInput {
+	background: rgb(255, 182, 193, 0.5);
+  }
+.semanticsProblem:focus.textInput {
+	background: rgba(255,211,131,0.5);
+  }
+.syntaxProblem:hover.textInput {
+	background: rgb(255, 182, 193, 0.667);
+  }
+.semanticsProblem:hover.textInput {
+	background: rgba(255,211,131,0.667);
+}
+.syntaxProblem:active.textInput {
+	background: rgb(255, 182, 193, 0.833);
+}
+.semanticsProblem:active.textInput {
+	background: rgba(255,211,131,0.833);
+}
+.syntaxProblem.textInput {
+	border-bottom-color: #a12;
+}
+.semanticsProblem.textInput {
+	border-bottom-color: #c82;
+}
+  
 .jsonImportError {
 	color: #ff8c31;
 	font-size: 14px;
@@ -245,10 +315,28 @@ button.delete {
 }
 
 .rulesHelp .rule {
-	display: inline-block;
-	padding: 0.5em;
+	display: inline-table;
+	border-collapse: collapse;
+	margin: 0.5em;
 	text-align: center;
-	vertical-align: top;
+	vertical-align: baseline;
+}
+
+.rulesHelp .rule td, .rulesHelp .rule th {
+	border: initial;
+	padding: .125em;
+}
+
+.rulesHelp .rule td {
+	border-left: .5px solid black;
+}
+
+.rulesHelp .rule td:first-child {
+	border-left: none;
+}
+
+.rulesHelp .rule tr:first-child {
+	border-bottom: .5px solid black;
 }
 
 .rulesHelpTable {
@@ -258,7 +346,7 @@ button.delete {
 
 .rulesHelpTable th, td {
 	text-align: center;
-	padding: 0px;
+	padding: .25em 0px;
 	border-bottom: 1px solid #ddd;
 	max-width: 400px;
 }
@@ -305,7 +393,7 @@ button.delete {
 	.closed {
 		display: inline-block;
 	}
-	.formulaEdit, .refEdit {
+	.textInput {
 		border-bottom: none;
 	}
 	/* Print color backgrounds for webkit browsers */

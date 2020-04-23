@@ -324,37 +324,114 @@ view ({ present } as model) =
 
 viewNode : Zipper.Zipper -> Html Msg
 viewNode z =
-    let
-        ( tableau, bs ) =
-            z
-    in
     div
         [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")"
-        , input
-            [ classList
-                [ ( "formulaInput", True )
-                , ( "premise", Helper.isPremise z )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (Zipper.zNode z).value
-            , type_ "text"
-            , onInput <| ChangeText z
-            ]
-            []
-        , text "["
-        , input
-            [ class "formulaReference"
-            , value (Zipper.zNode z).reference.str
-            , onInput <| ChangeRef z
-            ]
-            []
-        , text "]"
-        , viewButtonsAppearanceControlls z
+        [ viewNodeInputs identity z
         , singleNodeProblems z
         , viewControls z
         , viewChildren z
         ]
+
+
+viewSubsNode : Zipper.Zipper -> Html Msg
+viewSubsNode z =
+    div [ class "formula" ]
+        [ viewNodeInputs
+            (\rest -> text "{"
+            :: autoSizeInput
+                (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
+                [ classList
+                    [ ( "textInput textInputVariable", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , onInput <| ChangeVariable z
+                ]
+            :: text "→"
+            :: autoSizeInput
+                (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
+                [ classList
+                    [ ( "textInput textInputTerm", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , onInput <| ChangeTerm z
+                ]
+            :: text "}"
+            :: rest
+            )
+            z
+        , singleNodeProblems z
+        , viewControls z
+        , viewChildren z
+        ]
+
+
+viewNodeInputs : (List (Html Msg) -> List (Html Msg)) -> Zipper.Zipper
+    -> Html Msg
+viewNodeInputs additional z =
+    div [ class "inputGroup" ]
+            ( text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
+            :: autoSizeInput
+                (Zipper.zNode z).value
+                [ classList
+                    [ ( "textInput textInputFormula", True )
+                    , ( "premise", Helper.isPremise z )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , type_ "text"
+                , onInput <| ChangeText z
+                ]
+            :: viewRuleType z
+            :: div [ class "onclick-menu change", tabindex 0 ]
+                [ ul [ class "onclick-menu-content" ]
+                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
+                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
+                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
+                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
+                    ]
+                ]
+            :: text "["
+            :: autoSizeInput
+                (Zipper.zNode z).reference.str
+                [ class "textInput textInputReference"
+                , onInput <| ChangeRef z
+                ]
+            :: text "]"
+            :: additional
+                [ viewButtonsAppearanceControlls z ]
+            )
+
+
+autoSizeInput : String -> List (Attribute Msg) -> Html Msg
+autoSizeInput val attrs =
+    input
+        ( type_ "text"
+        :: value val
+        -- :: size (String.length val + 1)
+        :: size ((String.length val * 5 + 9) // 6)
+        :: onBlur Cache
+        :: attrs
+        )
+        []
+
+
+viewRuleType : Zipper.Zipper -> Html Msg
+viewRuleType z =
+    if Helper.isPremise z then
+        span [] [ var [] [ text "S" ], sup [] [ text "+" ] ]
+    else
+        case (Zipper.zTableau <| Zipper.up z).ext of
+            Open ->
+                text "O"
+            Closed _ _ ->
+                text "C"
+            Alpha _ ->
+                text "α"
+            Beta _ _ ->
+                text "β"
+            Gamma _ _ ->
+                text "γ"
+            Delta _ _ ->
+                text "δ"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -365,62 +442,6 @@ viewButtonsAppearanceControlls z =
 
         _ ->
             button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "⚙" ]
-
-
-viewSubsNode : Zipper.Zipper -> Html Msg
-viewSubsNode z =
-    let
-        ( tableau, bs ) =
-            z
-    in
-    div
-        [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")"
-        , input
-            [ classList
-                [ ( "formulaInputSubst", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (Zipper.zNode z).value
-            , type_ "text"
-            , onInput <| ChangeText z
-            ]
-            []
-        , text "{"
-        , input
-            [ classList
-                [ ( "substitutedConstant", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
-            , type_ "text"
-            , onInput <| ChangeVariable z
-            ]
-            []
-        , text "→"
-        , input
-            [ classList
-                [ ( "substitutedVariable", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
-            , type_ "text"
-            , onInput <| ChangeTerm z
-            ]
-            []
-        , text "}["
-        , input
-            [ class "formulaReference"
-            , value (Zipper.zNode z).reference.str
-            , onInput <| ChangeRef z
-            ]
-            []
-        , text "]"
-        , viewButtonsAppearanceControlls z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
-        ]
 
 
 viewChildren : Zipper.Zipper -> Html Msg
@@ -479,11 +500,7 @@ viewClosed z =
 
 
 viewControls : Zipper.Zipper -> Html Msg
-viewControls z =
-    let
-        ( t, bs ) =
-            z
-    in
+viewControls ( ( t, _ )  as z ) =
     div [ class "expandControls" ]
         (case t.ext of
             Tableau.Closed r1 r2 ->
@@ -495,102 +512,84 @@ viewControls z =
                         problemsClass <| Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
 
                     ref2Cls =
-                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r2 z ++ compl
+                        problemsClass <| Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
                 in
                 [ text "* "
-                , input
-                    [ class ("closed button " ++ ref1Cls)
+                , autoSizeInput r1.str
+                    [ class ("textInput closed " ++ ref1Cls)
                     , type_ "text"
                     , placeholder "Ref"
-                    , size 1
-                    , value r1.str
                     , onInput <| SetClosed 0 z
                     ]
-                    []
-                , input
-                    [ class ("closed button " ++ ref2Cls)
-                    , type_ "text"
+                , text " "
+                , autoSizeInput r2.str
+                    [ class ("textInput closed " ++ ref2Cls)
                     , placeholder "Ref"
-                    , size 1
-                    , value r2.str
                     , onInput <| SetClosed 1 z
                     ]
-                    []
                 , button [ class "button", onClick (MakeOpen z) ] [ text "Open" ]
                 ]
 
             _ ->
                 let
                     deleteMeButton =
-                        case (z |> Zipper.up) == z of
-                            False ->
-                                case z |> Zipper.up |> Zipper.zTableau |> .ext of
-                                    Beta _ _ ->
-                                        case t.node.value of
-                                            "" ->
-                                                case t.ext of
-                                                    Open ->
-                                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                        if (z |> Zipper.up) /= z then
+                            case z |> Zipper.up |> Zipper.zTableau |> .ext of
+                                Beta _ _ ->
+                                    case t.node.value of
+                                        "" ->
+                                            case t.ext of
+                                                Open ->
+                                                    button [ onClick (DeleteMe z) ] [ text "node" ]
 
-                                                    _ ->
-                                                        div [] []
+                                                _ ->
+                                                    div [] []
 
-                                            _ ->
-                                                div [] []
+                                        _ ->
+                                            div [] []
 
-                                    _ ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                                _ ->
+                                    button [ onClick (DeleteMe z) ] [ text "node" ]
+                        else
+                            case t.ext of
+                                Alpha _ ->
+                                    button [ onClick (DeleteMe z) ] [ text "node" ]
 
-                            True ->
-                                case t.ext of
-                                    Alpha _ ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                                Open ->
+                                    button [ onClick (DeleteMe z) ] [ text "node" ]
 
-                                    Open ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
-
-                                    _ ->
-                                        div [] []
+                                _ ->
+                                    div [] []
 
                     switchBetasButton =
                         case t.ext of
                             Beta _ _ ->
-                                button [ class "button", onClick (SwitchBetas z) ] [ text "->|<-" ]
+                                button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ text "⇄" ]
 
                             _ ->
                                 div [] []
                 in
-                case t.node.gui.controlsShown of
-                    True ->
-                        [ button [ class "button", onClick (ExpandAlpha z) ] [ text "+" ]
-                        , div [ class "onclick-menu add", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
-                                ]
+                if t.node.gui.controlsShown then
+                    [ button [ class "button", onClick (ExpandAlpha z) ] [ text "Add α" ]
+                    , div [ class "onclick-menu add", tabindex 0 ]
+                        [ ul [ class "onclick-menu-content" ]
+                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
+                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
+                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
+                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
                             ]
-                        , div [ class "onclick-menu change", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
-                                ]
-                            ]
-                        , div [ class "onclick-menu del", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ deleteMeButton ]
-                                , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
-                                ]
-                            ]
-                        , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
-                        , switchBetasButton
                         ]
-
-                    False ->
-                        []
+                    , div [ class "onclick-menu del", tabindex 0 ]
+                        [ ul [ class "onclick-menu-content" ]
+                            [ li [] [ deleteMeButton ]
+                            , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
+                            ]
+                        ]
+                    , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
+                    , switchBetasButton
+                    ]
+                else
+                    []
         )
 
 

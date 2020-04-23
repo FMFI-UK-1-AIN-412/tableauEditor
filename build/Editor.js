@@ -4488,6 +4488,184 @@ var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString
 
 
 
+// DECODER
+
+var _File_decoder = _Json_decodePrim(function(value) {
+	// NOTE: checks if `File` exists in case this is run on node
+	return (typeof File !== 'undefined' && value instanceof File)
+		? $elm$core$Result$Ok(value)
+		: _Json_expecting('a FILE', value);
+});
+
+
+// METADATA
+
+function _File_name(file) { return file.name; }
+function _File_mime(file) { return file.type; }
+function _File_size(file) { return file.size; }
+
+function _File_lastModified(file)
+{
+	return $elm$time$Time$millisToPosix(file.lastModified);
+}
+
+
+// DOWNLOAD
+
+var _File_downloadNode;
+
+function _File_getDownloadNode()
+{
+	return _File_downloadNode || (_File_downloadNode = document.createElement('a'));
+}
+
+var _File_download = F3(function(name, mime, content)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var blob = new Blob([content], {type: mime});
+
+		// for IE10+
+		if (navigator.msSaveOrOpenBlob)
+		{
+			navigator.msSaveOrOpenBlob(blob, name);
+			return;
+		}
+
+		// for HTML5
+		var node = _File_getDownloadNode();
+		var objectUrl = URL.createObjectURL(blob);
+		node.href = objectUrl;
+		node.download = name;
+		_File_click(node);
+		URL.revokeObjectURL(objectUrl);
+	});
+});
+
+function _File_downloadUrl(href)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var node = _File_getDownloadNode();
+		node.href = href;
+		node.download = '';
+		node.origin === location.origin || (node.target = '_blank');
+		_File_click(node);
+	});
+}
+
+
+// IE COMPATIBILITY
+
+function _File_makeBytesSafeForInternetExplorer(bytes)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/10
+	// all other browsers can just run `new Blob([bytes])` directly with no problem
+	//
+	return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+
+function _File_click(node)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/11
+	// all other browsers have MouseEvent and do not need this conditional stuff
+	//
+	if (typeof MouseEvent === 'function')
+	{
+		node.dispatchEvent(new MouseEvent('click'));
+	}
+	else
+	{
+		var event = document.createEvent('MouseEvents');
+		event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		document.body.appendChild(node);
+		node.dispatchEvent(event);
+		document.body.removeChild(node);
+	}
+}
+
+
+// UPLOAD
+
+var _File_node;
+
+function _File_uploadOne(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			callback(_Scheduler_succeed(event.target.files[0]));
+		});
+		_File_click(_File_node);
+	});
+}
+
+function _File_uploadOneOrMore(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.multiple = true;
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			var elmFiles = _List_fromArray(event.target.files);
+			callback(_Scheduler_succeed(_Utils_Tuple2(elmFiles.a, elmFiles.b)));
+		});
+		_File_click(_File_node);
+	});
+}
+
+
+// CONTENT
+
+function _File_toString(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsText(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toBytes(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(new DataView(reader.result)));
+		});
+		reader.readAsArrayBuffer(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toUrl(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsDataURL(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+
+
+
 
 // VIRTUAL-DOM WIDGETS
 
@@ -4584,6 +4762,10 @@ function _Markdown_formatOptions(options)
 		smartypants: options.smartypants
 	};
 }
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 'Just', a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -4687,10 +4869,6 @@ var $elm$json$Json$Decode$OneOf = function (a) {
 };
 var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 'Just', a: a};
-};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -5373,17 +5551,398 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$document = _Browser_document;
+var $author$project$Editor$None = {$: 'None'};
 var $author$project$Tableau$Open = {$: 'Open'};
-var $author$project$Tableau$defGUI = {controlsShown: true};
-var $elm_community$undo_redo$UndoList$UndoList = F3(
-	function (past, present, future) {
-		return {future: future, past: past, present: present};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
-var $elm_community$undo_redo$UndoList$fresh = function (state) {
-	return A3($elm_community$undo_redo$UndoList$UndoList, _List_Nil, state, _List_Nil);
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
+var $author$project$Tableau$Closed = F2(
+	function (a, b) {
+		return {$: 'Closed', a: a, b: b};
+	});
+var $author$project$Tableau$Tableau = F2(
+	function (node, ext) {
+		return {ext: ext, node: node};
+	});
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Tableau$Alpha = function (a) {
+	return {$: 'Alpha', a: a};
 };
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Tableau$Beta = F2(
+	function (a, b) {
+		return {$: 'Beta', a: a, b: b};
+	});
+var $author$project$Tableau$Delta = F2(
+	function (a, b) {
+		return {$: 'Delta', a: a, b: b};
+	});
+var $author$project$Tableau$Gamma = F2(
+	function (a, b) {
+		return {$: 'Gamma', a: a, b: b};
+	});
+var $author$project$Zipper$up = function (_v0) {
+	var t = _v0.a;
+	var bs = _v0.b;
+	if (bs.b) {
+		switch (bs.a.$) {
+			case 'AlphaCrumb':
+				var n = bs.a.a;
+				var bss = bs.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Tableau$Tableau,
+						n,
+						$author$project$Tableau$Alpha(t)),
+					bss);
+			case 'BetaLeftCrumb':
+				var _v2 = bs.a;
+				var n = _v2.a;
+				var tr = _v2.b;
+				var bss = bs.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Tableau$Tableau,
+						n,
+						A2($author$project$Tableau$Beta, t, tr)),
+					bss);
+			case 'BetaRightCrumb':
+				var _v3 = bs.a;
+				var n = _v3.a;
+				var tl = _v3.b;
+				var bss = bs.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Tableau$Tableau,
+						n,
+						A2($author$project$Tableau$Beta, tl, t)),
+					bss);
+			case 'GammaCrumb':
+				var _v4 = bs.a;
+				var n = _v4.a;
+				var subst = _v4.b;
+				var bss = bs.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Tableau$Tableau,
+						n,
+						A2($author$project$Tableau$Gamma, t, subst)),
+					bss);
+			default:
+				var _v5 = bs.a;
+				var n = _v5.a;
+				var subst = _v5.b;
+				var bss = bs.b;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Tableau$Tableau,
+						n,
+						A2($author$project$Tableau$Delta, t, subst)),
+					bss);
+		}
+	} else {
+		return _Utils_Tuple2(t, bs);
+	}
+};
+var $author$project$Zipper$findAbove = F2(
+	function (ref, _v0) {
+		var tableau = _v0.a;
+		var bs = _v0.b;
+		var node = tableau.node;
+		if (_Utils_eq(node.id, ref)) {
+			return $elm$core$Maybe$Just(0);
+		} else {
+			if (bs.b) {
+				var a = bs.a;
+				var bbs = bs.b;
+				return A2(
+					$elm$core$Maybe$map,
+					$elm$core$Basics$add(1),
+					A2(
+						$author$project$Zipper$findAbove,
+						ref,
+						$author$project$Zipper$up(
+							_Utils_Tuple2(tableau, bs))));
+			} else {
+				return $elm$core$Maybe$Nothing;
+			}
+		}
+	});
+var $author$project$Zipper$getRef = F2(
+	function (ref, z) {
+		return {
+			str: ref,
+			up: A2(
+				$elm$core$Maybe$andThen,
+				function (a) {
+					return A2($author$project$Zipper$findAbove, a, z);
+				},
+				$elm$core$String$toInt(ref))
+		};
+	});
+var $author$project$Zipper$modifyNode = F2(
+	function (f, _v0) {
+		var tableau = _v0.a;
+		var bs = _v0.b;
+		return _Utils_Tuple2(
+			f(tableau),
+			bs);
+	});
+var $author$project$Zipper$modifyRef = F2(
+	function (ref, z) {
+		return A2(
+			$author$project$Zipper$modifyNode,
+			function (tableau) {
+				var nodetmp = tableau.node;
+				return _Utils_update(
+					tableau,
+					{
+						node: _Utils_update(
+							nodetmp,
+							{reference: ref})
+					});
+			},
+			z);
+	});
+var $author$project$Zipper$setRef = F2(
+	function (_new, z) {
+		return A2(
+			$author$project$Zipper$modifyRef,
+			A2($author$project$Zipper$getRef, _new, z),
+			z);
+	});
+var $author$project$Zipper$zTableau = function (_v0) {
+	var t = _v0.a;
+	var bs = _v0.b;
+	return t;
+};
+var $author$project$Zipper$zNode = function (z) {
+	return $author$project$Zipper$zTableau(z).node;
+};
+var $author$project$Helpers$Exporting$Json$Decode$reRef = function (z) {
+	return A2(
+		$author$project$Zipper$modifyNode,
+		function (t) {
+			var _v0 = t.ext;
+			if (_v0.$ === 'Closed') {
+				var r1 = _v0.a;
+				var r2 = _v0.b;
+				return A2(
+					$author$project$Tableau$Tableau,
+					t.node,
+					A2(
+						$author$project$Tableau$Closed,
+						A2($author$project$Zipper$getRef, r1.str, z),
+						A2($author$project$Zipper$getRef, r2.str, z)));
+			} else {
+				return t;
+			}
+		},
+		A2(
+			$author$project$Zipper$setRef,
+			$author$project$Zipper$zNode(z).reference.str,
+			z));
+};
+var $author$project$Zipper$AlphaCrumb = function (a) {
+	return {$: 'AlphaCrumb', a: a};
+};
+var $author$project$Zipper$DeltaCrumb = F2(
+	function (a, b) {
+		return {$: 'DeltaCrumb', a: a, b: b};
+	});
+var $author$project$Zipper$GammaCrumb = F2(
+	function (a, b) {
+		return {$: 'GammaCrumb', a: a, b: b};
+	});
+var $author$project$Zipper$down = function (_v0) {
+	var t = _v0.a;
+	var bs = _v0.b;
+	var _v1 = t.ext;
+	switch (_v1.$) {
+		case 'Alpha':
+			var subt = _v1.a;
+			return _Utils_Tuple2(
+				subt,
+				A2(
+					$elm$core$List$cons,
+					$author$project$Zipper$AlphaCrumb(t.node),
+					bs));
+		case 'Gamma':
+			var subtableau = _v1.a;
+			var substitution = _v1.b;
+			return _Utils_Tuple2(
+				subtableau,
+				A2(
+					$elm$core$List$cons,
+					A2($author$project$Zipper$GammaCrumb, t.node, substitution),
+					bs));
+		case 'Delta':
+			var subtableau = _v1.a;
+			var substitution = _v1.b;
+			return _Utils_Tuple2(
+				subtableau,
+				A2(
+					$elm$core$List$cons,
+					A2($author$project$Zipper$DeltaCrumb, t.node, substitution),
+					bs));
+		default:
+			return _Utils_Tuple2(t, bs);
+	}
+};
+var $author$project$Zipper$BetaLeftCrumb = F2(
+	function (a, b) {
+		return {$: 'BetaLeftCrumb', a: a, b: b};
+	});
+var $author$project$Zipper$left = function (_v0) {
+	var t = _v0.a;
+	var bs = _v0.b;
+	var _v1 = t.ext;
+	if (_v1.$ === 'Beta') {
+		var tl = _v1.a;
+		var tr = _v1.b;
+		return _Utils_Tuple2(
+			tl,
+			A2(
+				$elm$core$List$cons,
+				A2($author$project$Zipper$BetaLeftCrumb, t.node, tr),
+				bs));
+	} else {
+		return _Utils_Tuple2(t, bs);
+	}
+};
+var $author$project$Zipper$BetaRightCrumb = F2(
+	function (a, b) {
+		return {$: 'BetaRightCrumb', a: a, b: b};
+	});
+var $author$project$Zipper$right = function (_v0) {
+	var t = _v0.a;
+	var bs = _v0.b;
+	var _v1 = t.ext;
+	if (_v1.$ === 'Beta') {
+		var tl = _v1.a;
+		var tr = _v1.b;
+		return _Utils_Tuple2(
+			tr,
+			A2(
+				$elm$core$List$cons,
+				A2($author$project$Zipper$BetaRightCrumb, t.node, tl),
+				bs));
+	} else {
+		return _Utils_Tuple2(t, bs);
+	}
+};
+var $author$project$Zipper$zWalkPost = F2(
+	function (f, z) {
+		var t = z.a;
+		var bs = z.b;
+		var _v0 = t.ext;
+		switch (_v0.$) {
+			case 'Open':
+				return f(z);
+			case 'Closed':
+				return f(z);
+			case 'Alpha':
+				return f(
+					$author$project$Zipper$up(
+						A2(
+							$author$project$Zipper$zWalkPost,
+							f,
+							$author$project$Zipper$down(z))));
+			case 'Beta':
+				var tl = _v0.a;
+				var tr = _v0.b;
+				return f(
+					$author$project$Zipper$up(
+						A2(
+							$author$project$Zipper$zWalkPost,
+							f,
+							$author$project$Zipper$right(
+								$author$project$Zipper$up(
+									A2(
+										$author$project$Zipper$zWalkPost,
+										f,
+										$author$project$Zipper$left(z)))))));
+			case 'Gamma':
+				var subst = _v0.b;
+				return f(
+					$author$project$Zipper$up(
+						A2(
+							$author$project$Zipper$zWalkPost,
+							f,
+							$author$project$Zipper$down(z))));
+			default:
+				var subst = _v0.b;
+				return f(
+					$author$project$Zipper$up(
+						A2(
+							$author$project$Zipper$zWalkPost,
+							f,
+							$author$project$Zipper$down(z))));
+		}
+	});
+var $author$project$Zipper$zipper = function (t) {
+	return _Utils_Tuple2(t, _List_Nil);
+};
+var $author$project$Helpers$Exporting$Json$Decode$reRefTableau = function (t) {
+	return $author$project$Zipper$zTableau(
+		A2(
+			$author$project$Zipper$zWalkPost,
+			$author$project$Helpers$Exporting$Json$Decode$reRef,
+			$author$project$Zipper$zipper(t)));
+};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$index = _Json_decodeIndex;
+var $author$project$Helpers$Exporting$Json$Decode$mkRef = function (str) {
+	return {str: str, up: $elm$core$Maybe$Nothing};
+};
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Helpers$Exporting$Json$Decode$ref = A2($elm$json$Json$Decode$map, $author$project$Helpers$Exporting$Json$Decode$mkRef, $elm$json$Json$Decode$string);
+var $author$project$Helpers$Exporting$Json$Decode$closedRefs = A3(
+	$elm$json$Json$Decode$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	A2($elm$json$Json$Decode$index, 0, $author$project$Helpers$Exporting$Json$Decode$ref),
+	A2($elm$json$Json$Decode$index, 1, $author$project$Helpers$Exporting$Json$Decode$ref));
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $author$project$Tableau$Node = F5(
+	function (id, value, reference, formula, gui) {
+		return {formula: formula, gui: gui, id: id, reference: reference, value: value};
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$map5 = _Json_map5;
 var $elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
@@ -6473,70 +7032,464 @@ var $FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned = $elm$parser$Parser$run(
 			$elm$parser$Parser$ignorer,
 			A2($elm$parser$Parser$ignorer, $FMFI_UK_1_AIN_412$elm_formula$Formula$signedFormula, $FMFI_UK_1_AIN_412$elm_formula$Formula$spaces),
 			$elm$parser$Parser$end)));
-var $author$project$Editor$init = function (_v0) {
+var $author$project$Helpers$Exporting$Json$Decode$node = A6(
+	$elm$json$Json$Decode$map5,
+	$author$project$Tableau$Node,
+	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'reference', $author$project$Helpers$Exporting$Json$Decode$ref),
+	A2(
+		$elm$json$Json$Decode$map,
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned,
+		A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string)),
+	$elm$json$Json$Decode$succeed(
+		{controlsShown: false}));
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Helpers$Exporting$Json$Decode$closed = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Tableau$Tableau,
+	A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+	A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$Tableau$Closed,
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Tuple$first,
+			A2($elm$json$Json$Decode$field, 'closed', $author$project$Helpers$Exporting$Json$Decode$closedRefs)),
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Tuple$second,
+			A2($elm$json$Json$Decode$field, 'closed', $author$project$Helpers$Exporting$Json$Decode$closedRefs))));
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$lazy = function (thunk) {
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		thunk,
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
+var $author$project$Helpers$Exporting$Json$Decode$open = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Tableau$Tableau,
+	A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+	$elm$json$Json$Decode$succeed($author$project$Tableau$Open));
+var $author$project$Tableau$Substitution = F2(
+	function (term, _var) {
+		return {term: term, _var: _var};
+	});
+var $author$project$Helpers$Exporting$Json$Decode$substitution = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Tableau$Substitution,
+	A2($elm$json$Json$Decode$field, 'term', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'var', $elm$json$Json$Decode$string));
+var $author$project$Helpers$Exporting$Json$Decode$tblTypeDecoder = function (typ) {
+	switch (typ) {
+		case 'open':
+			return $author$project$Helpers$Exporting$Json$Decode$open;
+		case 'closed':
+			return $author$project$Helpers$Exporting$Json$Decode$closed;
+		case 'alpha':
+			return $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha();
+		case 'beta':
+			return $author$project$Helpers$Exporting$Json$Decode$cyclic$beta();
+		case 'gamma':
+			return $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma();
+		case 'delta':
+			return $author$project$Helpers$Exporting$Json$Decode$cyclic$delta();
+		default:
+			return $elm$json$Json$Decode$fail('\'' + (typ + '\' is not a correct tableau node type'));
+	}
+};
+function $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha() {
+	return A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$Tableau$Tableau,
+		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+		A2(
+			$elm$json$Json$Decode$map,
+			$author$project$Tableau$Alpha,
+			A2(
+				$elm$json$Json$Decode$field,
+				'child',
+				$elm$json$Json$Decode$lazy(
+					function (_v6) {
+						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+					}))));
+}
+function $author$project$Helpers$Exporting$Json$Decode$cyclic$beta() {
+	return A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$Tableau$Tableau,
+		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+		A3(
+			$elm$json$Json$Decode$map2,
+			$author$project$Tableau$Beta,
+			A2(
+				$elm$json$Json$Decode$field,
+				'leftChild',
+				$elm$json$Json$Decode$lazy(
+					function (_v4) {
+						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+					})),
+			A2(
+				$elm$json$Json$Decode$field,
+				'rightChild',
+				$elm$json$Json$Decode$lazy(
+					function (_v5) {
+						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+					}))));
+}
+function $author$project$Helpers$Exporting$Json$Decode$cyclic$delta() {
+	return A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$Tableau$Tableau,
+		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+		A3(
+			$elm$json$Json$Decode$map2,
+			$author$project$Tableau$Delta,
+			A2(
+				$elm$json$Json$Decode$field,
+				'child',
+				$elm$json$Json$Decode$lazy(
+					function (_v3) {
+						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+					})),
+			A2($elm$json$Json$Decode$field, 'substitution', $author$project$Helpers$Exporting$Json$Decode$substitution)));
+}
+function $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma() {
+	return A3(
+		$elm$json$Json$Decode$map2,
+		$author$project$Tableau$Tableau,
+		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
+		A3(
+			$elm$json$Json$Decode$map2,
+			$author$project$Tableau$Gamma,
+			A2(
+				$elm$json$Json$Decode$field,
+				'child',
+				$elm$json$Json$Decode$lazy(
+					function (_v2) {
+						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+					})),
+			A2($elm$json$Json$Decode$field, 'substitution', $author$project$Helpers$Exporting$Json$Decode$substitution)));
+}
+function $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau() {
+	return $elm$json$Json$Decode$lazy(
+		function (_v1) {
+			return A2(
+				$elm$json$Json$Decode$andThen,
+				$author$project$Helpers$Exporting$Json$Decode$tblTypeDecoder,
+				A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+		});
+}
+try {
+	var $author$project$Helpers$Exporting$Json$Decode$alpha = $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha();
+	$author$project$Helpers$Exporting$Json$Decode$cyclic$alpha = function () {
+		return $author$project$Helpers$Exporting$Json$Decode$alpha;
+	};
+	var $author$project$Helpers$Exporting$Json$Decode$beta = $author$project$Helpers$Exporting$Json$Decode$cyclic$beta();
+	$author$project$Helpers$Exporting$Json$Decode$cyclic$beta = function () {
+		return $author$project$Helpers$Exporting$Json$Decode$beta;
+	};
+	var $author$project$Helpers$Exporting$Json$Decode$delta = $author$project$Helpers$Exporting$Json$Decode$cyclic$delta();
+	$author$project$Helpers$Exporting$Json$Decode$cyclic$delta = function () {
+		return $author$project$Helpers$Exporting$Json$Decode$delta;
+	};
+	var $author$project$Helpers$Exporting$Json$Decode$gamma = $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma();
+	$author$project$Helpers$Exporting$Json$Decode$cyclic$gamma = function () {
+		return $author$project$Helpers$Exporting$Json$Decode$gamma;
+	};
+	var $author$project$Helpers$Exporting$Json$Decode$tableau = $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
+	$author$project$Helpers$Exporting$Json$Decode$cyclic$tableau = function () {
+		return $author$project$Helpers$Exporting$Json$Decode$tableau;
+	};
+} catch ($) {
+	throw 'Some top-level definitions from `Helpers.Exporting.Json.Decode` are causing infinite recursion:\n\n  ┌─────┐\n  │    alpha\n  │     ↓\n  │    beta\n  │     ↓\n  │    delta\n  │     ↓\n  │    gamma\n  │     ↓\n  │    tableau\n  │     ↓\n  │    tblTypeDecoder\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+var $author$project$Helpers$Exporting$Json$Decode$decode = function (s) {
+	var fn = A2(
+		$elm$core$Basics$composeR,
+		$elm$json$Json$Decode$decodeString($author$project$Helpers$Exporting$Json$Decode$tableau),
+		$elm$core$Result$map($author$project$Helpers$Exporting$Json$Decode$reRefTableau));
+	return fn(s);
+};
+var $author$project$Tableau$defGUI = {controlsShown: true};
+var $elm_community$undo_redo$UndoList$UndoList = F3(
+	function (past, present, future) {
+		return {future: future, past: past, present: present};
+	});
+var $elm_community$undo_redo$UndoList$fresh = function (state) {
+	return A3($elm_community$undo_redo$UndoList$UndoList, _List_Nil, state, _List_Nil);
+};
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Editor$init = function (mts) {
+	var emptyT = {
+		ext: $author$project$Tableau$Open,
+		node: {
+			formula: $FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned(''),
+			gui: $author$project$Tableau$defGUI,
+			id: 1,
+			reference: {
+				str: '1',
+				up: $elm$core$Maybe$Just(0)
+			},
+			value: ''
+		}
+	};
+	var initT = function () {
+		if (mts.$ === 'Nothing') {
+			return emptyT;
+		} else {
+			var ts = mts.a;
+			var _v1 = $author$project$Helpers$Exporting$Json$Decode$decode(ts);
+			if (_v1.$ === 'Ok') {
+				var t = _v1.a;
+				return t;
+			} else {
+				return emptyT;
+			}
+		}
+	}();
 	return _Utils_Tuple2(
 		$elm_community$undo_redo$UndoList$fresh(
-			{
-				jsonImportError: '',
-				jsonImportId: 'importJson',
-				jsonImporting: false,
-				tableau: {
-					ext: $author$project$Tableau$Open,
-					node: {
-						formula: $FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned(''),
-						gui: $author$project$Tableau$defGUI,
-						id: 1,
-						reference: {
-							str: '1',
-							up: $elm$core$Maybe$Just(0)
-						},
-						value: ''
-					}
-				}
-			}),
+			{jsonImport: $author$project$Editor$None, tableau: initT}),
 		$elm$core$Platform$Cmd$none);
+};
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Editor$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$none;
+};
+var $author$project$Editor$ImportErr = function (a) {
+	return {$: 'ImportErr', a: a};
+};
+var $author$project$Editor$InProgress = function (a) {
+	return {$: 'InProgress', a: a};
 };
 var $author$project$Editor$JsonRead = function (a) {
 	return {$: 'JsonRead', a: a};
 };
-var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Helpers$Exporting$Ports$fileContentRead = _Platform_incomingPort(
-	'fileContentRead',
-	A2(
-		$elm$json$Json$Decode$andThen,
-		function (jsonImporting) {
-			return A2(
-				$elm$json$Json$Decode$andThen,
-				function (jsonImportId) {
-					return A2(
-						$elm$json$Json$Decode$andThen,
-						function (jsonImportError) {
-							return A2(
-								$elm$json$Json$Decode$andThen,
-								function (filename) {
-									return A2(
-										$elm$json$Json$Decode$andThen,
-										function (contents) {
-											return $elm$json$Json$Decode$succeed(
-												{contents: contents, filename: filename, jsonImportError: jsonImportError, jsonImportId: jsonImportId, jsonImporting: jsonImporting});
-										},
-										A2($elm$json$Json$Decode$field, 'contents', $elm$json$Json$Decode$string));
-								},
-								A2($elm$json$Json$Decode$field, 'filename', $elm$json$Json$Decode$string));
-						},
-						A2($elm$json$Json$Decode$field, 'jsonImportError', $elm$json$Json$Decode$string));
-				},
-				A2($elm$json$Json$Decode$field, 'jsonImportId', $elm$json$Json$Decode$string));
-		},
-		A2($elm$json$Json$Decode$field, 'jsonImporting', $elm$json$Json$Decode$bool)));
-var $author$project$Editor$subscriptions = function (model) {
-	return $author$project$Helpers$Exporting$Ports$fileContentRead($author$project$Editor$JsonRead);
+var $author$project$Editor$JsonSelected = function (a) {
+	return {$: 'JsonSelected', a: a};
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Helpers$Exporting$Ports$fileSelected = _Platform_outgoingPort('fileSelected', $elm$json$Json$Encode$string);
+var $author$project$Editor$cache = _Platform_outgoingPort('cache', $elm$json$Json$Encode$string);
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Helpers$Exporting$Json$Encode$jsonSubstitution = function (_v0) {
+	var term = _v0.term;
+	var _var = _v0._var;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'term',
+				$elm$json$Json$Encode$string(term)),
+				_Utils_Tuple2(
+				'var',
+				$elm$json$Json$Encode$string(_var))
+			]));
+};
+var $author$project$Helpers$Exporting$Json$Encode$encodeSubstitution = function (s) {
+	return _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'substitution',
+			$author$project$Helpers$Exporting$Json$Encode$jsonSubstitution(s))
+		]);
+};
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $author$project$Helpers$Exporting$Json$Encode$jsonRef = function (r) {
+	return $elm$json$Json$Encode$string(r.str);
+};
+var $author$project$Helpers$Exporting$Json$Encode$jsonNode = function (_v0) {
+	var id = _v0.id;
+	var value = _v0.value;
+	var reference = _v0.reference;
+	var gui = _v0.gui;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$json$Json$Encode$int(id)),
+				_Utils_Tuple2(
+				'value',
+				$elm$json$Json$Encode$string(value)),
+				_Utils_Tuple2(
+				'reference',
+				$author$project$Helpers$Exporting$Json$Encode$jsonRef(reference))
+			]));
+};
+var $author$project$Helpers$Exporting$Json$Encode$jsonNodeList = function (n) {
+	return _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'node',
+			$author$project$Helpers$Exporting$Json$Encode$jsonNode(n))
+		]);
+};
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $author$project$Helpers$Exporting$Json$Encode$jsonTableau = function (t) {
+	return $elm$json$Json$Encode$object(
+		$author$project$Helpers$Exporting$Json$Encode$jsonTblList(t));
+};
+var $author$project$Helpers$Exporting$Json$Encode$jsonTblList = function (tableau) {
+	var _v0 = tableau.ext;
+	switch (_v0.$) {
+		case 'Open':
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('open'))
+					]),
+				$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node));
+		case 'Closed':
+			var r1 = _v0.a;
+			var r2 = _v0.b;
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('closed'))
+					]),
+				_Utils_ap(
+					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'closed',
+							A2(
+								$elm$json$Json$Encode$list,
+								$author$project$Helpers$Exporting$Json$Encode$jsonRef,
+								_List_fromArray(
+									[r1, r2])))
+						])));
+		case 'Alpha':
+			var t = _v0.a;
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('alpha'))
+					]),
+				_Utils_ap(
+					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'child',
+							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
+						])));
+		case 'Beta':
+			var lt = _v0.a;
+			var rt = _v0.b;
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('beta'))
+					]),
+				_Utils_ap(
+					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'leftChild',
+							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(lt)),
+							_Utils_Tuple2(
+							'rightChild',
+							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(rt))
+						])));
+		case 'Gamma':
+			var t = _v0.a;
+			var s = _v0.b;
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('gamma'))
+					]),
+				_Utils_ap(
+					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'child',
+								$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
+							]),
+						$author$project$Helpers$Exporting$Json$Encode$encodeSubstitution(s))));
+		default:
+			var t = _v0.a;
+			var s = _v0.b;
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'type',
+						$elm$json$Json$Encode$string('delta'))
+					]),
+				_Utils_ap(
+					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'child',
+								$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
+							]),
+						$author$project$Helpers$Exporting$Json$Encode$encodeSubstitution(s))));
+	}
+};
+var $author$project$Helpers$Exporting$Json$Encode$encode = F2(
+	function (ind, t) {
+		return A2(
+			$elm$json$Json$Encode$encode,
+			ind,
+			$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t)) + '\n';
+	});
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$file$File$Select$file = F2(
+	function (mimes, toMsg) {
+		return A2(
+			$elm$core$Task$perform,
+			toMsg,
+			_File_uploadOne(mimes));
+	});
+var $elm$file$File$name = _File_name;
 var $elm_community$undo_redo$UndoList$new = F2(
 	function (event, _v0) {
 		var past = _v0.past;
@@ -6546,6 +7499,12 @@ var $elm_community$undo_redo$UndoList$new = F2(
 			A2($elm$core$List$cons, present, past),
 			event,
 			_List_Nil);
+	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Editor$print = _Platform_outgoingPort(
+	'print',
+	function ($) {
+		return $elm$json$Json$Encode$null;
 	});
 var $elm_community$undo_redo$UndoList$redo = function (_v0) {
 	var past = _v0.past;
@@ -6563,14 +7522,6 @@ var $elm_community$undo_redo$UndoList$redo = function (_v0) {
 			xs);
 	}
 };
-var $author$project$Zipper$modifyNode = F2(
-	function (f, _v0) {
-		var tableau = _v0.a;
-		var bs = _v0.b;
-		return _Utils_Tuple2(
-			f(tableau),
-			bs);
-	});
 var $author$project$Zipper$changeButtonAppearance = function (z) {
 	return A2(
 		$author$project$Zipper$modifyNode,
@@ -6588,88 +7539,6 @@ var $author$project$Zipper$changeButtonAppearance = function (z) {
 				{node: newNode});
 		},
 		z);
-};
-var $author$project$Tableau$Delta = F2(
-	function (a, b) {
-		return {$: 'Delta', a: a, b: b};
-	});
-var $author$project$Tableau$Gamma = F2(
-	function (a, b) {
-		return {$: 'Gamma', a: a, b: b};
-	});
-var $author$project$Tableau$Tableau = F2(
-	function (node, ext) {
-		return {ext: ext, node: node};
-	});
-var $author$project$Tableau$Alpha = function (a) {
-	return {$: 'Alpha', a: a};
-};
-var $author$project$Tableau$Beta = F2(
-	function (a, b) {
-		return {$: 'Beta', a: a, b: b};
-	});
-var $author$project$Zipper$up = function (_v0) {
-	var t = _v0.a;
-	var bs = _v0.b;
-	if (bs.b) {
-		switch (bs.a.$) {
-			case 'AlphaCrumb':
-				var n = bs.a.a;
-				var bss = bs.b;
-				return _Utils_Tuple2(
-					A2(
-						$author$project$Tableau$Tableau,
-						n,
-						$author$project$Tableau$Alpha(t)),
-					bss);
-			case 'BetaLeftCrumb':
-				var _v2 = bs.a;
-				var n = _v2.a;
-				var tr = _v2.b;
-				var bss = bs.b;
-				return _Utils_Tuple2(
-					A2(
-						$author$project$Tableau$Tableau,
-						n,
-						A2($author$project$Tableau$Beta, t, tr)),
-					bss);
-			case 'BetaRightCrumb':
-				var _v3 = bs.a;
-				var n = _v3.a;
-				var tl = _v3.b;
-				var bss = bs.b;
-				return _Utils_Tuple2(
-					A2(
-						$author$project$Tableau$Tableau,
-						n,
-						A2($author$project$Tableau$Beta, tl, t)),
-					bss);
-			case 'GammaCrumb':
-				var _v4 = bs.a;
-				var n = _v4.a;
-				var subst = _v4.b;
-				var bss = bs.b;
-				return _Utils_Tuple2(
-					A2(
-						$author$project$Tableau$Tableau,
-						n,
-						A2($author$project$Tableau$Gamma, t, subst)),
-					bss);
-			default:
-				var _v5 = bs.a;
-				var n = _v5.a;
-				var subst = _v5.b;
-				var bss = bs.b;
-				return _Utils_Tuple2(
-					A2(
-						$author$project$Tableau$Tableau,
-						n,
-						A2($author$project$Tableau$Delta, t, subst)),
-					bss);
-		}
-	} else {
-		return _Utils_Tuple2(t, bs);
-	}
 };
 var $author$project$Zipper$changeTerm = F2(
 	function (newTerm, z) {
@@ -6918,485 +7787,6 @@ var $author$project$Zipper$changeVariable = F2(
 			},
 			$author$project$Zipper$up(z));
 	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
-var $elm$core$Result$map = F2(
-	function (func, ra) {
-		if (ra.$ === 'Ok') {
-			var a = ra.a;
-			return $elm$core$Result$Ok(
-				func(a));
-		} else {
-			var e = ra.a;
-			return $elm$core$Result$Err(e);
-		}
-	});
-var $author$project$Tableau$Closed = F2(
-	function (a, b) {
-		return {$: 'Closed', a: a, b: b};
-	});
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $author$project$Zipper$findAbove = F2(
-	function (ref, _v0) {
-		var tableau = _v0.a;
-		var bs = _v0.b;
-		var node = tableau.node;
-		if (_Utils_eq(node.id, ref)) {
-			return $elm$core$Maybe$Just(0);
-		} else {
-			if (bs.b) {
-				var a = bs.a;
-				var bbs = bs.b;
-				return A2(
-					$elm$core$Maybe$map,
-					$elm$core$Basics$add(1),
-					A2(
-						$author$project$Zipper$findAbove,
-						ref,
-						$author$project$Zipper$up(
-							_Utils_Tuple2(tableau, bs))));
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		}
-	});
-var $author$project$Zipper$getRef = F2(
-	function (ref, z) {
-		return {
-			str: ref,
-			up: A2(
-				$elm$core$Maybe$andThen,
-				function (a) {
-					return A2($author$project$Zipper$findAbove, a, z);
-				},
-				$elm$core$String$toInt(ref))
-		};
-	});
-var $author$project$Zipper$modifyRef = F2(
-	function (ref, z) {
-		return A2(
-			$author$project$Zipper$modifyNode,
-			function (tableau) {
-				var nodetmp = tableau.node;
-				return _Utils_update(
-					tableau,
-					{
-						node: _Utils_update(
-							nodetmp,
-							{reference: ref})
-					});
-			},
-			z);
-	});
-var $author$project$Zipper$setRef = F2(
-	function (_new, z) {
-		return A2(
-			$author$project$Zipper$modifyRef,
-			A2($author$project$Zipper$getRef, _new, z),
-			z);
-	});
-var $author$project$Zipper$zTableau = function (_v0) {
-	var t = _v0.a;
-	var bs = _v0.b;
-	return t;
-};
-var $author$project$Zipper$zNode = function (z) {
-	return $author$project$Zipper$zTableau(z).node;
-};
-var $author$project$Helpers$Exporting$Json$Decode$reRef = function (z) {
-	return A2(
-		$author$project$Zipper$modifyNode,
-		function (t) {
-			var _v0 = t.ext;
-			if (_v0.$ === 'Closed') {
-				var r1 = _v0.a;
-				var r2 = _v0.b;
-				return A2(
-					$author$project$Tableau$Tableau,
-					t.node,
-					A2(
-						$author$project$Tableau$Closed,
-						A2($author$project$Zipper$getRef, r1.str, z),
-						A2($author$project$Zipper$getRef, r2.str, z)));
-			} else {
-				return t;
-			}
-		},
-		A2(
-			$author$project$Zipper$setRef,
-			$author$project$Zipper$zNode(z).reference.str,
-			z));
-};
-var $author$project$Zipper$AlphaCrumb = function (a) {
-	return {$: 'AlphaCrumb', a: a};
-};
-var $author$project$Zipper$DeltaCrumb = F2(
-	function (a, b) {
-		return {$: 'DeltaCrumb', a: a, b: b};
-	});
-var $author$project$Zipper$GammaCrumb = F2(
-	function (a, b) {
-		return {$: 'GammaCrumb', a: a, b: b};
-	});
-var $author$project$Zipper$down = function (_v0) {
-	var t = _v0.a;
-	var bs = _v0.b;
-	var _v1 = t.ext;
-	switch (_v1.$) {
-		case 'Alpha':
-			var subt = _v1.a;
-			return _Utils_Tuple2(
-				subt,
-				A2(
-					$elm$core$List$cons,
-					$author$project$Zipper$AlphaCrumb(t.node),
-					bs));
-		case 'Gamma':
-			var subtableau = _v1.a;
-			var substitution = _v1.b;
-			return _Utils_Tuple2(
-				subtableau,
-				A2(
-					$elm$core$List$cons,
-					A2($author$project$Zipper$GammaCrumb, t.node, substitution),
-					bs));
-		case 'Delta':
-			var subtableau = _v1.a;
-			var substitution = _v1.b;
-			return _Utils_Tuple2(
-				subtableau,
-				A2(
-					$elm$core$List$cons,
-					A2($author$project$Zipper$DeltaCrumb, t.node, substitution),
-					bs));
-		default:
-			return _Utils_Tuple2(t, bs);
-	}
-};
-var $author$project$Zipper$BetaLeftCrumb = F2(
-	function (a, b) {
-		return {$: 'BetaLeftCrumb', a: a, b: b};
-	});
-var $author$project$Zipper$left = function (_v0) {
-	var t = _v0.a;
-	var bs = _v0.b;
-	var _v1 = t.ext;
-	if (_v1.$ === 'Beta') {
-		var tl = _v1.a;
-		var tr = _v1.b;
-		return _Utils_Tuple2(
-			tl,
-			A2(
-				$elm$core$List$cons,
-				A2($author$project$Zipper$BetaLeftCrumb, t.node, tr),
-				bs));
-	} else {
-		return _Utils_Tuple2(t, bs);
-	}
-};
-var $author$project$Zipper$BetaRightCrumb = F2(
-	function (a, b) {
-		return {$: 'BetaRightCrumb', a: a, b: b};
-	});
-var $author$project$Zipper$right = function (_v0) {
-	var t = _v0.a;
-	var bs = _v0.b;
-	var _v1 = t.ext;
-	if (_v1.$ === 'Beta') {
-		var tl = _v1.a;
-		var tr = _v1.b;
-		return _Utils_Tuple2(
-			tr,
-			A2(
-				$elm$core$List$cons,
-				A2($author$project$Zipper$BetaRightCrumb, t.node, tl),
-				bs));
-	} else {
-		return _Utils_Tuple2(t, bs);
-	}
-};
-var $author$project$Zipper$zWalkPost = F2(
-	function (f, z) {
-		var t = z.a;
-		var bs = z.b;
-		var _v0 = t.ext;
-		switch (_v0.$) {
-			case 'Open':
-				return f(z);
-			case 'Closed':
-				return f(z);
-			case 'Alpha':
-				return f(
-					$author$project$Zipper$up(
-						A2(
-							$author$project$Zipper$zWalkPost,
-							f,
-							$author$project$Zipper$down(z))));
-			case 'Beta':
-				var tl = _v0.a;
-				var tr = _v0.b;
-				return f(
-					$author$project$Zipper$up(
-						A2(
-							$author$project$Zipper$zWalkPost,
-							f,
-							$author$project$Zipper$right(
-								$author$project$Zipper$up(
-									A2(
-										$author$project$Zipper$zWalkPost,
-										f,
-										$author$project$Zipper$left(z)))))));
-			case 'Gamma':
-				var subst = _v0.b;
-				return f(
-					$author$project$Zipper$up(
-						A2(
-							$author$project$Zipper$zWalkPost,
-							f,
-							$author$project$Zipper$down(z))));
-			default:
-				var subst = _v0.b;
-				return f(
-					$author$project$Zipper$up(
-						A2(
-							$author$project$Zipper$zWalkPost,
-							f,
-							$author$project$Zipper$down(z))));
-		}
-	});
-var $author$project$Zipper$zipper = function (t) {
-	return _Utils_Tuple2(t, _List_Nil);
-};
-var $author$project$Helpers$Exporting$Json$Decode$reRefTableau = function (t) {
-	return $author$project$Zipper$zTableau(
-		A2(
-			$author$project$Zipper$zWalkPost,
-			$author$project$Helpers$Exporting$Json$Decode$reRef,
-			$author$project$Zipper$zipper(t)));
-};
-var $elm$json$Json$Decode$index = _Json_decodeIndex;
-var $author$project$Helpers$Exporting$Json$Decode$mkRef = function (str) {
-	return {str: str, up: $elm$core$Maybe$Nothing};
-};
-var $author$project$Helpers$Exporting$Json$Decode$ref = A2($elm$json$Json$Decode$map, $author$project$Helpers$Exporting$Json$Decode$mkRef, $elm$json$Json$Decode$string);
-var $author$project$Helpers$Exporting$Json$Decode$closedRefs = A3(
-	$elm$json$Json$Decode$map2,
-	F2(
-		function (a, b) {
-			return _Utils_Tuple2(a, b);
-		}),
-	A2($elm$json$Json$Decode$index, 0, $author$project$Helpers$Exporting$Json$Decode$ref),
-	A2($elm$json$Json$Decode$index, 1, $author$project$Helpers$Exporting$Json$Decode$ref));
-var $author$project$Tableau$Node = F5(
-	function (id, value, reference, formula, gui) {
-		return {formula: formula, gui: gui, id: id, reference: reference, value: value};
-	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$map5 = _Json_map5;
-var $author$project$Helpers$Exporting$Json$Decode$node = A6(
-	$elm$json$Json$Decode$map5,
-	$author$project$Tableau$Node,
-	A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$int),
-	A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string),
-	A2($elm$json$Json$Decode$field, 'reference', $author$project$Helpers$Exporting$Json$Decode$ref),
-	A2(
-		$elm$json$Json$Decode$map,
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned,
-		A2($elm$json$Json$Decode$field, 'value', $elm$json$Json$Decode$string)),
-	$elm$json$Json$Decode$succeed(
-		{controlsShown: false}));
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
-var $author$project$Helpers$Exporting$Json$Decode$closed = A3(
-	$elm$json$Json$Decode$map2,
-	$author$project$Tableau$Tableau,
-	A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-	A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Tableau$Closed,
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Tuple$first,
-			A2($elm$json$Json$Decode$field, 'closed', $author$project$Helpers$Exporting$Json$Decode$closedRefs)),
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$core$Tuple$second,
-			A2($elm$json$Json$Decode$field, 'closed', $author$project$Helpers$Exporting$Json$Decode$closedRefs))));
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$lazy = function (thunk) {
-	return A2(
-		$elm$json$Json$Decode$andThen,
-		thunk,
-		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
-};
-var $author$project$Helpers$Exporting$Json$Decode$open = A3(
-	$elm$json$Json$Decode$map2,
-	$author$project$Tableau$Tableau,
-	A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-	$elm$json$Json$Decode$succeed($author$project$Tableau$Open));
-var $author$project$Tableau$Substitution = F2(
-	function (term, _var) {
-		return {term: term, _var: _var};
-	});
-var $author$project$Helpers$Exporting$Json$Decode$substitution = A3(
-	$elm$json$Json$Decode$map2,
-	$author$project$Tableau$Substitution,
-	A2($elm$json$Json$Decode$field, 'term', $elm$json$Json$Decode$string),
-	A2($elm$json$Json$Decode$field, 'var', $elm$json$Json$Decode$string));
-var $author$project$Helpers$Exporting$Json$Decode$tblTypeDecoder = function (typ) {
-	switch (typ) {
-		case 'open':
-			return $author$project$Helpers$Exporting$Json$Decode$open;
-		case 'closed':
-			return $author$project$Helpers$Exporting$Json$Decode$closed;
-		case 'alpha':
-			return $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha();
-		case 'beta':
-			return $author$project$Helpers$Exporting$Json$Decode$cyclic$beta();
-		case 'gamma':
-			return $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma();
-		case 'delta':
-			return $author$project$Helpers$Exporting$Json$Decode$cyclic$delta();
-		default:
-			return $elm$json$Json$Decode$fail('\'' + (typ + '\' is not a correct tableau node type'));
-	}
-};
-function $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha() {
-	return A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Tableau$Tableau,
-		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-		A2(
-			$elm$json$Json$Decode$map,
-			$author$project$Tableau$Alpha,
-			A2(
-				$elm$json$Json$Decode$field,
-				'child',
-				$elm$json$Json$Decode$lazy(
-					function (_v6) {
-						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-					}))));
-}
-function $author$project$Helpers$Exporting$Json$Decode$cyclic$beta() {
-	return A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Tableau$Tableau,
-		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-		A3(
-			$elm$json$Json$Decode$map2,
-			$author$project$Tableau$Beta,
-			A2(
-				$elm$json$Json$Decode$field,
-				'leftChild',
-				$elm$json$Json$Decode$lazy(
-					function (_v4) {
-						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-					})),
-			A2(
-				$elm$json$Json$Decode$field,
-				'rightChild',
-				$elm$json$Json$Decode$lazy(
-					function (_v5) {
-						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-					}))));
-}
-function $author$project$Helpers$Exporting$Json$Decode$cyclic$delta() {
-	return A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Tableau$Tableau,
-		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-		A3(
-			$elm$json$Json$Decode$map2,
-			$author$project$Tableau$Delta,
-			A2(
-				$elm$json$Json$Decode$field,
-				'child',
-				$elm$json$Json$Decode$lazy(
-					function (_v3) {
-						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-					})),
-			A2($elm$json$Json$Decode$field, 'substitution', $author$project$Helpers$Exporting$Json$Decode$substitution)));
-}
-function $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma() {
-	return A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Tableau$Tableau,
-		A2($elm$json$Json$Decode$field, 'node', $author$project$Helpers$Exporting$Json$Decode$node),
-		A3(
-			$elm$json$Json$Decode$map2,
-			$author$project$Tableau$Gamma,
-			A2(
-				$elm$json$Json$Decode$field,
-				'child',
-				$elm$json$Json$Decode$lazy(
-					function (_v2) {
-						return $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-					})),
-			A2($elm$json$Json$Decode$field, 'substitution', $author$project$Helpers$Exporting$Json$Decode$substitution)));
-}
-function $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau() {
-	return $elm$json$Json$Decode$lazy(
-		function (_v1) {
-			return A2(
-				$elm$json$Json$Decode$andThen,
-				$author$project$Helpers$Exporting$Json$Decode$tblTypeDecoder,
-				A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
-		});
-}
-try {
-	var $author$project$Helpers$Exporting$Json$Decode$alpha = $author$project$Helpers$Exporting$Json$Decode$cyclic$alpha();
-	$author$project$Helpers$Exporting$Json$Decode$cyclic$alpha = function () {
-		return $author$project$Helpers$Exporting$Json$Decode$alpha;
-	};
-	var $author$project$Helpers$Exporting$Json$Decode$beta = $author$project$Helpers$Exporting$Json$Decode$cyclic$beta();
-	$author$project$Helpers$Exporting$Json$Decode$cyclic$beta = function () {
-		return $author$project$Helpers$Exporting$Json$Decode$beta;
-	};
-	var $author$project$Helpers$Exporting$Json$Decode$delta = $author$project$Helpers$Exporting$Json$Decode$cyclic$delta();
-	$author$project$Helpers$Exporting$Json$Decode$cyclic$delta = function () {
-		return $author$project$Helpers$Exporting$Json$Decode$delta;
-	};
-	var $author$project$Helpers$Exporting$Json$Decode$gamma = $author$project$Helpers$Exporting$Json$Decode$cyclic$gamma();
-	$author$project$Helpers$Exporting$Json$Decode$cyclic$gamma = function () {
-		return $author$project$Helpers$Exporting$Json$Decode$gamma;
-	};
-	var $author$project$Helpers$Exporting$Json$Decode$tableau = $author$project$Helpers$Exporting$Json$Decode$cyclic$tableau();
-	$author$project$Helpers$Exporting$Json$Decode$cyclic$tableau = function () {
-		return $author$project$Helpers$Exporting$Json$Decode$tableau;
-	};
-} catch ($) {
-	throw 'Some top-level definitions from `Helpers.Exporting.Json.Decode` are causing infinite recursion:\n\n  ┌─────┐\n  │    alpha\n  │     ↓\n  │    beta\n  │     ↓\n  │    delta\n  │     ↓\n  │    gamma\n  │     ↓\n  │    tableau\n  │     ↓\n  │    tblTypeDecoder\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
-var $author$project$Helpers$Exporting$Json$Decode$decode = function (s) {
-	var fn = A2(
-		$elm$core$Basics$composeR,
-		$elm$json$Json$Decode$decodeString($author$project$Helpers$Exporting$Json$Decode$tableau),
-		$elm$core$Result$map($author$project$Helpers$Exporting$Json$Decode$reRefTableau));
-	return fn(s);
-};
 var $author$project$Zipper$delete = function (z) {
 	return A2(
 		$author$project$Zipper$modifyNode,
@@ -8589,36 +8979,7 @@ var $author$project$Editor$simpleUpdate = F2(
 								tableau: $author$project$Editor$topRenumbered(
 									$author$project$Zipper$changeToDelta(z))
 							});
-					case 'Prettify':
-						return _Utils_update(
-							model,
-							{
-								tableau: $author$project$Zipper$prettify(model.tableau)
-							});
-					case 'JsonSelected':
-						return model;
-					case 'Undo':
-						return model;
-					case 'Redo':
-						return model;
-					case 'JsonRead':
-						var contents = msg.a.contents;
-						var _v1 = $author$project$Helpers$Exporting$Json$Decode$decode(contents);
-						if (_v1.$ === 'Ok') {
-							var t = _v1.a;
-							return _Utils_update(
-								model,
-								{jsonImporting: false, tableau: t});
-						} else {
-							var e = _v1.a;
-							return _Utils_update(
-								model,
-								{
-									jsonImportError: $elm$json$Json$Decode$errorToString(e),
-									jsonImporting: false
-								});
-						}
-					default:
+					case 'ChangeButtonsAppearance':
 						var z = msg.a;
 						return _Utils_update(
 							model,
@@ -8626,9 +8987,39 @@ var $author$project$Editor$simpleUpdate = F2(
 								tableau: $author$project$Editor$top(
 									$author$project$Zipper$changeButtonAppearance(z))
 							});
+					case 'Prettify':
+						return _Utils_update(
+							model,
+							{
+								tableau: $author$project$Zipper$prettify(model.tableau)
+							});
+					case 'JsonSelect':
+						return model;
+					case 'JsonSelected':
+						return model;
+					case 'Undo':
+						return model;
+					case 'Redo':
+						return model;
+					case 'JsonRead':
+						return model;
+					case 'Export':
+						return model;
+					case 'Print':
+						return model;
+					default:
+						return model;
 				}
 			}());
 	});
+var $elm$file$File$Download$string = F3(
+	function (name, mime, content) {
+		return A2(
+			$elm$core$Task$perform,
+			$elm$core$Basics$never,
+			A3(_File_download, name, mime, content));
+	});
+var $elm$file$File$toString = _File_toString;
 var $elm_community$undo_redo$UndoList$undo = function (_v0) {
 	var past = _v0.past;
 	var present = _v0.present;
@@ -8649,48 +9040,109 @@ var $author$project$Editor$update = F2(
 	function (msg, model) {
 		var present = model.present;
 		switch (msg.$) {
-			case 'JsonSelected':
+			case 'JsonSelect':
 				return _Utils_Tuple2(
+					model,
 					A2(
-						$elm_community$undo_redo$UndoList$new,
+						$elm$file$File$Select$file,
+						_List_fromArray(
+							['application/json']),
+						$author$project$Editor$JsonSelected));
+			case 'JsonSelected':
+				var file = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							present: _Utils_update(
+								present,
+								{
+									jsonImport: $author$project$Editor$InProgress(
+										$elm$file$File$name(file))
+								})
+						}),
+					A2(
+						$elm$core$Task$perform,
+						$author$project$Editor$JsonRead,
+						$elm$file$File$toString(file)));
+			case 'JsonRead':
+				var contents = msg.a;
+				var _v1 = $author$project$Helpers$Exporting$Json$Decode$decode(contents);
+				if (_v1.$ === 'Ok') {
+					var t = _v1.a;
+					return _Utils_Tuple2(
+						A2(
+							$elm_community$undo_redo$UndoList$new,
+							_Utils_update(
+								present,
+								{jsonImport: $author$project$Editor$None, tableau: t}),
+							model),
+						$author$project$Editor$cache(contents));
+				} else {
+					var e = _v1.a;
+					return _Utils_Tuple2(
 						_Utils_update(
-							present,
-							{jsonImportError: '', jsonImporting: true}),
-						model),
-					$author$project$Helpers$Exporting$Ports$fileSelected(present.jsonImportId));
+							model,
+							{
+								present: _Utils_update(
+									present,
+									{
+										jsonImport: $author$project$Editor$ImportErr(
+											$elm$json$Json$Decode$errorToString(e))
+									})
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'Export':
+				return _Utils_Tuple2(
+					model,
+					A3(
+						$elm$file$File$Download$string,
+						'tableau.json',
+						'application/json',
+						A2($author$project$Helpers$Exporting$Json$Encode$encode, 2, present.tableau)));
 			case 'Undo':
 				return _Utils_Tuple2(
-					$elm_community$undo_redo$UndoList$undo(model),
+					$elm_community$undo_redo$UndoList$undo(
+						_Utils_update(
+							model,
+							{
+								present: _Utils_update(
+									present,
+									{jsonImport: $author$project$Editor$None})
+							})),
 					$elm$core$Platform$Cmd$none);
 			case 'Redo':
 				return _Utils_Tuple2(
 					$elm_community$undo_redo$UndoList$redo(model),
 					$elm$core$Platform$Cmd$none);
+			case 'Print':
+				return _Utils_Tuple2(
+					model,
+					$author$project$Editor$print(_Utils_Tuple0));
+			case 'Cache':
+				return _Utils_Tuple2(
+					model,
+					$author$project$Editor$cache(
+						A2($author$project$Helpers$Exporting$Json$Encode$encode, 0, model.present.tableau)));
 			default:
+				var presentSansImport = _Utils_update(
+					present,
+					{jsonImport: $author$project$Editor$None});
 				return _Utils_Tuple2(
 					A2(
 						$elm_community$undo_redo$UndoList$new,
-						A2(
-							$author$project$Editor$simpleUpdate,
-							msg,
-							_Utils_update(
-								present,
-								{jsonImportError: ''})),
-						model),
+						A2($author$project$Editor$simpleUpdate, msg, presentSansImport),
+						_Utils_update(
+							model,
+							{present: presentSansImport})),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Editor$Prettify = {$: 'Prettify'};
+var $author$project$Editor$Print = {$: 'Print'};
 var $author$project$Editor$Redo = {$: 'Redo'};
 var $author$project$Editor$Undo = {$: 'Undo'};
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -8725,7 +9177,7 @@ var $elm$core$Maybe$isJust = function (maybe) {
 var $elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
 var $elm_explorations$markdown$Markdown$toHtml = $elm_explorations$markdown$Markdown$toHtmlWith($elm_explorations$markdown$Markdown$defaultOptions);
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Rules$notesTable = A2(
+var $author$project$Helpers$Rules$notesTable = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
 		[
@@ -8784,7 +9236,7 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'Each of the nodes contains a signed formula, i.e. it must be prefixed by `T` or `F`. ')
+									'Each node contains a signed formula, i.e. it must be prefixed by `T` or `F`. ')
 								])),
 							A2(
 							$elm$html$Html$td,
@@ -8797,14 +9249,14 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'T \\forall x P(x)'),
+									'**T** \\forall x P(x)'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'F \\exists x \\forall p (K(x, q) ∧ G(p, x) )')
+									'**F** ∃x ∀y (K(x,q) ∧ G(y,x))')
 								]))
 						])),
 					A2(
@@ -8823,7 +9275,7 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'To enter a premise / assumption (which you want to prove), make it reference itself')
+									'Make each premise/assumption and conclusion/goal reference itself. Sign premises with `T` and sign conclusions with `F`.')
 								])),
 							A2(
 							$elm$html$Html$td,
@@ -8836,14 +9288,14 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(1) T (a → b) [1]'),
+									'(**1**) **T** (A → B) [**1**]'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(i.e. "(1) F .................. [1]")')
+									'(**2**) **F** ¬(A ∧ ¬B) [**2**]')
 								]))
 						])),
 					A2(
@@ -8862,7 +9314,7 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'When substituting, choose only such term which does not contain a variable which looks like bound in referrenced formula.')
+									'When substituting a variable _x_ with a term _t_, _t_ must not contain any variable which is bound at any occurrence of _x_.')
 								])),
 							A2(
 							$elm$html$Html$td,
@@ -8875,21 +9327,21 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'wrong example: '),
+									'**Incorrect** example: '),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(1) T \\forall x \\exists k P(x,k) [1]'),
+									'(1) T ∀x ∃**y** P(**x**,y) [1]'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(2) T \\exists k P(k,k) {x→k}[1]')
+									'(2) T ∃y P(f(y),y) {x→**f(y)**} [1]')
 								]))
 						])),
 					A2(
@@ -8908,7 +9360,7 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'When applying delta rule make sure to use completely new constant, which was not used as free (better bound as well) in a node somewhere above.')
+									'When applying a δ rule, substitute the bound variable with **a new** constant/variable, i.e., one which is not free (or, even better, does not occur at all) in any node above the current one.')
 								])),
 							A2(
 							$elm$html$Html$td,
@@ -8921,83 +9373,83 @@ var $author$project$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'wrong example: '),
+									'**Incorrect** example: '),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(1) T L(p) [1]'),
+									'(1) T L(**p**) [1]'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(2) T \\exists x \\forall k P(x,k) [2]'),
+									'(2) T ∃x ∀y P(x,y) [2]'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'(3) T \\forall k P(p,k) {x→p} [2]')
+									'(3) T ∀y P(**p**,y) {x→**p**} [2]')
 								]))
 						]))
 				]))
 		]));
-var $author$project$Rules$fA = A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Atom, 'A', _List_Nil);
-var $author$project$Rules$fB = A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Atom, 'B', _List_Nil);
-var $author$project$Rules$alphas = _List_fromArray(
+var $author$project$Helpers$Rules$fA = A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Atom, 'A', _List_Nil);
+var $author$project$Helpers$Rules$fB = A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Atom, 'B', _List_Nil);
+var $author$project$Helpers$Rules$alphas = _List_fromArray(
 	[
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Conj, $author$project$Rules$fA, $author$project$Rules$fB)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Conj, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Disj, $author$project$Rules$fA, $author$project$Rules$fB)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Disj, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Impl, $author$project$Rules$fA, $author$project$Rules$fB)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Impl, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$Neg($author$project$Rules$fA)),
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$Neg($author$project$Helpers$Rules$fA)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$Neg($author$project$Rules$fA))
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$Neg($author$project$Helpers$Rules$fA))
 	]);
-var $author$project$Rules$betas = _List_fromArray(
+var $author$project$Helpers$Rules$betas = _List_fromArray(
 	[
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Conj, $author$project$Rules$fA, $author$project$Rules$fB)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Conj, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Disj, $author$project$Rules$fA, $author$project$Rules$fB)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Disj, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Impl, $author$project$Rules$fA, $author$project$Rules$fB))
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Impl, $author$project$Helpers$Rules$fA, $author$project$Helpers$Rules$fB))
 	]);
-var $author$project$Rules$fD = A2(
+var $author$project$Helpers$Rules$fD = A2(
 	$FMFI_UK_1_AIN_412$elm_formula$Formula$Atom,
 	'P',
 	_List_fromArray(
 		[
 			$FMFI_UK_1_AIN_412$elm_formula$Formula$Var('x')
 		]));
-var $author$project$Rules$fG = A2(
+var $author$project$Helpers$Rules$fG = A2(
 	$FMFI_UK_1_AIN_412$elm_formula$Formula$Atom,
 	'P',
 	_List_fromArray(
 		[
 			$FMFI_UK_1_AIN_412$elm_formula$Formula$Var('x')
 		]));
-var $author$project$Rules$deltas = _List_fromArray(
+var $author$project$Helpers$Rules$deltas = _List_fromArray(
 	[
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', $author$project$Rules$fG)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', $author$project$Helpers$Rules$fG)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Exists, 'x', $author$project$Rules$fD))
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Exists, 'x', $author$project$Helpers$Rules$fD))
 	]);
-var $author$project$Rules$gammas = _List_fromArray(
+var $author$project$Helpers$Rules$gammas = _List_fromArray(
 	[
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$T(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', $author$project$Rules$fD)),
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, 'x', $author$project$Helpers$Rules$fD)),
 		$FMFI_UK_1_AIN_412$elm_formula$Formula$F(
-		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Exists, 'x', $author$project$Rules$fD))
+		A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Exists, 'x', $author$project$Helpers$Rules$fD))
 	]);
 var $FMFI_UK_1_AIN_412$elm_formula$Formula$negSigned = function (sf) {
 	if (sf.$ === 'T') {
@@ -9070,62 +9522,48 @@ var $FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas = function (sf) {
 				$FMFI_UK_1_AIN_412$elm_formula$Formula$T(f)));
 	}
 };
-var $author$project$Rules$renderAlpha = function (a) {
+var $author$project$Helpers$Rules$renderAlpha = function (a) {
 	return A2(
-		$elm$html$Html$div,
+		$elm$html$Html$table,
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class('rule')
 			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$table,
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$elm$html$Html$tr,
+				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('tableau')
-					]),
-				_Utils_ap(
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$tr,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$td,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('beta')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(a))
-										]))
-								]))
-						]),
-					A2(
-						$elm$core$List$map,
-						function (f) {
-							return A2(
-								$elm$html$Html$tr,
+						A2(
+						$elm$html$Html$td,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(a))
+							]))
+					])),
+			A2(
+				$elm$core$List$map,
+				function (f) {
+					return A2(
+						$elm$html$Html$tr,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$td,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$td,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text(
-												$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
-											]))
-									]));
-						},
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(a))))
-			]));
+										$elm$html$Html$text(
+										$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
+									]))
+							]));
+				},
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(a))));
 };
 var $elm$html$Html$Attributes$colspan = function (n) {
 	return A2(
@@ -9133,9 +9571,10 @@ var $elm$html$Html$Attributes$colspan = function (n) {
 		'colspan',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Rules$renderBeta = function (b) {
+var $author$project$Helpers$Rules$renderBeta = function (b) {
+	var subfs = $FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(b);
 	return A2(
-		$elm$html$Html$div,
+		$elm$html$Html$table,
 		_List_fromArray(
 			[
 				$elm$html$Html$Attributes$class('rule')
@@ -9143,1586 +9582,67 @@ var $author$project$Rules$renderBeta = function (b) {
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$table,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('tableau')
-					]),
+				$elm$html$Html$tr,
+				_List_Nil,
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$tr,
-						_List_Nil,
+						$elm$html$Html$td,
 						_List_fromArray(
 							[
-								A2(
-								$elm$html$Html$td,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('beta'),
-										$elm$html$Html$Attributes$colspan(2)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(b))
-									]))
-							])),
-						A2(
-						$elm$html$Html$tr,
-						_List_Nil,
-						A2(
-							$elm$core$List$map,
-							function (f) {
-								return A2(
-									$elm$html$Html$td,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
-										]));
-							},
-							$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(b)))
-					]))
-			]));
-};
-var $author$project$Rules$renderDelta = function (d) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('rule')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$table,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('tableau')
-					]),
-				_Utils_ap(
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$tr,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$td,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('alpha')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(d))
-										]))
-								]))
-						]),
-					A2(
-						$elm$core$List$map,
-						function (f) {
-							return A2(
-								$elm$html$Html$tr,
-								_List_Nil,
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$td,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text(
-												$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
-											]))
-									]));
-						},
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(d))))
-			]));
-};
-var $author$project$Rules$renderGamma = function (g) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('rule')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$table,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('tableau')
-					]),
-				_Utils_ap(
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$tr,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$td,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('alpha')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(g))
-										]))
-								]))
-						]),
-					A2(
-						$elm$core$List$map,
-						function (f) {
-							return A2(
-								$elm$html$Html$tr,
-								_List_Nil,
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$td,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text(
-												$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
-											]))
-									]));
-						},
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(g))))
-			]));
-};
-var $author$project$Rules$rulesTable = A2(
-	$elm$html$Html$div,
-	_List_Nil,
-	_List_fromArray(
-		[
-			A2(
-			$elm$html$Html$h3,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Aplying rules')
-				])),
-			A2(
-			$elm$html$Html$table,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('rulesHelpTable')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('α-rule')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('β-rule')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('γ-rule')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('δ-rule')
-								]))
-						])),
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('rules')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									A2($elm$core$List$map, $author$project$Rules$renderAlpha, $author$project$Rules$alphas))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									A2($elm$core$List$map, $author$project$Rules$renderBeta, $author$project$Rules$betas))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									A2($elm$core$List$map, $author$project$Rules$renderGamma, $author$project$Rules$gammas))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									A2($elm$core$List$map, $author$project$Rules$renderDelta, $author$project$Rules$deltas))
-								]))
-						])),
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('example')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('formula')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('(1) T(a∧b) [1]'),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('alpha')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('formula')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('(2) T a [1]'),
-															A2(
-															$elm$html$Html$div,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('alpha')
-																]),
-															_List_fromArray(
-																[
-																	A2(
-																	$elm$html$Html$div,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('formula')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text('(3) T b [1]')
-																		]))
-																]))
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('formula')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('(1) T(a∨b) [1]'),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('beta')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('formula')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('(2) T a [1]')
-														])),
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('formula')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('(3) T b [1]')
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('formula')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('(1) T \\forall x P(x) [1]'),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('gamma')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('formula')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('(2) T P(k) {x→k} [1]')
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('formula')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('(1) T \\forall x P(x) [1]'),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('delta')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$div,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('formula')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('(2) T P(k) {x→k} [1]')
-														]))
-												]))
-										]))
-								]))
-						]))
-				]))
-		]));
-var $author$project$Rules$symbolsTable = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('half')
-		]),
-	_List_fromArray(
-		[
-			A2(
-			$elm$html$Html$h3,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Symbols of propositional and first-order logic')
-				])),
-			A2(
-			$elm$html$Html$table,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('rulesHelpTable')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Symbols of conjunction')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Symbols of disjunction')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Symbols of implication')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Symbols of negation')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Universal quantifier')
-								])),
-							A2(
-							$elm$html$Html$th,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Existential quantifier')
-								]))
-						])),
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`&`, `/\\`, `∧`')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`|`, `\\/`, `∨`')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`->`, `→`')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`-`, `~`, `¬`')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`∀`, `\\A`, `\\forall`, `\\a`')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('symbols')
-										]),
-									'`∃`, `\\E`, `\\exists`, `\\e`')
-								]))
-						])),
-					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('strictly binary')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('strictly binary')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('strictly binary')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('unary')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('First order logic term')
-								])),
-							A2(
-							$elm$html$Html$td,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('First order logic term')
-								]))
-						]))
-				]))
-		]));
-var $author$project$Rules$help = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('rulesHelp')
-		]),
-	_List_fromArray(
-		[
-			A2(
-			$elm$html$Html$h2,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Help')
-				])),
-			$author$project$Rules$symbolsTable,
-			$author$project$Rules$notesTable,
-			$author$project$Rules$rulesTable
-		]));
-var $elm$html$Html$a = _VirtualDom_node('a');
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var $author$project$Helpers$Exporting$Json$Encode$jsonSubstitution = function (_v0) {
-	var term = _v0.term;
-	var _var = _v0._var;
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'term',
-				$elm$json$Json$Encode$string(term)),
-				_Utils_Tuple2(
-				'var',
-				$elm$json$Json$Encode$string(_var))
-			]));
-};
-var $author$project$Helpers$Exporting$Json$Encode$encodeSubstitution = function (s) {
-	return _List_fromArray(
-		[
-			_Utils_Tuple2(
-			'substitution',
-			$author$project$Helpers$Exporting$Json$Encode$jsonSubstitution(s))
-		]);
-};
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $author$project$Helpers$Exporting$Json$Encode$jsonRef = function (r) {
-	return $elm$json$Json$Encode$string(r.str);
-};
-var $author$project$Helpers$Exporting$Json$Encode$jsonNode = function (_v0) {
-	var id = _v0.id;
-	var value = _v0.value;
-	var reference = _v0.reference;
-	var gui = _v0.gui;
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'id',
-				$elm$json$Json$Encode$int(id)),
-				_Utils_Tuple2(
-				'value',
-				$elm$json$Json$Encode$string(value)),
-				_Utils_Tuple2(
-				'reference',
-				$author$project$Helpers$Exporting$Json$Encode$jsonRef(reference))
-			]));
-};
-var $author$project$Helpers$Exporting$Json$Encode$jsonNodeList = function (n) {
-	return _List_fromArray(
-		[
-			_Utils_Tuple2(
-			'node',
-			$author$project$Helpers$Exporting$Json$Encode$jsonNode(n))
-		]);
-};
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $author$project$Helpers$Exporting$Json$Encode$jsonTableau = function (t) {
-	return $elm$json$Json$Encode$object(
-		$author$project$Helpers$Exporting$Json$Encode$jsonTblList(t));
-};
-var $author$project$Helpers$Exporting$Json$Encode$jsonTblList = function (tableau) {
-	var _v0 = tableau.ext;
-	switch (_v0.$) {
-		case 'Open':
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('open'))
-					]),
-				$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node));
-		case 'Closed':
-			var r1 = _v0.a;
-			var r2 = _v0.b;
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('closed'))
-					]),
-				_Utils_ap(
-					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'closed',
-							A2(
-								$elm$json$Json$Encode$list,
-								$author$project$Helpers$Exporting$Json$Encode$jsonRef,
-								_List_fromArray(
-									[r1, r2])))
-						])));
-		case 'Alpha':
-			var t = _v0.a;
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('alpha'))
-					]),
-				_Utils_ap(
-					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'child',
-							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
-						])));
-		case 'Beta':
-			var lt = _v0.a;
-			var rt = _v0.b;
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('beta'))
-					]),
-				_Utils_ap(
-					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'leftChild',
-							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(lt)),
-							_Utils_Tuple2(
-							'rightChild',
-							$author$project$Helpers$Exporting$Json$Encode$jsonTableau(rt))
-						])));
-		case 'Gamma':
-			var t = _v0.a;
-			var s = _v0.b;
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('gamma'))
-					]),
-				_Utils_ap(
-					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
-					_Utils_ap(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'child',
-								$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
-							]),
-						$author$project$Helpers$Exporting$Json$Encode$encodeSubstitution(s))));
-		default:
-			var t = _v0.a;
-			var s = _v0.b;
-			return _Utils_ap(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'type',
-						$elm$json$Json$Encode$string('delta'))
-					]),
-				_Utils_ap(
-					$author$project$Helpers$Exporting$Json$Encode$jsonNodeList(tableau.node),
-					_Utils_ap(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'child',
-								$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t))
-							]),
-						$author$project$Helpers$Exporting$Json$Encode$encodeSubstitution(s))));
-	}
-};
-var $author$project$Helpers$Exporting$Json$Encode$encode = F2(
-	function (ind, t) {
-		return A2(
-			$elm$json$Json$Encode$encode,
-			ind,
-			$author$project$Helpers$Exporting$Json$Encode$jsonTableau(t)) + '\n';
-	});
-var $elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var $author$project$Editor$jsonDataUri = function (json) {
-	return 'data:application/json;charset=utf-8,';
-};
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$Editor$jsonExportControl = function (t) {
-	return A2(
-		$elm$html$Html$a,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$type_('button'),
-				$elm$html$Html$Attributes$href(
-				$author$project$Editor$jsonDataUri(
-					A2($author$project$Helpers$Exporting$Json$Encode$encode, 2, t)))
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('button')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Export as JSON')
-					]))
-			]));
-};
-var $author$project$Editor$JsonSelected = {$: 'JsonSelected'};
-var $elm$html$Html$Attributes$accept = $elm$html$Html$Attributes$stringProperty('accept');
-var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $author$project$Editor$jsonImportControl = F2(
-	function (jsonImporting, jsonImportId) {
-		if (jsonImporting) {
-			return $elm$html$Html$text('Loading file...');
-		} else {
-			return A2(
-				$elm$html$Html$label,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$for(jsonImportId)
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$attribute, 'onClick', 'javascript:document.getElementById(\'' + (jsonImportId + '\').click();')),
-								$elm$html$Html$Attributes$class('button')
+								$elm$html$Html$Attributes$colspan(
+								$elm$core$List$length(subfs))
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Import from JSON')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('file'),
-								$elm$html$Html$Attributes$id(jsonImportId),
-								$elm$html$Html$Attributes$accept('application/json'),
-								A2(
-								$elm$html$Html$Events$on,
-								'change',
-								$elm$json$Json$Decode$succeed($author$project$Editor$JsonSelected))
-							]),
-						_List_Nil)
-					]));
-		}
-	});
-var $elm$html$Html$p = _VirtualDom_node('p');
-var $author$project$Editor$jsonImportError = function (model) {
-	var _v0 = model.jsonImportError;
-	if (_v0 === '') {
-		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
-	} else {
-		return A2(
-			$elm$html$Html$p,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('jsonImportError')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('Error importing tableau: ' + model.jsonImportError)
-				]));
-	}
-};
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $author$project$Errors$errors = function (r) {
-	if (r.$ === 'Err') {
-		var x = r.a;
-		return x;
-	} else {
-		return _List_Nil;
-	}
-};
-var $author$project$Validate$always2 = F3(
-	function (r, _v0, _v1) {
-		return r;
-	});
-var $author$project$Zipper$children = function (z) {
-	var _v0 = z;
-	var t = _v0.a;
-	var bs = _v0.b;
-	var _v1 = t.ext;
-	switch (_v1.$) {
-		case 'Open':
-			return _List_Nil;
-		case 'Closed':
-			return _List_Nil;
-		case 'Alpha':
-			return _List_fromArray(
-				[
-					$author$project$Zipper$down(z)
-				]);
-		case 'Beta':
-			return _List_fromArray(
-				[
-					$author$project$Zipper$left(z),
-					$author$project$Zipper$right(z)
-				]);
-		case 'Gamma':
-			return _List_fromArray(
-				[
-					$author$project$Zipper$down(z)
-				]);
-		default:
-			return _List_fromArray(
-				[
-					$author$project$Zipper$down(z)
-				]);
-	}
-};
-var $elm$core$Result$andThen = F2(
-	function (callback, result) {
-		if (result.$ === 'Ok') {
-			var value = result.a;
-			return callback(value);
-		} else {
-			var msg = result.a;
-			return $elm$core$Result$Err(msg);
-		}
-	});
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
-var $author$project$Validate$Semantics = {$: 'Semantics'};
-var $author$project$Validate$semanticsProblem = F2(
-	function (z, s) {
-		return _List_fromArray(
-			[
-				{msg: s, typ: $author$project$Validate$Semantics, zip: z}
-			]);
-	});
-var $author$project$Validate$checkFormula = F2(
-	function (str, z) {
-		return A2(
-			$elm$core$Result$mapError,
-			function (_v0) {
-				return A2($author$project$Validate$semanticsProblem, z, str + ' is invalid.');
-			},
-			$author$project$Zipper$zNode(z).formula);
-	});
-var $elm$core$Result$fromMaybe = F2(
-	function (err, maybe) {
-		if (maybe.$ === 'Just') {
-			var v = maybe.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			return $elm$core$Result$Err(err);
-		}
-	});
-var $author$project$Zipper$getReffed = F2(
-	function (r, z) {
-		return A2(
-			$elm$core$Maybe$map,
-			function (a) {
-				return A2($author$project$Zipper$above, a, z);
-			},
-			r.up);
-	});
-var $author$project$Validate$checkReffedFormula = F3(
-	function (str, r, z) {
-		return A2(
-			$elm$core$Result$andThen,
-			$author$project$Validate$checkFormula(str + ' referenced formula'),
-			A2(
-				$elm$core$Result$fromMaybe,
-				A2($author$project$Validate$semanticsProblem, z, str + ' reference is invalid.'),
-				A2($author$project$Zipper$getReffed, r, z)));
-	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedComplementary = F2(
-	function (a, b) {
-		var _v0 = _Utils_Tuple2(a, b);
-		_v0$2:
-		while (true) {
-			if (_v0.a.$ === 'T') {
-				if (_v0.b.$ === 'F') {
-					var x = _v0.a.a;
-					var y = _v0.b.a;
-					return _Utils_eq(x, y);
-				} else {
-					break _v0$2;
-				}
-			} else {
-				if (_v0.b.$ === 'T') {
-					var x = _v0.a.a;
-					var y = _v0.b.a;
-					return _Utils_eq(x, y);
-				} else {
-					break _v0$2;
-				}
-			}
-		}
-		return false;
-	});
-var $author$project$Errors$merge2 = F3(
-	function (func, ra, rb) {
-		var _v0 = _Utils_Tuple2(ra, rb);
-		if (_v0.a.$ === 'Ok') {
-			if (_v0.b.$ === 'Ok') {
-				var a = _v0.a.a;
-				var b = _v0.b.a;
-				return $elm$core$Result$Ok(
-					A2(func, a, b));
-			} else {
-				var x = _v0.b.a;
-				return $elm$core$Result$Err(x);
-			}
-		} else {
-			if (_v0.b.$ === 'Err') {
-				var xa = _v0.a.a;
-				var xb = _v0.b.a;
-				return $elm$core$Result$Err(
-					_Utils_ap(xa, xb));
-			} else {
-				var x = _v0.a.a;
-				return $elm$core$Result$Err(x);
-			}
-		}
-	});
-var $author$project$Validate$resultFromBool = F3(
-	function (a, x, b) {
-		return b ? $elm$core$Result$Ok(a) : $elm$core$Result$Err(x);
-	});
-var $author$project$Validate$areCloseRefsComplementary = F3(
-	function (r1, r2, z) {
-		return A2(
-			$elm$core$Result$andThen,
-			A2(
-				$author$project$Validate$resultFromBool,
-				z,
-				A2($author$project$Validate$semanticsProblem, z, 'Closing formulas are not complementary.')),
-			A3(
-				$author$project$Errors$merge2,
-				$FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedComplementary,
-				A3($author$project$Validate$checkReffedFormula, 'First close', r1, z),
-				A3($author$project$Validate$checkReffedFormula, 'Second close', r2, z)));
-	});
-var $author$project$Validate$areCorrectCloseRefs = function (z) {
-	var _v0 = $author$project$Zipper$zTableau(z).ext;
-	if (_v0.$ === 'Closed') {
-		var r1 = _v0.a;
-		var r2 = _v0.b;
-		return A2(
-			$elm$core$Result$map,
-			$elm$core$Basics$always(z),
-			A3($author$project$Validate$areCloseRefsComplementary, r1, r2, z));
-	} else {
-		return $elm$core$Result$Ok(z);
-	}
-};
-var $author$project$Validate$checkPredicate = F3(
-	function (pred, x, a) {
-		return pred(a) ? $elm$core$Result$Ok(a) : $elm$core$Result$Err(x);
-	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha = {$: 'Alpha'};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta = {$: 'Beta'};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta = {$: 'Delta'};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma = {$: 'Gamma'};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$negType = function (t) {
-	switch (t.$) {
-		case 'Alpha':
-			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
-		case 'Beta':
-			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-		case 'Gamma':
-			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta;
-		default:
-			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma;
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$signedType = function (sf) {
-	if (sf.$ === 'T') {
-		switch (sf.a.$) {
-			case 'FF':
-				var _v1 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'FT':
-				var _v2 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'Atom':
-				var _v3 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'Neg':
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'Conj':
-				var _v5 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'Disj':
-				var _v6 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
-			case 'Impl':
-				var _v7 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
-			case 'ForAll':
-				var _v8 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma;
-			default:
-				var _v9 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta;
-		}
-	} else {
-		switch (sf.a.$) {
-			case 'Atom':
-				var _v4 = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			case 'Neg':
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
-			default:
-				var f = sf.a;
-				return $FMFI_UK_1_AIN_412$elm_formula$Formula$negType(
-					$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$T(f)));
-		}
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$isAlpha = function (x) {
-	return _Utils_eq(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha,
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
-};
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedSubformulaOf = F2(
-	function (a, b) {
-		return A2(
-			$elm$core$List$member,
-			a,
-			$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(b));
-	});
-var $elm$core$Result$map2 = F3(
-	function (func, ra, rb) {
-		if (ra.$ === 'Err') {
-			var x = ra.a;
-			return $elm$core$Result$Err(x);
-		} else {
-			var a = ra.a;
-			if (rb.$ === 'Err') {
-				var x = rb.a;
-				return $elm$core$Result$Err(x);
-			} else {
-				var b = rb.a;
-				return $elm$core$Result$Ok(
-					A2(func, a, b));
-			}
-		}
-	});
-var $author$project$Validate$validateReffedFormula = function (z) {
-	return A2(
-		$elm$core$Result$mapError,
-		function (e) {
-			return A2($author$project$Validate$semanticsProblem, z, 'Referenced formula is invalid');
-		},
-		$author$project$Zipper$zNode(z).formula);
-};
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Validate$validateAlphaRule = function (z) {
-	return A2(
-		$elm$core$Result$map,
-		$elm$core$Basics$always(z),
-		A2(
-			$elm$core$Result$andThen,
-			A2(
-				$author$project$Validate$checkPredicate,
-				function (_v0) {
-					var a = _v0.a;
-					var b = _v0.b;
-					return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedSubformulaOf, a, b);
-				},
+								$elm$html$Html$text(
+								$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(b))
+							]))
+					])),
 				A2(
-					$author$project$Validate$semanticsProblem,
-					z,
-					'Is not an α-subformula of (' + ($elm$core$String$fromInt(
-						A2(
-							$elm$core$Maybe$withDefault,
-							0,
-							A2(
-								$elm$core$Maybe$map,
-								A2(
-									$elm$core$Basics$composeR,
-									$author$project$Zipper$zNode,
-									function ($) {
-										return $.id;
-									}),
-								A2(
-									$author$project$Zipper$getReffed,
-									$author$project$Zipper$zNode(z).reference,
-									z)))) + ').'))),
-			A3(
-				$elm$core$Result$map2,
-				F2(
-					function (a, b) {
-						return _Utils_Tuple2(a, b);
-					}),
-				A2($author$project$Validate$checkFormula, 'Formula', z),
+				$elm$html$Html$tr,
+				_List_Nil,
 				A2(
-					$elm$core$Result$andThen,
-					A2(
-						$author$project$Validate$checkPredicate,
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$isAlpha,
-						A2($author$project$Validate$semanticsProblem, z, 'Referenced formula is not α')),
-					A2(
-						$elm$core$Result$andThen,
-						$author$project$Validate$validateReffedFormula,
-						A2(
-							$elm$core$Result$fromMaybe,
-							A2($author$project$Validate$semanticsProblem, z, 'Invalid reference.'),
-							A2(
-								$author$project$Zipper$getReffed,
-								$author$project$Zipper$zNode(z).reference,
-								z)))))));
-};
-var $author$project$Validate$betasHaveSameRef = F2(
-	function (_this, other) {
-		var getRef = A2(
-			$elm$core$Basics$composeR,
-			$author$project$Zipper$zNode,
-			A2(
-				$elm$core$Basics$composeR,
-				function ($) {
-					return $.reference;
-				},
-				A2(
-					$elm$core$Basics$composeR,
-					function ($) {
-						return $.up;
+					$elm$core$List$map,
+					function (f) {
+						return A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(f))
+								]));
 					},
-					$elm$core$Result$fromMaybe(_List_Nil))));
-		var ro = getRef(other);
-		var rt = getRef(_this);
-		return A2(
-			$elm$core$Result$andThen,
-			A2(
-				$author$project$Validate$resultFromBool,
-				_this,
-				A2($author$project$Validate$semanticsProblem, _this, 'β references are not the same')),
-			A3($author$project$Errors$merge2, $elm$core$Basics$eq, rt, ro));
+					subfs))
+			]));
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$FF = {$: 'FF'};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
 	});
-var $author$project$Validate$checkIsPointingOnSelf = F3(
-	function (pred, x, z) {
-		var _v0 = pred(z);
-		if (_v0) {
-			return $elm$core$Result$Err(x);
+var $author$project$Helpers$Rules$signedMap = F2(
+	function (f, sx) {
+		if (sx.$ === 'T') {
+			var x = sx.a;
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$T(
+				f(x));
 		} else {
-			return $elm$core$Result$Ok(z);
-		}
-	});
-var $author$project$Validate$Syntax = {$: 'Syntax'};
-var $author$project$Validate$syntaxProblem = F2(
-	function (z, s) {
-		return _List_fromArray(
-			[
-				{msg: s, typ: $author$project$Validate$Syntax, zip: z}
-			]);
-	});
-var $author$project$Validate$getReffedSignedFormula = function (z) {
-	var _v0 = A2(
-		$author$project$Zipper$getReffed,
-		$author$project$Zipper$zNode(z).reference,
-		z);
-	if (_v0.$ === 'Just') {
-		var rz = _v0.a;
-		var _v1 = $author$project$Zipper$zNode(rz).formula;
-		if (_v1.$ === 'Ok') {
-			var sf = _v1.a;
-			return $elm$core$Result$Ok(sf);
-		} else {
-			return $elm$core$Result$Err(
-				A2($author$project$Validate$syntaxProblem, z, 'reffed formula incorrectly parsed'));
-		}
-	} else {
-		return $elm$core$Result$Err(
-			A2($author$project$Validate$semanticsProblem, z, 'no reffed formula'));
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$isBeta = function (x) {
-	return _Utils_eq(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$Beta,
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
-};
-var $author$project$Validate$isPointingOnSelf = function (_this) {
-	var _v0 = $author$project$Zipper$zNode(_this).reference.up;
-	if ((_v0.$ === 'Just') && (!_v0.a)) {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
-var $elm$core$List$sortBy = _List_sortBy;
-var $author$project$Validate$validateBeta = F2(
-	function (_this, other) {
-		var reffed = A2(
-			$elm$core$Result$map,
-			$elm$core$List$sortBy($FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned),
-			A2(
-				$elm$core$Result$map,
-				$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas,
-				A2(
-					$elm$core$Result$andThen,
-					A2(
-						$author$project$Validate$checkPredicate,
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$isBeta,
-						A2($author$project$Validate$semanticsProblem, _this, 'Referenced formula is not β')),
-					A2(
-						$elm$core$Result$andThen,
-						function (z) {
-							return $author$project$Validate$getReffedSignedFormula(z);
-						},
-						A2(
-							$elm$core$Result$andThen,
-							A2(
-								$author$project$Validate$checkIsPointingOnSelf,
-								$author$project$Validate$isPointingOnSelf,
-								A2($author$project$Validate$semanticsProblem, _this, 'β can not be premise')),
-							A2(
-								$elm$core$Result$map,
-								$elm$core$Basics$always(_this),
-								A2(
-									$elm$core$Result$andThen,
-									$author$project$Validate$validateReffedFormula,
-									A2(
-										$elm$core$Result$fromMaybe,
-										A2($author$project$Validate$semanticsProblem, _this, 'Invalid reference'),
-										A2(
-											$author$project$Zipper$getReffed,
-											$author$project$Zipper$zNode(_this).reference,
-											_this)))))))));
-		var ft = A2($author$project$Validate$checkFormula, 'Formula', _this);
-		var fo = A2($author$project$Validate$checkFormula, 'The other β subformula', other);
-		var children = A2(
-			$elm$core$Result$map,
-			$elm$core$List$sortBy($FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned),
-			A3(
-				$elm$core$Result$map2,
-				$elm$core$List$cons,
-				fo,
-				A2($elm$core$Result$map, $elm$core$List$singleton, ft)));
-		return A3(
-			$author$project$Errors$merge2,
-			$author$project$Validate$always2(_this),
-			A2($author$project$Validate$betasHaveSameRef, _this, other),
-			A2(
-				$elm$core$Result$andThen,
-				A2(
-					$author$project$Validate$resultFromBool,
-					_this,
-					A2($author$project$Validate$semanticsProblem, _this, 'Wrong β subformulas.')),
-				A3($author$project$Errors$merge2, $elm$core$Basics$eq, children, reffed)));
-	});
-var $author$project$Validate$validateBetaRuleLeft = function (z) {
-	return A2(
-		$author$project$Validate$validateBeta,
-		z,
-		$author$project$Zipper$right(
-			$author$project$Zipper$up(z)));
-};
-var $author$project$Validate$validateBetaRuleRight = function (z) {
-	return A2(
-		$author$project$Validate$validateBeta,
-		z,
-		$author$project$Zipper$left(
-			$author$project$Zipper$up(z)));
-};
-var $author$project$Zipper$zSubstitution = function (z) {
-	var t = z.a;
-	var bs = z.b;
-	var _v0 = t.ext;
-	switch (_v0.$) {
-		case 'Gamma':
-			var node = _v0.a;
-			var subs = _v0.b;
-			return $elm$core$Maybe$Just(subs);
-		case 'Delta':
-			var node = _v0.a;
-			var subs = _v0.b;
-			return $elm$core$Maybe$Just(subs);
-		default:
-			return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Validate$checkNewVariable = F3(
-	function (pred, x, z) {
-		var _v0 = pred(
-			A2(
-				$elm$core$Maybe$withDefault,
-				'',
-				A2(
-					$elm$core$Maybe$map,
-					function ($) {
-						return $.term;
-					},
-					$author$project$Zipper$zSubstitution(
-						$author$project$Zipper$up(z)))));
-		if (_v0) {
-			return $elm$core$Result$Ok(z);
-		} else {
-			return $elm$core$Result$Err(x);
+			var x = sx.a;
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$F(
+				f(x));
 		}
 	});
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
 		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$singleton = F2(
+	function (key, value) {
+		return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
 	});
 var $elm$core$Dict$Red = {$: 'Red'};
 var $elm$core$Dict$balance = F5(
@@ -10827,76 +9747,27 @@ var $elm$core$Dict$insert = F3(
 			return x;
 		}
 	});
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$isDelta = function (x) {
-	return _Utils_eq(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$Delta,
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
-};
-var $author$project$Validate$getTermFromResult = function (r) {
-	if (r.$ === 'Ok') {
-		var term = r.a;
-		return term;
-	} else {
-		var err = r.a;
-		return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Fun, 'default', _List_Nil);
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm = $elm$parser$Parser$run(
-	A2(
-		$elm$parser$Parser$keeper,
-		A2(
-			$elm$parser$Parser$ignorer,
-			$elm$parser$Parser$succeed($elm$core$Basics$identity),
-			$FMFI_UK_1_AIN_412$elm_formula$Formula$spaces),
-		A2(
-			$elm$parser$Parser$ignorer,
-			A2($elm$parser$Parser$ignorer, $FMFI_UK_1_AIN_412$elm_formula$Formula$term, $FMFI_UK_1_AIN_412$elm_formula$Formula$spaces),
-			$elm$parser$Parser$end)));
-var $author$project$Validate$isNewVariableFunction = function (variable) {
-	var _v0 = $author$project$Validate$getTermFromResult(
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm(variable));
-	if (_v0.$ === 'Var') {
-		var s = _v0.a;
-		return true;
-	} else {
-		return false;
-	}
-};
 var $elm$core$Set$insert = F2(
 	function (key, _v0) {
 		var dict = _v0.a;
 		return $elm$core$Set$Set_elm_builtin(
 			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
 	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA = F2(
-	function (t, fvs) {
-		if (t.$ === 'Var') {
-			var x = t.a;
-			return A2($elm$core$Set$insert, x, fvs);
+var $elm$core$Result$map2 = F3(
+	function (func, ra, rb) {
+		if (ra.$ === 'Err') {
+			var x = ra.a;
+			return $elm$core$Result$Err(x);
 		} else {
-			var ts = t.b;
-			return A3($elm$core$List$foldl, $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA, fvs, ts);
+			var a = ra.a;
+			if (rb.$ === 'Err') {
+				var x = rb.a;
+				return $elm$core$Result$Err(x);
+			} else {
+				var b = rb.a;
+				return $elm$core$Result$Ok(
+					A2(func, a, b));
+			}
 		}
 	});
 var $elm$core$Dict$getMin = function (dict) {
@@ -11261,117 +10132,14 @@ var $elm$core$Dict$remove = F2(
 			return x;
 		}
 	});
-var $elm$core$Set$remove = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A2($elm$core$Dict$remove, key, dict));
-	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$subformulas = function (f) {
-	switch (f.$) {
-		case 'Neg':
-			var sf = f.a;
-			return _List_fromArray(
-				[sf]);
-		case 'Disj':
-			var lf = f.a;
-			var rf = f.b;
-			return _List_fromArray(
-				[lf, rf]);
-		case 'Conj':
-			var lf = f.a;
-			var rf = f.b;
-			return _List_fromArray(
-				[lf, rf]);
-		case 'Impl':
-			var lf = f.a;
-			var rf = f.b;
-			return _List_fromArray(
-				[lf, rf]);
-		case 'ForAll':
-			var sf = f.b;
-			return _List_fromArray(
-				[sf]);
-		case 'Exists':
-			var sf = f.b;
-			return _List_fromArray(
-				[sf]);
-		default:
-			return _List_Nil;
-	}
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA = F2(
-	function (f, fvs) {
-		switch (f.$) {
-			case 'Atom':
-				var ts = f.b;
-				return A3($elm$core$List$foldl, $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA, fvs, ts);
-			case 'ForAll':
-				var x = f.a;
-				var sf = f.b;
-				return A2(
-					$elm$core$Set$remove,
-					x,
-					A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, sf, fvs));
-			case 'Exists':
-				var x = f.a;
-				var sf = f.b;
-				return A2(
-					$elm$core$Set$remove,
-					x,
-					A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, sf, fvs));
-			default:
-				return A3(
-					$elm$core$List$foldl,
-					$FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA,
-					fvs,
-					$FMFI_UK_1_AIN_412$elm_formula$Formula$subformulas(f));
-		}
-	});
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormula = function (f) {
-	return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, f, $elm$core$Set$empty);
-};
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$signedGetFormula = function (sf) {
-	if (sf.$ === 'T') {
-		var f = sf.a;
-		return f;
-	} else {
-		var f = sf.a;
-		return f;
-	}
-};
-var $author$project$Validate$isSimilarAbove = F2(
-	function (variable, z) {
-		var maybeParsed = $FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned(
-			$author$project$Zipper$zNode(z).value);
-		if (maybeParsed.$ === 'Ok') {
-			var parsed = maybeParsed.a;
-			return A2(
-				$elm$core$Set$member,
-				variable,
-				$FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormula(
-					$FMFI_UK_1_AIN_412$elm_formula$Formula$signedGetFormula(parsed))) || (_Utils_eq(
-				$author$project$Zipper$up(z),
-				z) ? false : A2(
-				$author$project$Validate$isSimilarAbove,
-				variable,
-				$author$project$Zipper$up(z)));
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA = F2(
+	function (t, fvs) {
+		if (t.$ === 'Var') {
+			var x = t.a;
+			return A2($elm$core$Set$insert, x, fvs);
 		} else {
-			return false;
-		}
-	});
-var $author$project$Validate$isNewVariableValid = F2(
-	function (variable, z) {
-		var _v0 = $author$project$Validate$getTermFromResult(
-			$FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm(variable));
-		if (_v0.$ === 'Var') {
-			var s = _v0.a;
-			return !A2(
-				$author$project$Validate$isSimilarAbove,
-				variable,
-				$author$project$Zipper$up(z));
-		} else {
-			return false;
+			var ts = t.b;
+			return A3($elm$core$List$foldl, $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA, fvs, ts);
 		}
 	});
 var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTerm = function (t) {
@@ -11492,11 +10260,6 @@ var $FMFI_UK_1_AIN_412$elm_formula$Formula$canSubst = F3(
 						'bound'
 					])));
 	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
 var $FMFI_UK_1_AIN_412$elm_formula$Formula$mapResult = function (f) {
 	return A2(
 		$elm$core$List$foldr,
@@ -11606,6 +10369,1422 @@ var $FMFI_UK_1_AIN_412$elm_formula$Formula$substF = F3(
 var $FMFI_UK_1_AIN_412$elm_formula$Formula$substitute = F2(
 	function (σ, f) {
 		return A3($FMFI_UK_1_AIN_412$elm_formula$Formula$substF, σ, $elm$core$Set$empty, f);
+	});
+var $elm$core$Result$withDefault = F2(
+	function (def, result) {
+		if (result.$ === 'Ok') {
+			var a = result.a;
+			return a;
+		} else {
+			return def;
+		}
+	});
+var $author$project$Helpers$Rules$demoSubst = F2(
+	function (x, y) {
+		return $author$project$Helpers$Rules$signedMap(
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$core$Result$withDefault($FMFI_UK_1_AIN_412$elm_formula$Formula$FF),
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$substitute(
+					A2(
+						$elm$core$Dict$singleton,
+						x,
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$Var(y)))));
+	});
+var $author$project$Helpers$Rules$renderDelta = function (d) {
+	return A2(
+		$elm$html$Html$table,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('rule')
+			]),
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$elm$html$Html$tr,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$td,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(d))
+							]))
+					])),
+			A2(
+				$elm$core$List$map,
+				function (f) {
+					return A2(
+						$elm$html$Html$tr,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$td,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(
+											A3($author$project$Helpers$Rules$demoSubst, 'x', 'y', f)))
+									]))
+							]));
+				},
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(d))));
+};
+var $author$project$Helpers$Rules$renderGamma = function (g) {
+	return A2(
+		$elm$html$Html$table,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('rule')
+			]),
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$elm$html$Html$tr,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$td,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(g))
+							]))
+					])),
+			A2(
+				$elm$core$List$map,
+				function (f) {
+					return A2(
+						$elm$html$Html$tr,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$td,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned(
+											A3($author$project$Helpers$Rules$demoSubst, 'x', 't', f)))
+									]))
+							]));
+				},
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(g))));
+};
+var $author$project$Helpers$Rules$rulesTable = A2(
+	$elm$html$Html$div,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h3,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Applying rules')
+				])),
+			A2(
+			$elm$html$Html$table,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('rulesHelpTable')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('α-rule')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('β-rule')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('γ-rule')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('δ-rule')
+								]))
+						])),
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('rules')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									A2($elm$core$List$map, $author$project$Helpers$Rules$renderAlpha, $author$project$Helpers$Rules$alphas))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									A2($elm$core$List$map, $author$project$Helpers$Rules$renderBeta, $author$project$Helpers$Rules$betas))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									A2($elm$core$List$map, $author$project$Helpers$Rules$renderGamma, $author$project$Helpers$Rules$gammas))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									A2($elm$core$List$map, $author$project$Helpers$Rules$renderDelta, $author$project$Helpers$Rules$deltas))
+								]))
+						])),
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('example')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('formula')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(1) T(a∧b) [1]'),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('alpha')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('formula')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('(2) T a [1]'),
+															A2(
+															$elm$html$Html$div,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('alpha')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$div,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('formula')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('(3) T b [1]')
+																		]))
+																]))
+														]))
+												]))
+										]))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('formula')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(1) T(a∨b) [1]'),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('beta')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('formula')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('(2) T a [1]')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('formula')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('(3) T b [1]')
+														]))
+												]))
+										]))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('formula')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(1) T ∀x P(x) [1]'),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('gamma')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('formula')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('(2) T P(g(k,y)) {x→g(k,y)} [1]')
+														]))
+												]))
+										]))
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('formula')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(1) F ∀x P(x) [1]'),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('delta')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('formula')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('(2) F P(z) {x→z} [1]')
+														]))
+												]))
+										]))
+								]))
+						]))
+				]))
+		]));
+var $author$project$Helpers$Rules$symbolsTable = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('half')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h3,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Propositional and first-order logical symbols')
+				])),
+			A2(
+			$elm$html$Html$table,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('rulesHelpTable')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Negation')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Conjunction')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Disjunction')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Implication')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Universal quantifier')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Existential quantifier')
+								]))
+						])),
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`-`, `~`, `¬`')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`&`, `/\\`, `∧`')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`|`, `\\/`, `∨`')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`->`, `→`')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`∀`, `\\A`, `\\forall`, `\\a`')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('symbols')
+										]),
+									'`∃`, `\\E`, `\\exists`, `\\e`')
+								]))
+						])),
+					A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$td,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('unary')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$colspan(3)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('strictly binary, must be parenthesized')
+								])),
+							A2(
+							$elm$html$Html$td,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$colspan(2)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('takes a variable and a formula')
+								]))
+						]))
+				]))
+		]));
+var $author$project$Helpers$Rules$help = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('rulesHelp')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h2,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Help')
+				])),
+			$author$project$Helpers$Rules$symbolsTable,
+			$author$project$Helpers$Rules$notesTable,
+			$author$project$Helpers$Rules$rulesTable
+		]));
+var $author$project$Editor$Export = {$: 'Export'};
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $author$project$Editor$jsonExportControl = function (t) {
+	return A2(
+		$elm$html$Html$button,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('button'),
+				$elm$html$Html$Events$onClick($author$project$Editor$Export)
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Export as JSON')
+			]));
+};
+var $author$project$Editor$JsonSelect = {$: 'JsonSelect'};
+var $author$project$Editor$jsonImportControl = function (jsonImport) {
+	if (jsonImport.$ === 'InProgress') {
+		var fname = jsonImport.a;
+		return $elm$html$Html$text('Loading tableau from file' + (fname + '…'));
+	} else {
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('button'),
+					$elm$html$Html$Events$onClick($author$project$Editor$JsonSelect)
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Import from JSON')
+				]));
+	}
+};
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $author$project$Editor$jsonImportError = function (jsonImport) {
+	if (jsonImport.$ === 'ImportErr') {
+		var e = jsonImport.a;
+		return A2(
+			$elm$html$Html$p,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('jsonImportError')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Error importing tableau: ' + e)
+				]));
+	} else {
+		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+	}
+};
+var $author$project$Errors$errors = function (r) {
+	if (r.$ === 'Err') {
+		var x = r.a;
+		return x;
+	} else {
+		return _List_Nil;
+	}
+};
+var $author$project$Validate$always2 = F3(
+	function (r, _v0, _v1) {
+		return r;
+	});
+var $author$project$Zipper$children = function (z) {
+	var _v0 = z;
+	var t = _v0.a;
+	var bs = _v0.b;
+	var _v1 = t.ext;
+	switch (_v1.$) {
+		case 'Open':
+			return _List_Nil;
+		case 'Closed':
+			return _List_Nil;
+		case 'Alpha':
+			return _List_fromArray(
+				[
+					$author$project$Zipper$down(z)
+				]);
+		case 'Beta':
+			return _List_fromArray(
+				[
+					$author$project$Zipper$left(z),
+					$author$project$Zipper$right(z)
+				]);
+		case 'Gamma':
+			return _List_fromArray(
+				[
+					$author$project$Zipper$down(z)
+				]);
+		default:
+			return _List_fromArray(
+				[
+					$author$project$Zipper$down(z)
+				]);
+	}
+};
+var $elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (result.$ === 'Ok') {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return $elm$core$Result$Err(msg);
+		}
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $author$project$Validate$Semantics = {$: 'Semantics'};
+var $author$project$Validate$semanticsProblem = F2(
+	function (z, s) {
+		return _List_fromArray(
+			[
+				{msg: s, typ: $author$project$Validate$Semantics, zip: z}
+			]);
+	});
+var $author$project$Validate$checkFormula = F2(
+	function (str, z) {
+		return A2(
+			$elm$core$Result$mapError,
+			function (_v0) {
+				return A2($author$project$Validate$semanticsProblem, z, str + ' is invalid.');
+			},
+			$author$project$Zipper$zNode(z).formula);
+	});
+var $elm$core$Result$fromMaybe = F2(
+	function (err, maybe) {
+		if (maybe.$ === 'Just') {
+			var v = maybe.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			return $elm$core$Result$Err(err);
+		}
+	});
+var $author$project$Zipper$getReffed = F2(
+	function (r, z) {
+		return A2(
+			$elm$core$Maybe$map,
+			function (a) {
+				return A2($author$project$Zipper$above, a, z);
+			},
+			r.up);
+	});
+var $author$project$Validate$checkReffedFormula = F3(
+	function (str, r, z) {
+		return A2(
+			$elm$core$Result$andThen,
+			$author$project$Validate$checkFormula(str + ' referenced formula'),
+			A2(
+				$elm$core$Result$fromMaybe,
+				A2($author$project$Validate$semanticsProblem, z, str + ' reference is invalid.'),
+				A2($author$project$Zipper$getReffed, r, z)));
+	});
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedComplementary = F2(
+	function (a, b) {
+		var _v0 = _Utils_Tuple2(a, b);
+		_v0$2:
+		while (true) {
+			if (_v0.a.$ === 'T') {
+				if (_v0.b.$ === 'F') {
+					var x = _v0.a.a;
+					var y = _v0.b.a;
+					return _Utils_eq(x, y);
+				} else {
+					break _v0$2;
+				}
+			} else {
+				if (_v0.b.$ === 'T') {
+					var x = _v0.a.a;
+					var y = _v0.b.a;
+					return _Utils_eq(x, y);
+				} else {
+					break _v0$2;
+				}
+			}
+		}
+		return false;
+	});
+var $author$project$Errors$merge2 = F3(
+	function (func, ra, rb) {
+		var _v0 = _Utils_Tuple2(ra, rb);
+		if (_v0.a.$ === 'Ok') {
+			if (_v0.b.$ === 'Ok') {
+				var a = _v0.a.a;
+				var b = _v0.b.a;
+				return $elm$core$Result$Ok(
+					A2(func, a, b));
+			} else {
+				var x = _v0.b.a;
+				return $elm$core$Result$Err(x);
+			}
+		} else {
+			if (_v0.b.$ === 'Err') {
+				var xa = _v0.a.a;
+				var xb = _v0.b.a;
+				return $elm$core$Result$Err(
+					_Utils_ap(xa, xb));
+			} else {
+				var x = _v0.a.a;
+				return $elm$core$Result$Err(x);
+			}
+		}
+	});
+var $author$project$Validate$resultFromBool = F3(
+	function (a, x, b) {
+		return b ? $elm$core$Result$Ok(a) : $elm$core$Result$Err(x);
+	});
+var $author$project$Validate$areCloseRefsComplementary = F3(
+	function (r1, r2, z) {
+		return A2(
+			$elm$core$Result$andThen,
+			A2(
+				$author$project$Validate$resultFromBool,
+				z,
+				A2($author$project$Validate$semanticsProblem, z, 'Closing formulas are not complementary.')),
+			A3(
+				$author$project$Errors$merge2,
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedComplementary,
+				A3($author$project$Validate$checkReffedFormula, 'First close', r1, z),
+				A3($author$project$Validate$checkReffedFormula, 'Second close', r2, z)));
+	});
+var $author$project$Validate$areCorrectCloseRefs = function (z) {
+	var _v0 = $author$project$Zipper$zTableau(z).ext;
+	if (_v0.$ === 'Closed') {
+		var r1 = _v0.a;
+		var r2 = _v0.b;
+		return A2(
+			$elm$core$Result$map,
+			$elm$core$Basics$always(z),
+			A3($author$project$Validate$areCloseRefsComplementary, r1, r2, z));
+	} else {
+		return $elm$core$Result$Ok(z);
+	}
+};
+var $author$project$Validate$checkPredicate = F3(
+	function (pred, x, a) {
+		return pred(a) ? $elm$core$Result$Ok(a) : $elm$core$Result$Err(x);
+	});
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha = {$: 'Alpha'};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta = {$: 'Beta'};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta = {$: 'Delta'};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma = {$: 'Gamma'};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$negType = function (t) {
+	switch (t.$) {
+		case 'Alpha':
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
+		case 'Beta':
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+		case 'Gamma':
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta;
+		default:
+			return $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma;
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$signedType = function (sf) {
+	if (sf.$ === 'T') {
+		switch (sf.a.$) {
+			case 'FF':
+				var _v1 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'FT':
+				var _v2 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'Atom':
+				var _v3 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'Neg':
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'Conj':
+				var _v5 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'Disj':
+				var _v6 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
+			case 'Impl':
+				var _v7 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Beta;
+			case 'ForAll':
+				var _v8 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Gamma;
+			default:
+				var _v9 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Delta;
+		}
+	} else {
+		switch (sf.a.$) {
+			case 'Atom':
+				var _v4 = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			case 'Neg':
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha;
+			default:
+				var f = sf.a;
+				return $FMFI_UK_1_AIN_412$elm_formula$Formula$negType(
+					$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$T(f)));
+		}
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$isAlpha = function (x) {
+	return _Utils_eq(
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$Alpha,
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
+};
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedSubformulaOf = F2(
+	function (a, b) {
+		return A2(
+			$elm$core$List$member,
+			a,
+			$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas(b));
+	});
+var $author$project$Validate$validateReffedFormula = function (z) {
+	return A2(
+		$elm$core$Result$mapError,
+		function (e) {
+			return A2($author$project$Validate$semanticsProblem, z, 'Referenced formula is invalid');
+		},
+		$author$project$Zipper$zNode(z).formula);
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Validate$validateAlphaRule = function (z) {
+	return A2(
+		$elm$core$Result$map,
+		$elm$core$Basics$always(z),
+		A2(
+			$elm$core$Result$andThen,
+			A2(
+				$author$project$Validate$checkPredicate,
+				function (_v0) {
+					var a = _v0.a;
+					var b = _v0.b;
+					return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$isSignedSubformulaOf, a, b);
+				},
+				A2(
+					$author$project$Validate$semanticsProblem,
+					z,
+					'Is not an α-subformula of (' + ($elm$core$String$fromInt(
+						A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							A2(
+								$elm$core$Maybe$map,
+								A2(
+									$elm$core$Basics$composeR,
+									$author$project$Zipper$zNode,
+									function ($) {
+										return $.id;
+									}),
+								A2(
+									$author$project$Zipper$getReffed,
+									$author$project$Zipper$zNode(z).reference,
+									z)))) + ').'))),
+			A3(
+				$elm$core$Result$map2,
+				F2(
+					function (a, b) {
+						return _Utils_Tuple2(a, b);
+					}),
+				A2($author$project$Validate$checkFormula, 'Formula', z),
+				A2(
+					$elm$core$Result$andThen,
+					A2(
+						$author$project$Validate$checkPredicate,
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$isAlpha,
+						A2($author$project$Validate$semanticsProblem, z, 'Referenced formula is not α')),
+					A2(
+						$elm$core$Result$andThen,
+						$author$project$Validate$validateReffedFormula,
+						A2(
+							$elm$core$Result$fromMaybe,
+							A2($author$project$Validate$semanticsProblem, z, 'Invalid reference.'),
+							A2(
+								$author$project$Zipper$getReffed,
+								$author$project$Zipper$zNode(z).reference,
+								z)))))));
+};
+var $author$project$Validate$betasHaveSameRef = F2(
+	function (_this, other) {
+		var getRef = A2(
+			$elm$core$Basics$composeR,
+			$author$project$Zipper$zNode,
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.reference;
+				},
+				A2(
+					$elm$core$Basics$composeR,
+					function ($) {
+						return $.up;
+					},
+					$elm$core$Result$fromMaybe(_List_Nil))));
+		var ro = getRef(other);
+		var rt = getRef(_this);
+		return A2(
+			$elm$core$Result$andThen,
+			A2(
+				$author$project$Validate$resultFromBool,
+				_this,
+				A2($author$project$Validate$semanticsProblem, _this, 'β references are not the same')),
+			A3($author$project$Errors$merge2, $elm$core$Basics$eq, rt, ro));
+	});
+var $author$project$Validate$checkIsPointingOnSelf = F3(
+	function (pred, x, z) {
+		var _v0 = pred(z);
+		if (_v0) {
+			return $elm$core$Result$Err(x);
+		} else {
+			return $elm$core$Result$Ok(z);
+		}
+	});
+var $author$project$Validate$Syntax = {$: 'Syntax'};
+var $author$project$Validate$syntaxProblem = F2(
+	function (z, s) {
+		return _List_fromArray(
+			[
+				{msg: s, typ: $author$project$Validate$Syntax, zip: z}
+			]);
+	});
+var $author$project$Validate$getReffedSignedFormula = function (z) {
+	var _v0 = A2(
+		$author$project$Zipper$getReffed,
+		$author$project$Zipper$zNode(z).reference,
+		z);
+	if (_v0.$ === 'Just') {
+		var rz = _v0.a;
+		var _v1 = $author$project$Zipper$zNode(rz).formula;
+		if (_v1.$ === 'Ok') {
+			var sf = _v1.a;
+			return $elm$core$Result$Ok(sf);
+		} else {
+			return $elm$core$Result$Err(
+				A2($author$project$Validate$syntaxProblem, z, 'reffed formula incorrectly parsed'));
+		}
+	} else {
+		return $elm$core$Result$Err(
+			A2($author$project$Validate$semanticsProblem, z, 'no reffed formula'));
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$isBeta = function (x) {
+	return _Utils_eq(
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$Beta,
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
+};
+var $author$project$Validate$isPointingOnSelf = function (_this) {
+	var _v0 = $author$project$Zipper$zNode(_this).reference.up;
+	if ((_v0.$ === 'Just') && (!_v0.a)) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $author$project$Validate$validateBeta = F2(
+	function (_this, other) {
+		var reffed = A2(
+			$elm$core$Result$map,
+			$elm$core$List$sortBy($FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned),
+			A2(
+				$elm$core$Result$map,
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$signedSubformulas,
+				A2(
+					$elm$core$Result$andThen,
+					A2(
+						$author$project$Validate$checkPredicate,
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$isBeta,
+						A2($author$project$Validate$semanticsProblem, _this, 'Referenced formula is not β')),
+					A2(
+						$elm$core$Result$andThen,
+						function (z) {
+							return $author$project$Validate$getReffedSignedFormula(z);
+						},
+						A2(
+							$elm$core$Result$andThen,
+							A2(
+								$author$project$Validate$checkIsPointingOnSelf,
+								$author$project$Validate$isPointingOnSelf,
+								A2($author$project$Validate$semanticsProblem, _this, 'β can not be premise')),
+							A2(
+								$elm$core$Result$map,
+								$elm$core$Basics$always(_this),
+								A2(
+									$elm$core$Result$andThen,
+									$author$project$Validate$validateReffedFormula,
+									A2(
+										$elm$core$Result$fromMaybe,
+										A2($author$project$Validate$semanticsProblem, _this, 'Invalid reference'),
+										A2(
+											$author$project$Zipper$getReffed,
+											$author$project$Zipper$zNode(_this).reference,
+											_this)))))))));
+		var ft = A2($author$project$Validate$checkFormula, 'Formula', _this);
+		var fo = A2($author$project$Validate$checkFormula, 'The other β subformula', other);
+		var children = A2(
+			$elm$core$Result$map,
+			$elm$core$List$sortBy($FMFI_UK_1_AIN_412$elm_formula$Formula$strSigned),
+			A3(
+				$elm$core$Result$map2,
+				$elm$core$List$cons,
+				fo,
+				A2($elm$core$Result$map, $elm$core$List$singleton, ft)));
+		return A3(
+			$author$project$Errors$merge2,
+			$author$project$Validate$always2(_this),
+			A2($author$project$Validate$betasHaveSameRef, _this, other),
+			A2(
+				$elm$core$Result$andThen,
+				A2(
+					$author$project$Validate$resultFromBool,
+					_this,
+					A2($author$project$Validate$semanticsProblem, _this, 'Wrong β subformulas.')),
+				A3($author$project$Errors$merge2, $elm$core$Basics$eq, children, reffed)));
+	});
+var $author$project$Validate$validateBetaRuleLeft = function (z) {
+	return A2(
+		$author$project$Validate$validateBeta,
+		z,
+		$author$project$Zipper$right(
+			$author$project$Zipper$up(z)));
+};
+var $author$project$Validate$validateBetaRuleRight = function (z) {
+	return A2(
+		$author$project$Validate$validateBeta,
+		z,
+		$author$project$Zipper$left(
+			$author$project$Zipper$up(z)));
+};
+var $author$project$Zipper$zSubstitution = function (z) {
+	var t = z.a;
+	var bs = z.b;
+	var _v0 = t.ext;
+	switch (_v0.$) {
+		case 'Gamma':
+			var node = _v0.a;
+			var subs = _v0.b;
+			return $elm$core$Maybe$Just(subs);
+		case 'Delta':
+			var node = _v0.a;
+			var subs = _v0.b;
+			return $elm$core$Maybe$Just(subs);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Validate$checkNewVariable = F3(
+	function (pred, x, z) {
+		var _v0 = pred(
+			A2(
+				$elm$core$Maybe$withDefault,
+				'',
+				A2(
+					$elm$core$Maybe$map,
+					function ($) {
+						return $.term;
+					},
+					$author$project$Zipper$zSubstitution(
+						$author$project$Zipper$up(z)))));
+		if (_v0) {
+			return $elm$core$Result$Ok(z);
+		} else {
+			return $elm$core$Result$Err(x);
+		}
+	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$isDelta = function (x) {
+	return _Utils_eq(
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$Delta,
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$signedType(x));
+};
+var $author$project$Validate$getTermFromResult = function (r) {
+	if (r.$ === 'Ok') {
+		var term = r.a;
+		return term;
+	} else {
+		var err = r.a;
+		return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Fun, 'default', _List_Nil);
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm = $elm$parser$Parser$run(
+	A2(
+		$elm$parser$Parser$keeper,
+		A2(
+			$elm$parser$Parser$ignorer,
+			$elm$parser$Parser$succeed($elm$core$Basics$identity),
+			$FMFI_UK_1_AIN_412$elm_formula$Formula$spaces),
+		A2(
+			$elm$parser$Parser$ignorer,
+			A2($elm$parser$Parser$ignorer, $FMFI_UK_1_AIN_412$elm_formula$Formula$term, $FMFI_UK_1_AIN_412$elm_formula$Formula$spaces),
+			$elm$parser$Parser$end)));
+var $author$project$Validate$isNewVariableFunction = function (variable) {
+	var _v0 = $author$project$Validate$getTermFromResult(
+		$FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm(variable));
+	if (_v0.$ === 'Var') {
+		var s = _v0.a;
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Set$remove = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$remove, key, dict));
+	});
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$subformulas = function (f) {
+	switch (f.$) {
+		case 'Neg':
+			var sf = f.a;
+			return _List_fromArray(
+				[sf]);
+		case 'Disj':
+			var lf = f.a;
+			var rf = f.b;
+			return _List_fromArray(
+				[lf, rf]);
+		case 'Conj':
+			var lf = f.a;
+			var rf = f.b;
+			return _List_fromArray(
+				[lf, rf]);
+		case 'Impl':
+			var lf = f.a;
+			var rf = f.b;
+			return _List_fromArray(
+				[lf, rf]);
+		case 'ForAll':
+			var sf = f.b;
+			return _List_fromArray(
+				[sf]);
+		case 'Exists':
+			var sf = f.b;
+			return _List_fromArray(
+				[sf]);
+		default:
+			return _List_Nil;
+	}
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA = F2(
+	function (f, fvs) {
+		switch (f.$) {
+			case 'Atom':
+				var ts = f.b;
+				return A3($elm$core$List$foldl, $FMFI_UK_1_AIN_412$elm_formula$Formula$freeTermA, fvs, ts);
+			case 'ForAll':
+				var x = f.a;
+				var sf = f.b;
+				return A2(
+					$elm$core$Set$remove,
+					x,
+					A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, sf, fvs));
+			case 'Exists':
+				var x = f.a;
+				var sf = f.b;
+				return A2(
+					$elm$core$Set$remove,
+					x,
+					A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, sf, fvs));
+			default:
+				return A3(
+					$elm$core$List$foldl,
+					$FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA,
+					fvs,
+					$FMFI_UK_1_AIN_412$elm_formula$Formula$subformulas(f));
+		}
+	});
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormula = function (f) {
+	return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormulaA, f, $elm$core$Set$empty);
+};
+var $FMFI_UK_1_AIN_412$elm_formula$Formula$signedGetFormula = function (sf) {
+	if (sf.$ === 'T') {
+		var f = sf.a;
+		return f;
+	} else {
+		var f = sf.a;
+		return f;
+	}
+};
+var $author$project$Validate$isSimilarAbove = F2(
+	function (variable, z) {
+		var maybeParsed = $FMFI_UK_1_AIN_412$elm_formula$Formula$parseSigned(
+			$author$project$Zipper$zNode(z).value);
+		if (maybeParsed.$ === 'Ok') {
+			var parsed = maybeParsed.a;
+			return A2(
+				$elm$core$Set$member,
+				variable,
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$freeFormula(
+					$FMFI_UK_1_AIN_412$elm_formula$Formula$signedGetFormula(parsed))) || (_Utils_eq(
+				$author$project$Zipper$up(z),
+				z) ? false : A2(
+				$author$project$Validate$isSimilarAbove,
+				variable,
+				$author$project$Zipper$up(z)));
+		} else {
+			return false;
+		}
+	});
+var $author$project$Validate$isNewVariableValid = F2(
+	function (variable, z) {
+		var _v0 = $author$project$Validate$getTermFromResult(
+			$FMFI_UK_1_AIN_412$elm_formula$Formula$parseTerm(variable));
+		if (_v0.$ === 'Var') {
+			var s = _v0.a;
+			return !A2(
+				$author$project$Validate$isSimilarAbove,
+				variable,
+				$author$project$Zipper$up(z));
+		} else {
+			return false;
+		}
 	});
 var $author$project$Validate$isSubstituable = F3(
 	function (substitution, _new, original) {
@@ -12184,16 +12363,291 @@ var $author$project$Validate$areValidCloseRefs = function (z) {
 		return $elm$core$Result$Ok(z);
 	}
 };
-var $elm$parser$Parser$deadEndsToString = function (deadEnds) {
-	return 'TODO deadEndsToString';
+var $author$project$Helpers$Parser$addProblemToProblems = F2(
+	function (p, ps) {
+		switch (p.$) {
+			case 'Expecting':
+				var exp = p.a;
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, exp, ps.expecting)
+					});
+			case 'ExpectingInt':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'an integer', ps.expecting)
+					});
+			case 'ExpectingHex':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'a hexadecimal number', ps.expecting)
+					});
+			case 'ExpectingOctal':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'an octal number', ps.expecting)
+					});
+			case 'ExpectingBinary':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'a binary number', ps.expecting)
+					});
+			case 'ExpectingFloat':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'a floating point number', ps.expecting)
+					});
+			case 'ExpectingNumber':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'a number', ps.expecting)
+					});
+			case 'ExpectingVariable':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'an identifier', ps.expecting)
+					});
+			case 'ExpectingSymbol':
+				var sym = p.a;
+				return _Utils_update(
+					ps,
+					{
+						expectingSymbol: A2($elm$core$List$cons, sym, ps.expectingSymbol)
+					});
+			case 'ExpectingKeyword':
+				var kw = p.a;
+				return _Utils_update(
+					ps,
+					{
+						expectingKeyword: A2($elm$core$List$cons, kw, ps.expectingKeyword)
+					});
+			case 'ExpectingEnd':
+				return _Utils_update(
+					ps,
+					{
+						expecting: A2($elm$core$List$cons, 'end of input', ps.expecting)
+					});
+			case 'UnexpectedChar':
+				return _Utils_update(
+					ps,
+					{
+						other: A2($elm$core$List$cons, 'unexpected character', ps.other)
+					});
+			case 'Problem':
+				var prob = p.a;
+				return _Utils_update(
+					ps,
+					{
+						other: A2($elm$core$List$cons, prob, ps.other)
+					});
+			default:
+				return _Utils_update(
+					ps,
+					{
+						other: A2($elm$core$List$cons, 'bad repeat', ps.other)
+					});
+		}
+	});
+var $author$project$Helpers$Parser$noProblems = {expecting: _List_Nil, expectingKeyword: _List_Nil, expectingSymbol: _List_Nil, other: _List_Nil};
+var $elm$core$Dict$update = F3(
+	function (targetKey, alter, dictionary) {
+		var _v0 = alter(
+			A2($elm$core$Dict$get, targetKey, dictionary));
+		if (_v0.$ === 'Just') {
+			var value = _v0.a;
+			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
+		} else {
+			return A2($elm$core$Dict$remove, targetKey, dictionary);
+		}
+	});
+var $author$project$Helpers$Parser$updateMatrix = F3(
+	function (r, c, update) {
+		return A2(
+			$elm$core$Dict$update,
+			r,
+			A2(
+				$elm$core$Basics$composeL,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Maybe$Just,
+					A2($elm$core$Dict$update, c, update)),
+				$elm$core$Maybe$withDefault($elm$core$Dict$empty)));
+	});
+var $author$project$Helpers$Parser$deadEndsToProblemsMatrix = A2(
+	$elm$core$List$foldl,
+	function (_v0) {
+		var row = _v0.row;
+		var col = _v0.col;
+		var problem = _v0.problem;
+		return A3(
+			$author$project$Helpers$Parser$updateMatrix,
+			row,
+			col,
+			A2(
+				$elm$core$Basics$composeL,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Maybe$Just,
+					$author$project$Helpers$Parser$addProblemToProblems(problem)),
+				$elm$core$Maybe$withDefault($author$project$Helpers$Parser$noProblems)));
+	},
+	$elm$core$Dict$empty);
+var $author$project$Helpers$Parser$rowToStrings = A2(
+	$elm$core$Dict$foldr,
+	F3(
+		function (c, ps, pstrs) {
+			return A2(
+				$elm$core$List$cons,
+				'column ' + ($elm$core$String$fromInt(c) + (': ' + ps)),
+				pstrs);
+		}),
+	_List_Nil);
+var $author$project$Helpers$Parser$matrixToStrings = A2(
+	$elm$core$Dict$foldr,
+	F3(
+		function (r, row, pstrs) {
+			return A3(
+				$elm$core$List$foldr,
+				F2(
+					function (s, psts1) {
+						return A2(
+							$elm$core$List$cons,
+							'Row ' + ($elm$core$String$fromInt(r) + (', ' + s)),
+							psts1);
+					}),
+				pstrs,
+				$author$project$Helpers$Parser$rowToStrings(row));
+		}),
+	_List_Nil);
+var $elm$core$Dict$map = F2(
+	function (func, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				A2(func, key, value),
+				A2($elm$core$Dict$map, func, left),
+				A2($elm$core$Dict$map, func, right));
+		}
+	});
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
 };
-var $FMFI_UK_1_AIN_412$elm_formula$Formula$errorString = function (e) {
-	return 'Invalid formula: ' + $elm$parser$Parser$deadEndsToString(e);
+var $author$project$Helpers$Parser$revAlternativesToMaybeString = function (alts) {
+	if (!alts.b) {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		if (!alts.b.b) {
+			var alt = alts.a;
+			return $elm$core$Maybe$Just(alt);
+		} else {
+			if (!alts.b.b.b) {
+				var alt1 = alts.a;
+				var _v1 = alts.b;
+				var alt2 = _v1.a;
+				return $elm$core$Maybe$Just(alt2 + (' or ' + alt1));
+			} else {
+				var alt1 = alts.a;
+				var morealts = alts.b;
+				return $elm$core$Maybe$Just(
+					A2(
+						$elm$core$String$join,
+						', ',
+						$elm$core$List$reverse(morealts)) + (', or ' + alt1));
+			}
+		}
+	}
 };
+var $author$project$Helpers$Parser$expectingKindToString = F2(
+	function (kind, syms) {
+		var _v0 = A2(
+			$elm$core$List$map,
+			function (sym) {
+				return '‘' + (sym + '’');
+			},
+			$elm$core$Set$toList(
+				$elm$core$Set$fromList(syms)));
+		if (!_v0.b) {
+			return _List_Nil;
+		} else {
+			if (!_v0.b.b) {
+				var qsym = _v0.a;
+				return _List_fromArray(
+					[kind + (' ' + qsym)]);
+			} else {
+				var qsyms = _v0;
+				return _List_fromArray(
+					[
+						'one of ' + (kind + ('s ' + A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						$author$project$Helpers$Parser$revAlternativesToMaybeString(qsyms))))
+					]);
+			}
+		}
+	});
+var $author$project$Helpers$Parser$problemsToString = function (ps) {
+	var expectations = $author$project$Helpers$Parser$revAlternativesToMaybeString(
+		_Utils_ap(
+			$elm$core$List$reverse(ps.expecting),
+			_Utils_ap(
+				A2($author$project$Helpers$Parser$expectingKindToString, 'keyword', ps.expectingKeyword),
+				A2($author$project$Helpers$Parser$expectingKindToString, 'symbol', ps.expectingSymbol))));
+	return A2(
+		$elm$core$String$join,
+		'; ',
+		_Utils_ap(
+			A2(
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(
+					$elm$core$Maybe$map,
+					function (s) {
+						return _List_fromArray(
+							['expecting ' + s]);
+					},
+					expectations)),
+			$elm$core$List$reverse(ps.other)));
+};
+var $author$project$Helpers$Parser$problemsMatrixToStringMatrix = $elm$core$Dict$map(
+	F2(
+		function (_v0, cd) {
+			return A2(
+				$elm$core$Dict$map,
+				F2(
+					function (_v1, ps) {
+						return $author$project$Helpers$Parser$problemsToString(ps);
+					}),
+				cd);
+		}));
+var $author$project$Helpers$Parser$deadEndsToStrings = A2(
+	$elm$core$Basics$composeL,
+	A2($elm$core$Basics$composeL, $author$project$Helpers$Parser$matrixToStrings, $author$project$Helpers$Parser$problemsMatrixToStringMatrix),
+	$author$project$Helpers$Parser$deadEndsToProblemsMatrix);
+var $author$project$Helpers$Parser$deadEndsToString = A2(
+	$elm$core$Basics$composeL,
+	$elm$core$String$join('.'),
+	$author$project$Helpers$Parser$deadEndsToStrings);
 var $author$project$Validate$parseProblem = function (z) {
 	return A2(
 		$elm$core$Basics$composeR,
-		$FMFI_UK_1_AIN_412$elm_formula$Formula$errorString,
+		$author$project$Helpers$Parser$deadEndsToString,
 		$author$project$Validate$syntaxProblem(z));
 };
 var $author$project$Validate$isValidFormula = function (z) {
@@ -12372,7 +12826,7 @@ var $elm$core$Maybe$map2 = F3(
 			}
 		}
 	});
-var $author$project$Helper$second = F2(
+var $author$project$Helpers$Helper$second = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b).b;
 	});
@@ -12384,7 +12838,7 @@ var $elm$core$Result$toMaybe = function (result) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $author$project$Helper$assumptions = function (z) {
+var $author$project$Helpers$Helper$assumptions = function (z) {
 	return _Utils_ap(
 		A2(
 			$elm$core$Maybe$withDefault,
@@ -12394,7 +12848,7 @@ var $author$project$Helper$assumptions = function (z) {
 				$elm$core$List$singleton,
 				A3(
 					$elm$core$Maybe$map2,
-					$author$project$Helper$second,
+					$author$project$Helpers$Helper$second,
 					A2(
 						$elm$core$Maybe$andThen,
 						function (x) {
@@ -12405,7 +12859,7 @@ var $author$project$Helper$assumptions = function (z) {
 						$author$project$Zipper$zNode(z).formula)))),
 		A2(
 			$elm$core$List$concatMap,
-			$author$project$Helper$assumptions,
+			$author$project$Helpers$Helper$assumptions,
 			$author$project$Zipper$children(z)));
 };
 var $elm$core$List$partition = F2(
@@ -12426,7 +12880,7 @@ var $elm$core$List$partition = F2(
 			_Utils_Tuple2(_List_Nil, _List_Nil),
 			list);
 	});
-var $author$project$Helper$merge2 = F3(
+var $author$project$Helpers$Helper$merge2 = F3(
 	function (func, ra, rb) {
 		var _v0 = _Utils_Tuple2(ra, rb);
 		if (_v0.a.$ === 'Ok') {
@@ -12451,7 +12905,7 @@ var $author$project$Helper$merge2 = F3(
 			}
 		}
 	});
-var $author$project$Helper$errors = function (r) {
+var $author$project$Helpers$Helper$errors = function (r) {
 	if (r.$ === 'Err') {
 		var x = r.a;
 		return x;
@@ -12459,7 +12913,7 @@ var $author$project$Helper$errors = function (r) {
 		return _List_Nil;
 	}
 };
-var $author$project$Helper$merge3 = F4(
+var $author$project$Helpers$Helper$merge3 = F4(
 	function (func, ra, rb, rc) {
 		var _v0 = _Utils_Tuple3(ra, rb, rc);
 		if (((_v0.a.$ === 'Ok') && (_v0.b.$ === 'Ok')) && (_v0.c.$ === 'Ok')) {
@@ -12471,54 +12925,54 @@ var $author$project$Helper$merge3 = F4(
 		} else {
 			return $elm$core$Result$Err(
 				_Utils_ap(
-					$author$project$Helper$errors(ra),
+					$author$project$Helpers$Helper$errors(ra),
 					_Utils_ap(
-						$author$project$Helper$errors(rb),
-						$author$project$Helper$errors(rc))));
+						$author$project$Helpers$Helper$errors(rb),
+						$author$project$Helpers$Helper$errors(rc))));
 		}
 	});
-var $author$project$Helper$isClosed = function (z) {
+var $author$project$Helpers$Helper$isClosed = function (z) {
 	var _v0 = $author$project$Zipper$zTableau(z).ext;
 	switch (_v0.$) {
 		case 'Alpha':
 			var t = _v0.a;
 			return A3(
-				$author$project$Helper$merge2,
-				$author$project$Helper$second,
+				$author$project$Helpers$Helper$merge2,
+				$author$project$Helpers$Helper$second,
 				$author$project$Validate$isCorrectNode(z),
-				$author$project$Helper$isClosed(
+				$author$project$Helpers$Helper$isClosed(
 					$author$project$Zipper$down(z)));
 		case 'Beta':
 			var lt = _v0.a;
 			var rt = _v0.b;
 			return A4(
-				$author$project$Helper$merge3,
+				$author$project$Helpers$Helper$merge3,
 				F3(
 					function (_v1, b, c) {
 						return b && c;
 					}),
 				$author$project$Validate$isCorrectNode(z),
-				$author$project$Helper$isClosed(
+				$author$project$Helpers$Helper$isClosed(
 					$author$project$Zipper$left(z)),
-				$author$project$Helper$isClosed(
+				$author$project$Helpers$Helper$isClosed(
 					$author$project$Zipper$right(z)));
 		case 'Gamma':
 			var t = _v0.a;
 			var s = _v0.b;
 			return A3(
-				$author$project$Helper$merge2,
-				$author$project$Helper$second,
+				$author$project$Helpers$Helper$merge2,
+				$author$project$Helpers$Helper$second,
 				$author$project$Validate$isCorrectNode(z),
-				$author$project$Helper$isClosed(
+				$author$project$Helpers$Helper$isClosed(
 					$author$project$Zipper$down(z)));
 		case 'Delta':
 			var t = _v0.a;
 			var s = _v0.b;
 			return A3(
-				$author$project$Helper$merge2,
-				$author$project$Helper$second,
+				$author$project$Helpers$Helper$merge2,
+				$author$project$Helpers$Helper$second,
 				$author$project$Validate$isCorrectNode(z),
-				$author$project$Helper$isClosed(
+				$author$project$Helpers$Helper$isClosed(
 					$author$project$Zipper$down(z)));
 		case 'Open':
 			return A2(
@@ -12535,7 +12989,7 @@ var $author$project$Helper$isClosed = function (z) {
 	}
 };
 var $author$project$Editor$textVerdict = function (t) {
-	var _v0 = $author$project$Helper$isClosed(t);
+	var _v0 = $author$project$Helpers$Helper$isClosed(t);
 	if (_v0.$ === 'Ok') {
 		if (_v0.a) {
 			return 'proves';
@@ -12547,7 +13001,7 @@ var $author$project$Editor$textVerdict = function (t) {
 	}
 };
 var $author$project$Editor$verdict = function (t) {
-	var ass = $author$project$Helper$assumptions(
+	var ass = $author$project$Helpers$Helper$assumptions(
 		$author$project$Zipper$zipper(t));
 	var _v0 = A2(
 		$elm$core$List$partition,
@@ -12620,21 +13074,49 @@ var $author$project$Editor$verdict = function (t) {
 					]))
 			]));
 };
-var $author$project$Editor$ChangeRef = F2(
-	function (a, b) {
-		return {$: 'ChangeRef', a: a, b: b};
-	});
 var $author$project$Editor$ChangeTerm = F2(
 	function (a, b) {
 		return {$: 'ChangeTerm', a: a, b: b};
 	});
-var $author$project$Editor$ChangeText = F2(
-	function (a, b) {
-		return {$: 'ChangeText', a: a, b: b};
-	});
 var $author$project$Editor$ChangeVariable = F2(
 	function (a, b) {
 		return {$: 'ChangeVariable', a: a, b: b};
+	});
+var $author$project$Editor$Cache = {$: 'Cache'};
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$Events$onBlur = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'blur',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Attributes$size = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'size',
+		$elm$core$String$fromInt(n));
+};
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Editor$autoSizeInput = F2(
+	function (val, attrs) {
+		return A2(
+			$elm$html$Html$input,
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$type_('text'),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$value(val),
+					A2(
+						$elm$core$List$cons,
+						$elm$html$Html$Attributes$size(
+							((($elm$core$String$length(val) * 5) + 9) / 6) | 0),
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$Events$onBlur($author$project$Editor$Cache),
+							attrs)))),
+			_List_Nil);
 	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -12657,14 +13139,8 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
-var $author$project$Helper$hasReference = function (z) {
+var $author$project$Helpers$Helper$hasReference = function (z) {
 	return ($author$project$Zipper$zNode(z).reference.str === '') && ($author$project$Zipper$zNode(z).value !== '');
-};
-var $author$project$Helper$isPremise = function (z) {
-	return _Utils_eq(
-		$elm$core$String$fromInt(
-			$author$project$Zipper$zNode(z).id),
-		$author$project$Zipper$zNode(z).reference.str);
 };
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -12729,43 +13205,8 @@ var $author$project$Editor$singleNodeProblems = function (z) {
 			},
 			errors));
 };
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Editor$ChangeButtonsAppearance = function (a) {
-	return {$: 'ChangeButtonsAppearance', a: a};
-};
-var $author$project$Editor$viewButtonsAppearanceControlls = function (z) {
-	var _v0 = $author$project$Zipper$zTableau(z).ext;
-	if (_v0.$ === 'Closed') {
-		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
-	} else {
-		return A2(
-			$elm$html$Html$button,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('button'),
-					$elm$html$Html$Events$onClick(
-					$author$project$Editor$ChangeButtonsAppearance(z))
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('⚙')
-				]));
-	}
-};
 var $author$project$Editor$viewClosed = function (z) {
 	return A2($elm$html$Html$div, _List_Nil, _List_Nil);
-};
-var $author$project$Editor$ChangeToAlpha = function (a) {
-	return {$: 'ChangeToAlpha', a: a};
-};
-var $author$project$Editor$ChangeToBeta = function (a) {
-	return {$: 'ChangeToBeta', a: a};
-};
-var $author$project$Editor$ChangeToDelta = function (a) {
-	return {$: 'ChangeToDelta', a: a};
-};
-var $author$project$Editor$ChangeToGamma = function (a) {
-	return {$: 'ChangeToGamma', a: a};
 };
 var $author$project$Editor$Delete = function (a) {
 	return {$: 'Delete', a: a};
@@ -12807,18 +13248,13 @@ var $author$project$Editor$problemsClass = function (pl) {
 		return $author$project$Editor$problemClass(p);
 	}
 };
-var $elm$html$Html$Attributes$size = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'size',
-		$elm$core$String$fromInt(n));
-};
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
 		_VirtualDom_attribute,
 		'tabIndex',
 		$elm$core$String$fromInt(n));
 };
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
 var $author$project$Validate$validateRef = F3(
 	function (str, r, z) {
 		var _v0 = r.up;
@@ -12829,9 +13265,7 @@ var $author$project$Validate$validateRef = F3(
 		}
 	});
 var $author$project$Editor$viewControls = function (z) {
-	var _v0 = z;
-	var t = _v0.a;
-	var bs = _v0.b;
+	var t = z.a;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -12839,10 +13273,10 @@ var $author$project$Editor$viewControls = function (z) {
 				$elm$html$Html$Attributes$class('expandControls')
 			]),
 		function () {
-			var _v1 = t.ext;
-			if (_v1.$ === 'Closed') {
-				var r1 = _v1.a;
-				var r2 = _v1.b;
+			var _v0 = t.ext;
+			if (_v0.$ === 'Closed') {
+				var r1 = _v0.a;
+				var r2 = _v0.b;
 				var compl = $author$project$Errors$errors(
 					A3($author$project$Validate$areCloseRefsComplementary, r1, r2, z));
 				var ref1Cls = $author$project$Editor$problemsClass(
@@ -12851,37 +13285,33 @@ var $author$project$Editor$viewControls = function (z) {
 						compl));
 				var ref2Cls = $author$project$Editor$problemsClass(
 					_Utils_ap(
-						A3($author$project$Validate$validateRef, 'Invalid close ref. #1', r2, z),
+						A3($author$project$Validate$validateRef, 'Invalid close ref. #2', r2, z),
 						compl));
 				return _List_fromArray(
 					[
 						$elm$html$Html$text('* '),
 						A2(
-						$elm$html$Html$input,
+						$author$project$Editor$autoSizeInput,
+						r1.str,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('closed button ' + ref1Cls),
+								$elm$html$Html$Attributes$class('textInput closed ' + ref1Cls),
 								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Attributes$placeholder('Ref'),
-								$elm$html$Html$Attributes$size(1),
-								$elm$html$Html$Attributes$value(r1.str),
 								$elm$html$Html$Events$onInput(
 								A2($author$project$Editor$SetClosed, 0, z))
-							]),
-						_List_Nil),
+							])),
+						$elm$html$Html$text(' '),
 						A2(
-						$elm$html$Html$input,
+						$author$project$Editor$autoSizeInput,
+						r2.str,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('closed button ' + ref2Cls),
-								$elm$html$Html$Attributes$type_('text'),
+								$elm$html$Html$Attributes$class('textInput closed ' + ref2Cls),
 								$elm$html$Html$Attributes$placeholder('Ref'),
-								$elm$html$Html$Attributes$size(1),
-								$elm$html$Html$Attributes$value(r2.str),
 								$elm$html$Html$Events$onInput(
 								A2($author$project$Editor$SetClosed, 1, z))
-							]),
-						_List_Nil),
+							])),
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
@@ -12897,36 +13327,36 @@ var $author$project$Editor$viewControls = function (z) {
 					]);
 			} else {
 				var switchBetasButton = function () {
-					var _v8 = t.ext;
-					if (_v8.$ === 'Beta') {
+					var _v5 = t.ext;
+					if (_v5.$ === 'Beta') {
 						return A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$class('button'),
 									$elm$html$Html$Events$onClick(
-									$author$project$Editor$SwitchBetas(z))
+									$author$project$Editor$SwitchBetas(z)),
+									$elm$html$Html$Attributes$title('Swap branches')
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('->|<-')
+									$elm$html$Html$text('⇄')
 								]));
 					} else {
 						return A2($elm$html$Html$div, _List_Nil, _List_Nil);
 					}
 				}();
 				var deleteMeButton = function () {
-					var _v3 = _Utils_eq(
+					if (!_Utils_eq(
 						$author$project$Zipper$up(z),
-						z);
-					if (!_v3) {
-						var _v4 = $author$project$Zipper$zTableau(
+						z)) {
+						var _v1 = $author$project$Zipper$zTableau(
 							$author$project$Zipper$up(z)).ext;
-						if (_v4.$ === 'Beta') {
-							var _v5 = t.node.value;
-							if (_v5 === '') {
-								var _v6 = t.ext;
-								if (_v6.$ === 'Open') {
+						if (_v1.$ === 'Beta') {
+							var _v2 = t.node.value;
+							if (_v2 === '') {
+								var _v3 = t.ext;
+								if (_v3.$ === 'Open') {
 									return A2(
 										$elm$html$Html$button,
 										_List_fromArray(
@@ -12958,8 +13388,8 @@ var $author$project$Editor$viewControls = function (z) {
 									]));
 						}
 					} else {
-						var _v7 = t.ext;
-						switch (_v7.$) {
+						var _v4 = t.ext;
+						switch (_v4.$) {
 							case 'Alpha':
 								return A2(
 									$elm$html$Html$button,
@@ -12989,257 +13419,407 @@ var $author$project$Editor$viewControls = function (z) {
 						}
 					}
 				}();
-				var _v2 = t.node.gui.controlsShown;
-				if (_v2) {
-					return _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('button'),
-									$elm$html$Html$Events$onClick(
-									$author$project$Editor$ExpandAlpha(z))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('+')
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('onclick-menu add'),
-									$elm$html$Html$Attributes$tabindex(0)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$ul,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('onclick-menu-content')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ExpandAlpha(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('α')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ExpandBeta(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('β')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ExpandGamma(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('γ')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ExpandDelta(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('δ')
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('onclick-menu change'),
-									$elm$html$Html$Attributes$tabindex(0)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$ul,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('onclick-menu-content')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ChangeToAlpha(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('α')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ChangeToBeta(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('β')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ChangeToGamma(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('γ')
-														]))
-												])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$ChangeToDelta(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('δ')
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('onclick-menu del'),
-									$elm$html$Html$Attributes$tabindex(0)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$ul,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('onclick-menu-content')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[deleteMeButton])),
-											A2(
-											$elm$html$Html$li,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Events$onClick(
-															$author$project$Editor$Delete(z))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('subtree')
-														]))
-												]))
-										]))
-								])),
-							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('button'),
-									$elm$html$Html$Events$onClick(
-									$author$project$Editor$MakeClosed(z))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Close')
-								])),
-							switchBetasButton
-						]);
-				} else {
-					return _List_Nil;
-				}
+				return t.node.gui.controlsShown ? _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick(
+								$author$project$Editor$ExpandAlpha(z))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Add α')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('onclick-menu add'),
+								$elm$html$Html$Attributes$tabindex(0)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$ul,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('onclick-menu-content')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Events$onClick(
+														$author$project$Editor$ExpandAlpha(z))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('α')
+													]))
+											])),
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Events$onClick(
+														$author$project$Editor$ExpandBeta(z))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('β')
+													]))
+											])),
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Events$onClick(
+														$author$project$Editor$ExpandGamma(z))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('γ')
+													]))
+											])),
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Events$onClick(
+														$author$project$Editor$ExpandDelta(z))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('δ')
+													]))
+											]))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('onclick-menu del'),
+								$elm$html$Html$Attributes$tabindex(0)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$ul,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('onclick-menu-content')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[deleteMeButton])),
+										A2(
+										$elm$html$Html$li,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Events$onClick(
+														$author$project$Editor$Delete(z))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('subtree')
+													]))
+											]))
+									]))
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick(
+								$author$project$Editor$MakeClosed(z))
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Close')
+							])),
+						switchBetasButton
+					]) : _List_Nil;
 			}
 		}());
 };
+var $author$project$Editor$ChangeRef = F2(
+	function (a, b) {
+		return {$: 'ChangeRef', a: a, b: b};
+	});
+var $author$project$Editor$ChangeText = F2(
+	function (a, b) {
+		return {$: 'ChangeText', a: a, b: b};
+	});
+var $author$project$Editor$ChangeToAlpha = function (a) {
+	return {$: 'ChangeToAlpha', a: a};
+};
+var $author$project$Editor$ChangeToBeta = function (a) {
+	return {$: 'ChangeToBeta', a: a};
+};
+var $author$project$Editor$ChangeToDelta = function (a) {
+	return {$: 'ChangeToDelta', a: a};
+};
+var $author$project$Editor$ChangeToGamma = function (a) {
+	return {$: 'ChangeToGamma', a: a};
+};
+var $author$project$Helpers$Helper$isPremise = function (z) {
+	return _Utils_eq(
+		$elm$core$String$fromInt(
+			$author$project$Zipper$zNode(z).id),
+		$author$project$Zipper$zNode(z).reference.str);
+};
+var $author$project$Editor$ChangeButtonsAppearance = function (a) {
+	return {$: 'ChangeButtonsAppearance', a: a};
+};
+var $author$project$Editor$viewButtonsAppearanceControlls = function (z) {
+	var _v0 = $author$project$Zipper$zTableau(z).ext;
+	if (_v0.$ === 'Closed') {
+		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+	} else {
+		return A2(
+			$elm$html$Html$button,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('button'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Editor$ChangeButtonsAppearance(z))
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('⚙')
+				]));
+	}
+};
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$sup = _VirtualDom_node('sup');
+var $elm$html$Html$var = _VirtualDom_node('var');
+var $author$project$Editor$viewRuleType = function (z) {
+	if ($author$project$Helpers$Helper$isPremise(z)) {
+		return A2(
+			$elm$html$Html$span,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$var,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('S')
+						])),
+					A2(
+					$elm$html$Html$sup,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('+')
+						]))
+				]));
+	} else {
+		var _v0 = $author$project$Zipper$zTableau(
+			$author$project$Zipper$up(z)).ext;
+		switch (_v0.$) {
+			case 'Open':
+				return $elm$html$Html$text('O');
+			case 'Closed':
+				return $elm$html$Html$text('C');
+			case 'Alpha':
+				return $elm$html$Html$text('α');
+			case 'Beta':
+				return $elm$html$Html$text('β');
+			case 'Gamma':
+				return $elm$html$Html$text('γ');
+			default:
+				return $elm$html$Html$text('δ');
+		}
+	}
+};
+var $author$project$Editor$viewNodeInputs = F2(
+	function (additional, z) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('inputGroup')
+				]),
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$text(
+					'(' + ($elm$core$String$fromInt(
+						$author$project$Zipper$zNode(z).id) + ')')),
+				A2(
+					$elm$core$List$cons,
+					A2(
+						$author$project$Editor$autoSizeInput,
+						$author$project$Zipper$zNode(z).value,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('textInput textInputFormula', true),
+										_Utils_Tuple2(
+										'premise',
+										$author$project$Helpers$Helper$isPremise(z)),
+										_Utils_Tuple2(
+										'semanticsProblem',
+										$author$project$Helpers$Helper$hasReference(z))
+									])),
+								$elm$html$Html$Attributes$type_('text'),
+								$elm$html$Html$Events$onInput(
+								$author$project$Editor$ChangeText(z))
+							])),
+					A2(
+						$elm$core$List$cons,
+						$author$project$Editor$viewRuleType(z),
+						A2(
+							$elm$core$List$cons,
+							A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('onclick-menu change'),
+										$elm$html$Html$Attributes$tabindex(0)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$ul,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('onclick-menu-content')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$li,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$Editor$ChangeToAlpha(z))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('α')
+															]))
+													])),
+												A2(
+												$elm$html$Html$li,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$Editor$ChangeToBeta(z))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('β')
+															]))
+													])),
+												A2(
+												$elm$html$Html$li,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$Editor$ChangeToGamma(z))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('γ')
+															]))
+													])),
+												A2(
+												$elm$html$Html$li,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$Editor$ChangeToDelta(z))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('δ')
+															]))
+													]))
+											]))
+									])),
+							A2(
+								$elm$core$List$cons,
+								$elm$html$Html$text('['),
+								A2(
+									$elm$core$List$cons,
+									A2(
+										$author$project$Editor$autoSizeInput,
+										$author$project$Zipper$zNode(z).reference.str,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('textInput textInputReference'),
+												$elm$html$Html$Events$onInput(
+												$author$project$Editor$ChangeRef(z))
+											])),
+									A2(
+										$elm$core$List$cons,
+										$elm$html$Html$text(']'),
+										additional(
+											_List_fromArray(
+												[
+													$author$project$Editor$viewButtonsAppearanceControlls(z)
+												]))))))))));
+	});
 var $author$project$Editor$viewOpen = function (z) {
 	return A2($elm$html$Html$div, _List_Nil, _List_Nil);
 };
@@ -13272,28 +13852,28 @@ var $author$project$Editor$viewBeta = function (z) {
 			]));
 };
 var $author$project$Editor$viewChildren = function (z) {
-	var _v2 = $author$project$Zipper$zTableau(z).ext;
-	switch (_v2.$) {
+	var _v0 = $author$project$Zipper$zTableau(z).ext;
+	switch (_v0.$) {
 		case 'Open':
 			return $author$project$Editor$viewOpen(z);
 		case 'Closed':
-			var r1 = _v2.a;
-			var r2 = _v2.b;
+			var r1 = _v0.a;
+			var r2 = _v0.b;
 			return $author$project$Editor$viewClosed(z);
 		case 'Alpha':
-			var t = _v2.a;
+			var t = _v0.a;
 			return $author$project$Editor$viewAlpha(z);
 		case 'Beta':
-			var lt = _v2.a;
-			var rt = _v2.b;
+			var lt = _v0.a;
+			var rt = _v0.b;
 			return $author$project$Editor$viewBeta(z);
 		case 'Gamma':
-			var t = _v2.a;
-			var subs = _v2.b;
+			var t = _v0.a;
+			var subs = _v0.b;
 			return $author$project$Editor$viewGamma(z);
 		default:
-			var t = _v2.a;
-			var subs = _v2.b;
+			var t = _v0.a;
+			var subs = _v0.b;
 			return $author$project$Editor$viewDelta(z);
 	}
 };
@@ -13324,9 +13904,6 @@ var $author$project$Editor$viewGamma = function (z) {
 			]));
 };
 var $author$project$Editor$viewNode = function (z) {
-	var _v1 = z;
-	var tableau = _v1.a;
-	var bs = _v1.b;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -13335,54 +13912,13 @@ var $author$project$Editor$viewNode = function (z) {
 			]),
 		_List_fromArray(
 			[
-				$elm$html$Html$text(
-				'(' + ($elm$core$String$fromInt(
-					$author$project$Zipper$zNode(z).id) + ')')),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('formulaInput', true),
-								_Utils_Tuple2(
-								'premise',
-								$author$project$Helper$isPremise(z)),
-								_Utils_Tuple2(
-								'semanticsProblem',
-								$author$project$Helper$hasReference(z))
-							])),
-						$elm$html$Html$Attributes$value(
-						$author$project$Zipper$zNode(z).value),
-						$elm$html$Html$Attributes$type_('text'),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeText(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text('['),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('formulaReference'),
-						$elm$html$Html$Attributes$value(
-						$author$project$Zipper$zNode(z).reference.str),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeRef(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text(']'),
-				$author$project$Editor$viewButtonsAppearanceControlls(z),
+				A2($author$project$Editor$viewNodeInputs, $elm$core$Basics$identity, z),
 				$author$project$Editor$singleNodeProblems(z),
 				$author$project$Editor$viewControls(z),
 				$author$project$Editor$viewChildren(z)
 			]));
 };
 var $author$project$Editor$viewSubsNode = function (z) {
-	var _v0 = z;
-	var tableau = _v0.a;
-	var bs = _v0.b;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -13391,100 +13927,75 @@ var $author$project$Editor$viewSubsNode = function (z) {
 			]),
 		_List_fromArray(
 			[
-				$elm$html$Html$text(
-				'(' + ($elm$core$String$fromInt(
-					$author$project$Zipper$zNode(z).id) + ')')),
 				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('formulaInputSubst', true),
-								_Utils_Tuple2(
-								'semanticsProblem',
-								$author$project$Helper$hasReference(z))
-							])),
-						$elm$html$Html$Attributes$value(
-						$author$project$Zipper$zNode(z).value),
-						$elm$html$Html$Attributes$type_('text'),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeText(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text('{'),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('substitutedConstant', true),
-								_Utils_Tuple2(
-								'semanticsProblem',
-								$author$project$Helper$hasReference(z))
-							])),
-						$elm$html$Html$Attributes$value(
+				$author$project$Editor$viewNodeInputs,
+				function (rest) {
+					return A2(
+						$elm$core$List$cons,
+						$elm$html$Html$text('{'),
 						A2(
-							$elm$core$Maybe$withDefault,
-							'',
+							$elm$core$List$cons,
 							A2(
-								$elm$core$Maybe$map,
-								function ($) {
-									return $._var;
-								},
-								$author$project$Zipper$zSubstitution(
-									$author$project$Zipper$up(z))))),
-						$elm$html$Html$Attributes$type_('text'),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeVariable(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text('→'),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('substitutedVariable', true),
-								_Utils_Tuple2(
-								'semanticsProblem',
-								$author$project$Helper$hasReference(z))
-							])),
-						$elm$html$Html$Attributes$value(
-						A2(
-							$elm$core$Maybe$withDefault,
-							'',
+								$author$project$Editor$autoSizeInput,
+								A2(
+									$elm$core$Maybe$withDefault,
+									'',
+									A2(
+										$elm$core$Maybe$map,
+										function ($) {
+											return $._var;
+										},
+										$author$project$Zipper$zSubstitution(
+											$author$project$Zipper$up(z)))),
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('textInput textInputVariable', true),
+												_Utils_Tuple2(
+												'semanticsProblem',
+												$author$project$Helpers$Helper$hasReference(z))
+											])),
+										$elm$html$Html$Events$onInput(
+										$author$project$Editor$ChangeVariable(z))
+									])),
 							A2(
-								$elm$core$Maybe$map,
-								function ($) {
-									return $.term;
-								},
-								$author$project$Zipper$zSubstitution(
-									$author$project$Zipper$up(z))))),
-						$elm$html$Html$Attributes$type_('text'),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeTerm(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text('}['),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('formulaReference'),
-						$elm$html$Html$Attributes$value(
-						$author$project$Zipper$zNode(z).reference.str),
-						$elm$html$Html$Events$onInput(
-						$author$project$Editor$ChangeRef(z))
-					]),
-				_List_Nil),
-				$elm$html$Html$text(']'),
-				$author$project$Editor$viewButtonsAppearanceControlls(z),
+								$elm$core$List$cons,
+								$elm$html$Html$text('→'),
+								A2(
+									$elm$core$List$cons,
+									A2(
+										$author$project$Editor$autoSizeInput,
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2(
+												$elm$core$Maybe$map,
+												function ($) {
+													return $.term;
+												},
+												$author$project$Zipper$zSubstitution(
+													$author$project$Zipper$up(z)))),
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$classList(
+												_List_fromArray(
+													[
+														_Utils_Tuple2('textInput textInputTerm', true),
+														_Utils_Tuple2(
+														'semanticsProblem',
+														$author$project$Helpers$Helper$hasReference(z))
+													])),
+												$elm$html$Html$Events$onInput(
+												$author$project$Editor$ChangeTerm(z))
+											])),
+									A2(
+										$elm$core$List$cons,
+										$elm$html$Html$text('}'),
+										rest)))));
+				},
+				z),
 				$author$project$Editor$singleNodeProblems(z),
 				$author$project$Editor$viewControls(z),
 				$author$project$Editor$viewChildren(z)
@@ -13527,14 +14038,14 @@ var $author$project$Editor$view = function (model) {
 								_List_fromArray(
 									[
 										$elm$html$Html$Attributes$class('button'),
-										A2($elm$html$Html$Attributes$attribute, 'onClick', 'javascript:window.print()')
+										$elm$html$Html$Events$onClick($author$project$Editor$Print)
 									]),
 								_List_fromArray(
 									[
 										$elm$html$Html$text('Print')
 									])),
 								$author$project$Editor$jsonExportControl(present.tableau),
-								A2($author$project$Editor$jsonImportControl, present.jsonImporting, present.jsonImportId),
+								$author$project$Editor$jsonImportControl(present.jsonImport),
 								A2(
 								$elm$html$Html$button,
 								_List_fromArray(
@@ -13558,12 +14069,12 @@ var $author$project$Editor$view = function (model) {
 										$elm$html$Html$text('Redo')
 									]))
 							])),
-						$author$project$Editor$jsonImportError(present),
+						$author$project$Editor$jsonImportError(present.jsonImport),
 						$author$project$Editor$viewNode(
 						$author$project$Zipper$zipper(present.tableau)),
 						$author$project$Editor$verdict(present.tableau),
 						$author$project$Editor$problems(present.tableau),
-						$author$project$Rules$help
+						$author$project$Helpers$Rules$help
 					]))
 			]),
 		title: 'Tableau Editor'
@@ -13572,4 +14083,9 @@ var $author$project$Editor$view = function (model) {
 var $author$project$Editor$main = $elm$browser$Browser$document(
 	{init: $author$project$Editor$init, subscriptions: $author$project$Editor$subscriptions, update: $author$project$Editor$update, view: $author$project$Editor$view});
 _Platform_export({'Editor':{'init':$author$project$Editor$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+	$elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$string)
+			])))(0)}});}(this));
