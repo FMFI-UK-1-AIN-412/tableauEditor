@@ -373,10 +373,10 @@ viewNodeInputs additional z =
             :: autoSizeInput
                 (Zipper.zNode z).value
                 [ classList
-                    [ ( "textInput textInputFormula", True )
+                    [ ( "textInputFormula", True )
                     , ( "premise", Helper.isPremise z )
-                    , ( "semanticsProblem", Helper.hasReference z )
                     ]
+                , class (errorsClass <| Validate.isCorrectFormula z)
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
@@ -392,8 +392,9 @@ viewNodeInputs additional z =
             :: text "["
             :: autoSizeInput
                 (Zipper.zNode z).reference.str
-                [ class "textInput textInputReference"
+                [ class "textInputReference"
                 , onInput <| ChangeRef z
+                , class (problemsClass <| Validate.validateNodeRef z)
                 ]
             :: text "]"
             :: additional
@@ -405,6 +406,7 @@ autoSizeInput : String -> List (Attribute Msg) -> Html Msg
 autoSizeInput val attrs =
     input
         ( type_ "text"
+        :: class "textInput"
         :: value val
         -- :: size (String.length val + 1)
         :: size ((String.length val * 5 + 9) // 6)
@@ -516,14 +518,13 @@ viewControls ( ( t, _ )  as z ) =
                 in
                 [ text "* "
                 , autoSizeInput r1.str
-                    [ class ("textInput closed " ++ ref1Cls)
-                    , type_ "text"
+                    [ class ("closed " ++ ref1Cls)
                     , placeholder "Ref"
                     , onInput <| SetClosed 0 z
                     ]
                 , text " "
                 , autoSizeInput r2.str
-                    [ class ("textInput closed " ++ ref2Cls)
+                    [ class ("closed " ++ ref2Cls)
                     , placeholder "Ref"
                     , onInput <| SetClosed 1 z
                     ]
@@ -641,6 +642,11 @@ problemItem pi =
         ]
 
 
+errorsClass : Result (List Validate.Problem) a -> String
+errorsClass =
+    Errors.errors >> problemsClass
+
+
 problemsClass : List Validate.Problem -> String
 problemsClass pl =
     case pl of
@@ -659,11 +665,6 @@ problemClass { typ } =
 
         Validate.Semantics ->
             "semanticsProblem"
-
-
-jsonDataUri : String -> String
-jsonDataUri json =
-    "data:application/json;charset=utf-8," -- TODO ++ Http.encodeUri json
 
 
 jsonExportControl : Tableau -> Html Msg
