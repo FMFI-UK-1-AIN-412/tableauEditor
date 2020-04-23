@@ -116,6 +116,7 @@
 .nodeProblems {
 	text-align: center;
 	color: hsl(36, 100%, 40%);
+	font: small-caption;
 	font-weight: bold;
 	font-size: 12px;
 }
@@ -188,6 +189,9 @@ Eye candy
 ( colors courtesy of https://kuler.adobe.com/try-color-theme-3350110 )
 */
 .onclick-menu {
+	font: caption-small;
+	font: 400 11px system-ui;
+	font: -moz-button;
 	padding: 0;
 	margin: 0;
 	outline: 0;
