@@ -13107,15 +13107,18 @@ var $author$project$Editor$autoSizeInput = F2(
 				$elm$html$Html$Attributes$type_('text'),
 				A2(
 					$elm$core$List$cons,
-					$elm$html$Html$Attributes$value(val),
+					$elm$html$Html$Attributes$class('textInput'),
 					A2(
 						$elm$core$List$cons,
-						$elm$html$Html$Attributes$size(
-							((($elm$core$String$length(val) * 5) + 9) / 6) | 0),
+						$elm$html$Html$Attributes$value(val),
 						A2(
 							$elm$core$List$cons,
-							$elm$html$Html$Events$onBlur($author$project$Editor$Cache),
-							attrs)))),
+							$elm$html$Html$Attributes$size(
+								((($elm$core$String$length(val) * 5) + 9) / 6) | 0),
+							A2(
+								$elm$core$List$cons,
+								$elm$html$Html$Events$onBlur($author$project$Editor$Cache),
+								attrs))))),
 			_List_Nil);
 	});
 var $elm$core$List$filter = F2(
@@ -13295,8 +13298,7 @@ var $author$project$Editor$viewControls = function (z) {
 						r1.str,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('textInput closed ' + ref1Cls),
-								$elm$html$Html$Attributes$type_('text'),
+								$elm$html$Html$Attributes$class('closed ' + ref1Cls),
 								$elm$html$Html$Attributes$placeholder('Ref'),
 								$elm$html$Html$Events$onInput(
 								A2($author$project$Editor$SetClosed, 0, z))
@@ -13307,7 +13309,7 @@ var $author$project$Editor$viewControls = function (z) {
 						r2.str,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('textInput closed ' + ref2Cls),
+								$elm$html$Html$Attributes$class('closed ' + ref2Cls),
 								$elm$html$Html$Attributes$placeholder('Ref'),
 								$elm$html$Html$Events$onInput(
 								A2($author$project$Editor$SetClosed, 1, z))
@@ -13598,11 +13600,25 @@ var $author$project$Editor$ChangeToDelta = function (a) {
 var $author$project$Editor$ChangeToGamma = function (a) {
 	return {$: 'ChangeToGamma', a: a};
 };
+var $author$project$Editor$errorsClass = A2($elm$core$Basics$composeR, $author$project$Errors$errors, $author$project$Editor$problemsClass);
+var $author$project$Validate$isCorrectFormula = function (z) {
+	return A2(
+		$elm$core$Result$andThen,
+		$author$project$Validate$isCorrectRule,
+		$author$project$Validate$isValidFormula(z));
+};
 var $author$project$Helpers$Helper$isPremise = function (z) {
 	return _Utils_eq(
 		$elm$core$String$fromInt(
 			$author$project$Zipper$zNode(z).id),
 		$author$project$Zipper$zNode(z).reference.str);
+};
+var $author$project$Validate$validateNodeRef = function (z) {
+	return A3(
+		$author$project$Validate$validateRef,
+		'Invalid reference',
+		$author$project$Zipper$zNode(z).reference,
+		z);
 };
 var $author$project$Editor$ChangeButtonsAppearance = function (a) {
 	return {$: 'ChangeButtonsAppearance', a: a};
@@ -13693,14 +13709,14 @@ var $author$project$Editor$viewNodeInputs = F2(
 								$elm$html$Html$Attributes$classList(
 								_List_fromArray(
 									[
-										_Utils_Tuple2('textInput textInputFormula', true),
+										_Utils_Tuple2('textInputFormula', true),
 										_Utils_Tuple2(
 										'premise',
-										$author$project$Helpers$Helper$isPremise(z)),
-										_Utils_Tuple2(
-										'semanticsProblem',
-										$author$project$Helpers$Helper$hasReference(z))
+										$author$project$Helpers$Helper$isPremise(z))
 									])),
+								$elm$html$Html$Attributes$class(
+								$author$project$Editor$errorsClass(
+									$author$project$Validate$isCorrectFormula(z))),
 								$elm$html$Html$Attributes$type_('text'),
 								$elm$html$Html$Events$onInput(
 								$author$project$Editor$ChangeText(z))
@@ -13807,9 +13823,12 @@ var $author$project$Editor$viewNodeInputs = F2(
 										$author$project$Zipper$zNode(z).reference.str,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('textInput textInputReference'),
+												$elm$html$Html$Attributes$class('textInputReference'),
 												$elm$html$Html$Events$onInput(
-												$author$project$Editor$ChangeRef(z))
+												$author$project$Editor$ChangeRef(z)),
+												$elm$html$Html$Attributes$class(
+												$author$project$Editor$problemsClass(
+													$author$project$Validate$validateNodeRef(z)))
 											])),
 									A2(
 										$elm$core$List$cons,

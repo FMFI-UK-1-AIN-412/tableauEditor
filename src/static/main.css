@@ -1,3 +1,6 @@
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
 .tableau {
 	width: 100%;
 	border-spacing: 0;
@@ -27,13 +30,14 @@
 }
 .beta > .formula:first-child {
 	border-left: none;
-	border-right: 0.5px solid black;
 	padding-left: 0;
 	padding-right: 2.25px;
 }
 
 .inputGroup {
 	display: flex;
+	font-size: .75rem;
+	align-items: baseline;
 	margin-bottom: 0.125em;
 	margin-bottom: 0.125rem;
 }
@@ -45,6 +49,7 @@
 .textInput {
 	text-align: center;
 	background-color: inherit;
+	font-size: .75rem;
 	border: 0;
 	outline: 0;
 	padding-bottom: 1px;
@@ -107,6 +112,7 @@
 	background-color: #fff;
 	border-radius: 20px;
 	border: thin solid #ececec;
+	font-size: .75rem;
 }
 
 .closed {
@@ -118,7 +124,7 @@
 	color: hsl(36, 100%, 40%);
 	font: small-caption;
 	font-weight: bold;
-	font-size: 12px;
+	font-size: .75rem;
 }
 
 .nodeProblemsText {
@@ -132,7 +138,7 @@
 	display: inline-block;
 }
 .onclick-menu:before {
-	font-size: 12px;
+	font-size: .75rem;
 }
 
 .onclick-menu.del:before {
@@ -399,6 +405,10 @@ button.delete {
 	}
 	.textInput {
 		border-bottom: none;
+	}
+	.textInput.syntaxProblem, .textInput.semanticsProblem {
+		border-bottom-style: dashed;
+		border-bottom-width: 1px;
 	}
 	/* Print color backgrounds for webkit browsers */
 	body {
