@@ -1,4 +1,4 @@
-module Rules exposing (..)
+module Helpers.Rules exposing (..)
 
 import Formula exposing (..)
 import Html exposing (Attribute, Html, div, h2, h3, p, table, td, text, tr)

@@ -1,4 +1,4 @@
-module Helper exposing (..)
+module Helpers.Helper exposing (..)
 
 import Formula
 import Result

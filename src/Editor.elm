@@ -1,26 +1,28 @@
-module Editor exposing (main)
+port module Editor exposing (main)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
 import Errors
+import File exposing (File)
+import File.Select as Select
+import File.Download as Download
 import Formula
-import Helper
+import Helpers.Helper as Helper
+import Json.Decode
 import Helpers.Exporting.Json.Decode
 import Helpers.Exporting.Json.Encode
-import Helpers.Exporting.Ports exposing (FileReaderPortData, fileContentRead, fileSelected)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
--- TOOD Export import Http
-import Json.Decode
-import Rules exposing (..)
+import Helpers.Rules as Rules exposing (..)
 import Tableau exposing (..)
+import Task
 import UndoList exposing (UndoList)
 import Validate
 import Zipper exposing (..)
 
 
-main : Program () Model Msg
+main : Program (Maybe String) Model Msg
 main =
     Browser.document
         { init = init
@@ -30,19 +32,23 @@ main =
         }
 
 
+type JsonImport
+    = None
+    | InProgress String
+    | ImportErr String
+
+
 type alias Model =
     UndoList
         { tableau : Tableau
-        , jsonImporting : Bool
-        , jsonImportError : String
-        , jsonImportId : String
+        , jsonImport: JsonImport
         }
 
 
-init : () -> ( Model, Cmd msg )
-init _ =
-    ( UndoList.fresh
-        { tableau =
+init : Maybe String -> ( Model, Cmd msg )
+init mts =
+    let
+        emptyT =
             { node =
                 { id = 1
                 , value = ""
@@ -52,17 +58,29 @@ init _ =
                 }
             , ext = Open
             }
-        , jsonImporting = False
-        , jsonImportError = ""
-        , jsonImportId = "importJson"
-        }
-    , Cmd.none
-    )
+
+        initT =
+            case mts of
+                Nothing -> emptyT
+                Just ts ->
+                    case Helpers.Exporting.Json.Decode.decode ts of
+                        Ok t ->
+                            t
+
+                        Err _ ->
+                            emptyT
+    in
+        ( UndoList.fresh
+            { tableau = initT
+            , jsonImport = None
+            }
+        , Cmd.none
+        )
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    fileContentRead JsonRead
+subscriptions _ =
+    Sub.none
 
 
 type Msg
@@ -84,12 +102,22 @@ type Msg
     | ChangeToBeta Zipper.Zipper
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
+    | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
     | Prettify
-    | JsonSelected
-    | JsonRead FileReaderPortData
-    | ChangeButtonsAppearance Zipper.Zipper
+    | JsonSelect
+    | JsonSelected File
+    | JsonRead String
+    | Export
+    | Print
+    | Cache
+
+
+port print : () -> Cmd msg
+
+
+port cache : String -> Cmd msg
 
 
 top : Zipper.Zipper -> Tableau
@@ -105,17 +133,73 @@ topRenumbered =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ present } as model) =
     case msg of
-        JsonSelected ->
-            ( UndoList.new { present | jsonImportError = "", jsonImporting = True } model, fileSelected present.jsonImportId )
+        JsonSelect ->
+            ( model
+            , Select.file [ "application/json" ] JsonSelected
+            )
+
+        JsonSelected file ->
+            ( { model
+                | present =
+                    { present
+                    | jsonImport = InProgress (File.name file)
+                    }
+                }
+            , Task.perform JsonRead (File.toString file)
+            )
+
+        JsonRead contents ->
+            case contents |> Helpers.Exporting.Json.Decode.decode of
+                Ok t ->
+                    ( UndoList.new
+                        { present | jsonImport = None, tableau = t }
+                        model
+                    , cache contents
+                    )
+
+                Err e ->
+                    ( { model
+                        | present =
+                            { present
+                            | jsonImport =
+                                ImportErr (Json.Decode.errorToString e)
+                            }
+                        }
+                    , Cmd.none
+                    )
+
+        Export ->
+            ( model
+            , Download.string
+                "tableau.json"
+                "application/json"
+                <| Helpers.Exporting.Json.Encode.encode 2 present.tableau
+            )
 
         Undo ->
-            ( UndoList.undo model, Cmd.none )
+            ( UndoList.undo
+                { model | present = { present | jsonImport = None } }
+            , Cmd.none
+            )
 
         Redo ->
             ( UndoList.redo model, Cmd.none )
 
+        Print ->
+            ( model, print () )
+
+        Cache ->
+            ( model
+            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau) )
+
         _ ->
-            ( UndoList.new (simpleUpdate msg { present | jsonImportError = "" }) model, Cmd.none )
+            let
+                presentSansImport = { present | jsonImport = None }
+            in
+            ( UndoList.new
+                (simpleUpdate msg presentSansImport)
+                { model | present = presentSansImport }
+            , Cmd.none )
 
 
 simpleUpdate msg model =
@@ -183,10 +267,16 @@ simpleUpdate msg model =
             ChangeToDelta z ->
                 { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
 
+            ChangeButtonsAppearance z ->
+                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
+
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
 
-            JsonSelected ->
+            JsonSelect ->
+                model
+
+            JsonSelected _ ->
                 model
 
             Undo ->
@@ -195,16 +285,17 @@ simpleUpdate msg model =
             Redo ->
                 model
 
-            JsonRead { contents } ->
-                case contents |> Helpers.Exporting.Json.Decode.decode of
-                    Ok t ->
-                        { model | jsonImporting = False, tableau = t }
+            JsonRead _ ->
+                model
 
-                    Err e ->
-                        { model | jsonImporting = False, jsonImportError = Json.Decode.errorToString e }
+            Export ->
+                model
 
-            ChangeButtonsAppearance z ->
-                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
+            Print ->
+                model
+
+            Cache ->
+                model
         )
 
 
@@ -215,13 +306,13 @@ view ({ present } as model) =
         [ div [ class "tableau" ]
             [ div [ class "actions" ]
                 [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-                , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
+                , button [ class "button", onClick Print ] [ text "Print" ]
                 , jsonExportControl present.tableau
-                , jsonImportControl present.jsonImporting present.jsonImportId
+                , jsonImportControl present.jsonImport
                 , button [ class "button", onClick Undo ] [ text "Undo" ]
                 , button [ class "button", onClick Redo ] [ text "Redo" ]
                 ]
-            , jsonImportError present
+            , jsonImportError present.jsonImport
             , viewNode (Zipper.zipper present.tableau)
             , verdict present.tableau
             , problems present.tableau
@@ -576,56 +667,33 @@ jsonDataUri json =
     "data:application/json;charset=utf-8," -- TODO ++ Http.encodeUri json
 
 
-jsonExportControl : Tableau -> Html msg
+jsonExportControl : Tableau -> Html Msg
 jsonExportControl t =
-    a
-        [ type_ "button"
-        , href <| jsonDataUri <| Helpers.Exporting.Json.Encode.encode 2 t
-        -- TODO , downloadAs "tableau.json"
-        ]
-        [ button [ class "button" ] [ text "Export as JSON" ] ]
+    button [ class "button", onClick Export ] [ text "Export as JSON" ]
 
 
-jsonImportControl : Bool -> String -> Html Msg
-jsonImportControl jsonImporting jsonImportId =
-    case jsonImporting of
-        True ->
-            text "Loading file..."
-
-        False ->
-            label [ for jsonImportId ]
-                [ button
-                    {- This is really ugly, but:
-                       - we really need the buton and onClick, if we want it to look like a button
-                         (embedding the label in a button or vice versa works in webkit but not in firefox)
-                       - Adding another Msg / Cmd just for this...
-                    -}
-                    [ attribute "onClick" ("javascript:document.getElementById('" ++ jsonImportId ++ "').click();")
-                    , class "button"
-                    ]
-                    [ text "Import from JSON"
-                    ]
-                , input
-                    [ type_ "file"
-                    , id jsonImportId
-                    , accept "application/json"
-                    , on "change"
-                        (Json.Decode.succeed JsonSelected)
-                    ]
-                    []
-                ]
-
-
-jsonImportError : { a | jsonImportError : String } -> Html msg
-jsonImportError model =
-    case model.jsonImportError of
-        "" ->
-            div [] []
+jsonImportControl : JsonImport -> Html Msg
+jsonImportControl jsonImport =
+    case jsonImport of
+        InProgress fname ->
+            text <| "Loading tableau from file" ++ fname ++ "…"
 
         _ ->
+            button
+                [ class "button", onClick JsonSelect ]
+                [ text "Import from JSON" ]
+
+
+jsonImportError : JsonImport -> Html msg
+jsonImportError jsonImport =
+    case jsonImport of
+        ImportErr e ->
             p
                 [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ model.jsonImportError ]
+                [ text <| "Error importing tableau: " ++ e ]
+
+        _ ->
+            div [] []
 
 
 verdict : Tableau -> Html msg
