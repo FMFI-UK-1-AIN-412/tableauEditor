@@ -1,8 +1,10 @@
 module Validate exposing (..)
 
+
 import Dict
 import Errors
 import Formula
+import Helpers.Parser
 import Parser
 import Set
 import Tableau exposing (..)
@@ -145,9 +147,9 @@ areCorrectCloseRefs z =
             Ok z
 
 
-parseProblem : Zipper.Zipper -> (List Parser.DeadEnd) -> List Problem
+parseProblem : Zipper.Zipper -> List Parser.DeadEnd -> List Problem
 parseProblem z =
-    Formula.errorString >> syntaxProblem z
+    Helpers.Parser.deadEndsToString >> syntaxProblem z
 
 
 validateFormula : Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
