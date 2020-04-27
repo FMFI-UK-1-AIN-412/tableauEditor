@@ -6,6 +6,7 @@ import Errors
 import File exposing (File)
 import File.Select as Select
 import File.Download as Download
+import FontAwesome exposing (icon, ellipsisHorizontal, exchangeAlt)
 import Formula
 import Helpers.Helper as Helper
 import Json.Decode
@@ -303,7 +304,7 @@ view : Model -> Browser.Document Msg
 view ({ present } as model) =
     { title = "Tableau Editor"
     , body =
-        [ div [ class "tableau" ]
+        [   div [ class "tableau" ]
             [ div [ class "actions" ]
                 [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
                 , button [ class "button", onClick Print ] [ text "Print" ]
@@ -383,10 +384,10 @@ viewNodeInputs additional z =
             :: viewRuleType z
             :: div [ class "onclick-menu change", tabindex 0 ]
                 [ ul [ class "onclick-menu-content" ]
-                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
-                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
-                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
-                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
+                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "Change to α" ] ]
+                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
+                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
+                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
                     ]
                 ]
             :: text "["
@@ -443,7 +444,16 @@ viewButtonsAppearanceControlls z =
             div [] []
 
         _ ->
-            button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "⚙" ]
+            button
+                [ class "button"
+                , classList
+                    [ ( "active"
+                      , (Zipper.zTableau z).node.gui.controlsShown )
+                    ]
+                , onClick (ChangeButtonsAppearance z)
+                , title "Toggle node tools"
+                ]
+                [ icon ellipsisHorizontal ]
 
 
 viewChildren : Zipper.Zipper -> Html Msg
@@ -541,7 +551,7 @@ viewControls ( ( t, _ )  as z ) =
                                         "" ->
                                             case t.ext of
                                                 Open ->
-                                                    button [ onClick (DeleteMe z) ] [ text "node" ]
+                                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
                                                 _ ->
                                                     div [] []
@@ -550,14 +560,14 @@ viewControls ( ( t, _ )  as z ) =
                                             div [] []
 
                                 _ ->
-                                    button [ onClick (DeleteMe z) ] [ text "node" ]
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
                         else
                             case t.ext of
                                 Alpha _ ->
-                                    button [ onClick (DeleteMe z) ] [ text "node" ]
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
                                 Open ->
-                                    button [ onClick (DeleteMe z) ] [ text "node" ]
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
                                 _ ->
                                     div [] []
@@ -565,7 +575,7 @@ viewControls ( ( t, _ )  as z ) =
                     switchBetasButton =
                         case t.ext of
                             Beta _ _ ->
-                                button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ text "⇄" ]
+                                button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
 
                             _ ->
                                 div [] []
@@ -574,16 +584,16 @@ viewControls ( ( t, _ )  as z ) =
                     [ button [ class "button", onClick (ExpandAlpha z) ] [ text "Add α" ]
                     , div [ class "onclick-menu add", tabindex 0 ]
                         [ ul [ class "onclick-menu-content" ]
-                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
-                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
-                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
-                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
+                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "Add α" ] ]
+                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
+                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
+                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]
                         [ ul [ class "onclick-menu-content" ]
                             [ li [] [ deleteMeButton ]
-                            , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
+                            , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                             ]
                         ]
                     , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]

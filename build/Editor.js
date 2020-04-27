@@ -10481,7 +10481,10 @@ var $author$project$Helpers$Rules$renderGamma = function (g) {
 };
 var $author$project$Helpers$Rules$rulesTable = A2(
 	$elm$html$Html$div,
-	_List_Nil,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('full')
+		]),
 	_List_fromArray(
 		[
 			A2(
@@ -13242,6 +13245,346 @@ var $author$project$Editor$SetClosed = F3(
 var $author$project$Editor$SwitchBetas = function (a) {
 	return {$: 'SwitchBetas', a: a};
 };
+var $frandibar$elm_font_awesome_5$FontAwesome$Icon$Icon = function (a) {
+	return {$: 'Icon', a: a};
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$exchangeAlt = $frandibar$elm_font_awesome_5$FontAwesome$Icon$Icon('exchange-alt');
+var $frandibar$elm_font_awesome_5$FontAwesome$Solid = {$: 'Solid'};
+var $frandibar$elm_font_awesome_5$FontAwesome$animationClass = function (animation) {
+	if (animation.$ === 'Spin') {
+		return 'fa-spin';
+	} else {
+		return 'fa-pulse';
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$borderClass = 'fa-border';
+var $frandibar$elm_font_awesome_5$FontAwesome$invertClass = 'fa-inverse';
+var $frandibar$elm_font_awesome_5$FontAwesome$pullClass = function (p) {
+	if (p.$ === 'Left') {
+		return 'fa-pull-left';
+	} else {
+		return 'fa-pull-right';
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$sizeClass = function (size) {
+	switch (size.$) {
+		case 'ExtraSmall':
+			return 'fa-xs';
+		case 'Small':
+			return 'fa-sm';
+		case 'Large':
+			return 'fa-lg';
+		default:
+			var n = size.a;
+			return 'fa-' + ($elm$core$String$fromInt(n) + 'x');
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$widthClass = 'fa-fw';
+var $frandibar$elm_font_awesome_5$FontAwesome$className = function (opt) {
+	switch (opt.$) {
+		case 'Animation':
+			var animation = opt.a;
+			return _Utils_Tuple2(
+				$frandibar$elm_font_awesome_5$FontAwesome$animationClass(animation),
+				true);
+		case 'HasBorder':
+			return _Utils_Tuple2($frandibar$elm_font_awesome_5$FontAwesome$borderClass, true);
+		case 'HasFixedWidth':
+			return _Utils_Tuple2($frandibar$elm_font_awesome_5$FontAwesome$widthClass, true);
+		case 'InvertColor':
+			return _Utils_Tuple2($frandibar$elm_font_awesome_5$FontAwesome$invertClass, true);
+		case 'Pull':
+			var direction = opt.a;
+			return _Utils_Tuple2(
+				$frandibar$elm_font_awesome_5$FontAwesome$pullClass(direction),
+				true);
+		case 'Size':
+			var size = opt.a;
+			return _Utils_Tuple2(
+				$frandibar$elm_font_awesome_5$FontAwesome$sizeClass(size),
+				true);
+		default:
+			return _Utils_Tuple2('', false);
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$iconClass = function (iconOrLogo) {
+	var root = function () {
+		if (iconOrLogo.$ === 'Icon') {
+			var name = iconOrLogo.a;
+			return name;
+		} else {
+			var name = iconOrLogo.a;
+			return name;
+		}
+	}();
+	return 'fa-' + root;
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$styleClass = F2(
+	function (iconOrLogo, style) {
+		if (iconOrLogo.$ === 'Logo') {
+			return 'fab';
+		} else {
+			switch (style.$) {
+				case 'Solid':
+					return 'fas';
+				case 'Regular':
+					return 'far';
+				default:
+					return 'fal';
+			}
+		}
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$classes = F3(
+	function (iconUnstyled, style, options) {
+		return $elm$html$Html$Attributes$classList(
+			A2(
+				$elm$core$List$cons,
+				_Utils_Tuple2(
+					A2($frandibar$elm_font_awesome_5$FontAwesome$styleClass, iconUnstyled, style),
+					true),
+				A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						$frandibar$elm_font_awesome_5$FontAwesome$iconClass(iconUnstyled),
+						true),
+					A2($elm$core$List$map, $frandibar$elm_font_awesome_5$FontAwesome$className, options))));
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$Utils$onlyOne = F3(
+	function (f, curr, _v0) {
+		var found = _v0.a;
+		var list = _v0.b;
+		var _v1 = _Utils_Tuple2(
+			f(curr),
+			found);
+		if (_v1.a) {
+			if (!_v1.b) {
+				return _Utils_Tuple2(
+					true,
+					A2($elm$core$List$cons, curr, list));
+			} else {
+				return _Utils_Tuple2(found, list);
+			}
+		} else {
+			return _Utils_Tuple2(
+				found,
+				A2($elm$core$List$cons, curr, list));
+		}
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup = F2(
+	function (f, list) {
+		return A3(
+			$elm$core$List$foldr,
+			$frandibar$elm_font_awesome_5$FontAwesome$Utils$onlyOne(f),
+			_Utils_Tuple2(false, _List_Nil),
+			list).b;
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$isAnimation = function (option) {
+	if (option.$ === 'Animation') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isBorder = function (option) {
+	if (option.$ === 'HasBorder') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isHtmlTag = function (option) {
+	if (option.$ === 'HtmlTag') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isInvertColor = function (option) {
+	if (option.$ === 'InvertColor') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isMask = function (option) {
+	if (option.$ === 'Mask') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isPull = function (option) {
+	if (option.$ === 'Pull') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isSize = function (option) {
+	if (option.$ === 'Size') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isTransform = function (option) {
+	if (option.$ === 'Transform') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$isWidth = function (option) {
+	if (option.$ === 'HasFixedWidth') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$filterAttrs = function (options) {
+	return A2(
+		$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+		$frandibar$elm_font_awesome_5$FontAwesome$isWidth,
+		A2(
+			$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+			$frandibar$elm_font_awesome_5$FontAwesome$isTransform,
+			A2(
+				$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+				$frandibar$elm_font_awesome_5$FontAwesome$isSize,
+				A2(
+					$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+					$frandibar$elm_font_awesome_5$FontAwesome$isPull,
+					A2(
+						$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+						$frandibar$elm_font_awesome_5$FontAwesome$isMask,
+						A2(
+							$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+							$frandibar$elm_font_awesome_5$FontAwesome$isInvertColor,
+							A2(
+								$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+								$frandibar$elm_font_awesome_5$FontAwesome$isHtmlTag,
+								A2(
+									$frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup,
+									$frandibar$elm_font_awesome_5$FontAwesome$isBorder,
+									A2($frandibar$elm_font_awesome_5$FontAwesome$Utils$dedup, $frandibar$elm_font_awesome_5$FontAwesome$isAnimation, options)))))))));
+};
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $frandibar$elm_font_awesome_5$FontAwesome$mask = F2(
+	function (opt, opts) {
+		if (opt.$ === 'Mask') {
+			var maskIcon = opt.a;
+			var style = opt.b;
+			var val = A2($frandibar$elm_font_awesome_5$FontAwesome$styleClass, maskIcon, style) + (' ' + $frandibar$elm_font_awesome_5$FontAwesome$iconClass(maskIcon));
+			return A2(
+				$elm$core$List$cons,
+				A2($elm$html$Html$Attributes$attribute, 'data-fa-mask', val),
+				opts);
+		} else {
+			return opts;
+		}
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$maskAttr = function (options) {
+	return A3($elm$core$List$foldr, $frandibar$elm_font_awesome_5$FontAwesome$mask, _List_Nil, options);
+};
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $frandibar$elm_font_awesome_5$FontAwesome$transformVal = function (transformValue) {
+	switch (transformValue.$) {
+		case 'Grow':
+			var n = transformValue.a;
+			return 'grow-' + $elm$core$String$fromFloat(n);
+		case 'Shrink':
+			var n = transformValue.a;
+			return 'shrink-' + $elm$core$String$fromFloat(n);
+		case 'ShiftDown':
+			var n = transformValue.a;
+			return 'down-' + $elm$core$String$fromFloat(n);
+		case 'ShiftLeft':
+			var n = transformValue.a;
+			return 'left-' + $elm$core$String$fromFloat(n);
+		case 'ShiftRight':
+			var n = transformValue.a;
+			return 'right-' + $elm$core$String$fromFloat(n);
+		case 'ShiftUp':
+			var n = transformValue.a;
+			return 'up-' + $elm$core$String$fromFloat(n);
+		case 'Rotate':
+			var n = transformValue.a;
+			return 'rotate-' + $elm$core$String$fromFloat(n);
+		case 'FlipHorizontal':
+			return 'flip-h';
+		default:
+			return 'flip-v';
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$transform = F2(
+	function (opt, opts) {
+		if (opt.$ === 'Transform') {
+			var transforms = opt.a;
+			var val = A2(
+				$elm$core$String$join,
+				' ',
+				A2($elm$core$List$map, $frandibar$elm_font_awesome_5$FontAwesome$transformVal, transforms));
+			return A2(
+				$elm$core$List$cons,
+				A2($elm$html$Html$Attributes$attribute, 'data-fa-transform', val),
+				opts);
+		} else {
+			return opts;
+		}
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$transformAttr = function (options) {
+	return A3($elm$core$List$foldr, $frandibar$elm_font_awesome_5$FontAwesome$transform, _List_Nil, options);
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$htmlAttrs = F2(
+	function (options, htmlAttributes) {
+		return _Utils_ap(
+			$frandibar$elm_font_awesome_5$FontAwesome$transformAttr(options),
+			_Utils_ap(
+				$frandibar$elm_font_awesome_5$FontAwesome$maskAttr(options),
+				htmlAttributes));
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$I = {$: 'I'};
+var $frandibar$elm_font_awesome_5$FontAwesome$findTag = F2(
+	function (option, previousTag) {
+		if (option.$ === 'HtmlTag') {
+			var newTag = option.a;
+			return newTag;
+		} else {
+			return previousTag;
+		}
+	});
+var $elm$html$Html$i = _VirtualDom_node('i');
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $frandibar$elm_font_awesome_5$FontAwesome$htmlTag = function (opts) {
+	var foundTag = A3($elm$core$List$foldl, $frandibar$elm_font_awesome_5$FontAwesome$findTag, $frandibar$elm_font_awesome_5$FontAwesome$I, opts);
+	if (foundTag.$ === 'I') {
+		return $elm$html$Html$i;
+	} else {
+		return $elm$html$Html$span;
+	}
+};
+var $frandibar$elm_font_awesome_5$FontAwesome$iconWithOptions = F4(
+	function (iconName, style, options, htmlAttributes) {
+		var opts = $frandibar$elm_font_awesome_5$FontAwesome$filterAttrs(options);
+		return A3(
+			$frandibar$elm_font_awesome_5$FontAwesome$htmlTag,
+			opts,
+			A2(
+				$elm$core$List$cons,
+				A3($frandibar$elm_font_awesome_5$FontAwesome$classes, iconName, style, opts),
+				A2($frandibar$elm_font_awesome_5$FontAwesome$htmlAttrs, opts, htmlAttributes)),
+			_List_Nil);
+	});
+var $frandibar$elm_font_awesome_5$FontAwesome$icon = function (iconName) {
+	return A4($frandibar$elm_font_awesome_5$FontAwesome$iconWithOptions, iconName, $frandibar$elm_font_awesome_5$FontAwesome$Solid, _List_Nil, _List_Nil);
+};
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $author$project$Editor$problemsClass = function (pl) {
 	if (!pl.b) {
@@ -13342,7 +13685,7 @@ var $author$project$Editor$viewControls = function (z) {
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('⇄')
+									$frandibar$elm_font_awesome_5$FontAwesome$icon($frandibar$elm_font_awesome_5$FontAwesome$exchangeAlt)
 								]));
 					} else {
 						return A2($elm$html$Html$div, _List_Nil, _List_Nil);
@@ -13368,7 +13711,7 @@ var $author$project$Editor$viewControls = function (z) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('node')
+												$elm$html$Html$text('Delete node')
 											]));
 								} else {
 									return A2($elm$html$Html$div, _List_Nil, _List_Nil);
@@ -13386,7 +13729,7 @@ var $author$project$Editor$viewControls = function (z) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('node')
+										$elm$html$Html$text('Delete node')
 									]));
 						}
 					} else {
@@ -13402,7 +13745,7 @@ var $author$project$Editor$viewControls = function (z) {
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('node')
+											$elm$html$Html$text('Delete node')
 										]));
 							case 'Open':
 								return A2(
@@ -13414,7 +13757,7 @@ var $author$project$Editor$viewControls = function (z) {
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('node')
+											$elm$html$Html$text('Delete node')
 										]));
 							default:
 								return A2($elm$html$Html$div, _List_Nil, _List_Nil);
@@ -13466,7 +13809,7 @@ var $author$project$Editor$viewControls = function (z) {
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text('α')
+														$elm$html$Html$text('Add α')
 													]))
 											])),
 										A2(
@@ -13483,7 +13826,7 @@ var $author$project$Editor$viewControls = function (z) {
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text('β')
+														$elm$html$Html$text('Add β')
 													]))
 											])),
 										A2(
@@ -13500,7 +13843,7 @@ var $author$project$Editor$viewControls = function (z) {
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text('γ')
+														$elm$html$Html$text('Add γ')
 													]))
 											])),
 										A2(
@@ -13517,7 +13860,7 @@ var $author$project$Editor$viewControls = function (z) {
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text('δ')
+														$elm$html$Html$text('Add δ')
 													]))
 											]))
 									]))
@@ -13558,7 +13901,7 @@ var $author$project$Editor$viewControls = function (z) {
 													]),
 												_List_fromArray(
 													[
-														$elm$html$Html$text('subtree')
+														$elm$html$Html$text('Delete subtree')
 													]))
 											]))
 									]))
@@ -13623,6 +13966,7 @@ var $author$project$Validate$validateNodeRef = function (z) {
 var $author$project$Editor$ChangeButtonsAppearance = function (a) {
 	return {$: 'ChangeButtonsAppearance', a: a};
 };
+var $frandibar$elm_font_awesome_5$FontAwesome$ellipsisHorizontal = $frandibar$elm_font_awesome_5$FontAwesome$Icon$Icon('ellipsis-h');
 var $author$project$Editor$viewButtonsAppearanceControlls = function (z) {
 	var _v0 = $author$project$Zipper$zTableau(z).ext;
 	if (_v0.$ === 'Closed') {
@@ -13633,16 +13977,23 @@ var $author$project$Editor$viewButtonsAppearanceControlls = function (z) {
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$class('button'),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'active',
+							$author$project$Zipper$zTableau(z).node.gui.controlsShown)
+						])),
 					$elm$html$Html$Events$onClick(
-					$author$project$Editor$ChangeButtonsAppearance(z))
+					$author$project$Editor$ChangeButtonsAppearance(z)),
+					$elm$html$Html$Attributes$title('Toggle node tools')
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('⚙')
+					$frandibar$elm_font_awesome_5$FontAwesome$icon($frandibar$elm_font_awesome_5$FontAwesome$ellipsisHorizontal)
 				]));
 	}
 };
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$sup = _VirtualDom_node('sup');
 var $elm$html$Html$var = _VirtualDom_node('var');
 var $author$project$Editor$viewRuleType = function (z) {
@@ -13757,7 +14108,7 @@ var $author$project$Editor$viewNodeInputs = F2(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('α')
+																$elm$html$Html$text('Change to α')
 															]))
 													])),
 												A2(
@@ -13774,7 +14125,7 @@ var $author$project$Editor$viewNodeInputs = F2(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('β')
+																$elm$html$Html$text('Change to β')
 															]))
 													])),
 												A2(
@@ -13791,7 +14142,7 @@ var $author$project$Editor$viewNodeInputs = F2(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('γ')
+																$elm$html$Html$text('Change to γ')
 															]))
 													])),
 												A2(
@@ -13808,7 +14159,7 @@ var $author$project$Editor$viewNodeInputs = F2(
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text('δ')
+																$elm$html$Html$text('Change to δ')
 															]))
 													]))
 											]))

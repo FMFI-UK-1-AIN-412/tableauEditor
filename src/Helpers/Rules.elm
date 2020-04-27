@@ -190,7 +190,7 @@ notesTable =
 
 
 rulesTable =
-    div []
+    div [ class "full" ]
         [ h3 [] [ text "Applying rules" ]
         , Html.table [ class "rulesHelpTable" ]
             [ Html.tr []

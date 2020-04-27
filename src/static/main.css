@@ -10,10 +10,12 @@ body {
 .formula {
 	display: block;
 	border-top: 0.5px solid transparent;
+	min-width: 100%;
+	width: max-content;
 }
 
 .beta {
-	width: 100%;
+	min-width: 100%;
 }
 
 .formula > .beta {
@@ -107,12 +109,35 @@ body {
 	max-width: 97%;
 }
 
-.button {
+.button, .onclick-menu:before {
 	padding: 2px 10px;
 	background-color: #fff;
 	border-radius: 20px;
-	border: thin solid #ececec;
+	border: thin solid lightgray;
 	font-size: .75rem;
+}
+.button:focus, .onclick-menu:focus:before {
+	background-color: rgba(0, 0, 0, 0.05);
+	border-color: #16a;
+}
+.button:hover, .onclick-menu:hover:before {
+	background-color: rgba(0, 0, 0, 0.075);
+	border-color: #ccc;
+}
+.onclick-menu-content button:hover, .onclick-menu-content button:focus {
+	background-color: rgba(0, 0, 0, 0.075);
+}
+.button.active {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-color: #bbb;
+}
+.button:active, .onclick-menu:active:before {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-color: #16a;
+}
+.onclick-menu-content button:active {
+	color: white;
+	background-color: #16a;
 }
 
 .closed {
@@ -137,9 +162,6 @@ body {
 	position: relative;
 	display: inline-block;
 }
-.onclick-menu:before {
-	font-size: .75rem;
-}
 
 .onclick-menu.del:before {
 	content: "Delete ▾";
@@ -147,6 +169,10 @@ body {
 
 .onclick-menu.change:before {
 	content: "▾";
+}
+.onclick-menu.change .onclick-menu-content {
+	left: auto;
+	right: -2em;
 }
 
 .onclick-menu.add:before {
@@ -170,7 +196,8 @@ body {
 
 	opacity: 0;
 	visibility: hidden;
-	transition: visibility 0.5s;
+	transition: visibility 0.25s, opacity 0.1s;
+	left: -1em;
 }
 
 .onclick-menu.no-pointer-events {
@@ -204,25 +231,19 @@ Eye candy
 	margin-right: 0.3em;
 	text-align: left;
 }
-.onclick-menu:before {
-	padding: 2px 10px;
-	background-color: #fff;
-	-webkit-border-radius: 20px;
-	-moz-border-radius: 20px;
-	border-radius: 20px;
-	border: thin solid #ececec;
-}
 .onclick-menu-content {
-	background-color: #364656;
+	background-color:white /* #364656 */;
 	width: auto;
 
-	margin-top: 19px;
+	margin-top: 5px;
 	margin-left: 0;
-	padding: 10px;
+	padding: .25em 0;
+	border-radius: .25em;
+	border: thin solid lightgray;
 }
 
 /* arrow for the expanding part */
-.onclick-menu-content:before {
+/*.onclick-menu-content:before {
 	content: "";
 	width: 0;
 	height: 0;
@@ -233,10 +254,10 @@ Eye candy
 
 	position: absolute;
 	top: -10px;
-}
+}*/
 
 .onclick-menu-content li {
-	color: #f2f5e9;
+	color: black /* #f2f5e9 */;
 	list-style-type: none;
 	white-space: nowrap;
 }
@@ -249,11 +270,16 @@ Eye candy
 	cursor: inherit;
 	outline: 0;
 	cursor: pointer;
+	line-height: 2em;
+	padding: 0 2em;
+	font-size: .75rem;
+	width: 100%;
+	text-align: left;
 }
-.onclick-menu-content button:hover {
+/*.onclick-menu-content button:hover {
 	background-color: hsl(210, 20%, 45%);
 	color: #ff8c31;
-}
+}*/
 
 /*custom menu component end*/
 
@@ -323,6 +349,12 @@ button.delete {
 .rulesHelp {
 	font-size: smaller;
 }
+.rulesHelp:after {
+	content: ' ';
+	display: block;
+	clear: both;
+	height: 0;
+}
 
 .rulesHelp .rule {
 	display: inline-table;
@@ -352,6 +384,7 @@ button.delete {
 .rulesHelpTable {
 	border-collapse: collapse;
 	width: 100%;
+	box-sizing: border-box;
 }
 
 .rulesHelpTable th, td {
@@ -375,17 +408,34 @@ button.delete {
 
 .rulesHelpTable .formula {
 	text-align: center;
+	display: inline-block;
+	width: initial;
+	min-width: initial;
 }
 
+.rulesHelp > h2 {
+	padding: 0 10px;
+}
 .half {
-	width: 48%;
+	width: 50%;
 	float: left;
-	padding: 10px;
+	padding: 0 0.5rem 0 0;
+	box-sizing: border-box;
+}
+.half + .half {
+	padding: 0 0 0 0.5rem;
+}
+.full {
+	clear: left;
+	width: 100%;
+	float: left;
+	box-sizing: border-box;
 }
 
 @media only screen and (max-width: 1180px) {
 	.half {
 		width:100%;
+		padding: 0;
 	}
 }
 
