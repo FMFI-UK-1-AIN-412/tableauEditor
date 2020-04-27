@@ -18,12 +18,14 @@ publish: build
 	rsync -av $(OUT_DIR)/ $(PUBLISH_URL)
 clean:
 	rm -r $(OUT_DIR)
-.PHONY: build publish clean
+live:
+	elm-live --dir src -- $(ELM_MAIN) --output=$(basename $(ELM_MAIN)).js
+.PHONY: build publish clean live
 
 
-$(OUT_DIR)/index.html: index.html
+$(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/static/main.css $(OUT_DIR)/Editor.js
 	mkdir -p $(OUT_DIR)
-	sed -e 's,src="/_compile[^"]*",src="$(notdir $(ELM_OUT))",' $< >$@
+	sed -e 's,src="[^"]*",src="$(notdir $(ELM_OUT))?'"$$(sha1sum $(ELM_OUT) | grep -o '^[0-9a-f]\+')"'",; s,href="static/main\.css",href="static/main.css?'"$$(sha1sum $(OUT_DIR)/static/main.css | grep -o '^[0-9a-f]\+')"'",' $< >$@
 
 $(ELM_OUT): $(wildcard $(SRC_DIR)/*.elm) $(wildcard $(SRC_DIR)/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*/*.elm)
 	mkdir -p $(OUT_DIR)
