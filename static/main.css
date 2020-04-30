@@ -1,3 +1,6 @@
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
 .tableau {
 	width: 100%;
 	border-spacing: 0;
@@ -6,10 +9,13 @@
 
 .formula {
 	display: block;
+	border-top: 0.5px solid transparent;
+	min-width: 100%;
+	width: max-content;
 }
 
 .beta {
-	width: 100%;
+	min-width: 100%;
 }
 
 .formula > .beta {
@@ -20,43 +26,74 @@
 	display: inline-block;
 	min-width: 20px;
 	flex-grow: 1;
+	border-top: 0.5px solid black;
+	border-left: 0.5px solid black;
+	padding-left: 2.25px;
+}
+.beta > .formula:first-child {
+	border-left: none;
+	padding-left: 0;
+	padding-right: 2.25px;
+}
+
+.inputGroup {
+	display: flex;
+	font-size: .75rem;
+	align-items: baseline;
+	margin-bottom: 0.125em;
+	margin-bottom: 0.125rem;
 }
 
 .formulaId {
-	width: 10px;
+	width: 0.625em;
 }
 
-.formulaInput {
-	flex-grow: 1;
-	width: calc(100% - 85px);
-}
-
-.formulaInputSubst {
-	flex-grow: 1;
-	width: calc(100% - 208px);
-}
-
-.substitutedVariable {
-	width: 45px;
-}
-
-.substitutedConstant {
-	width: 45px;
-}
-
-.formulaReference {
-	width: 11px;
-}
-
-.formulaInput, .formulaReference, .formulaInputSubst, .substitutedVariable, .substitutedConstant {
+.textInput {
 	text-align: center;
 	background-color: inherit;
+	font-size: .75rem;
 	border: 0;
-	border-bottom: thin dashed lightgray;
+	outline: 0;
+	padding-bottom: 1px;
+	border-bottom: 1px dashed lightgray;
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+}
+
+.textInput:focus {
+	background-color: rgba(0, 0, 0, 0.05);
+	padding-bottom: 0;
+	border-bottom: 2px solid #16a;
+}
+  
+.textInput:hover {
+	background-color: rgba(0, 0, 0, 0.075);
+	border-bottom-style: solid;
+}
+  
+.textInput:active {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-bottom-style: solid;
+}
+  
+.textInputFormula, .textInputFormulaWithSubst {
+	flex-grow: 1;
+	/* width: calc(100% - 5rem); */
+}
+
+.textInputFormulaWithSubst {
+	/* width: calc(100% - 11.25rem); */
+}
+
+.textInputVariable, .textInputTerm, .textInputReference {
+	flex: none;
+	min-width: 1rem;
 }
 
 .expandControls {
 	text-align: center;
+	margin-bottom: 0.125em;
+	margin-bottom: 0.125rem;
 }
 
 .actions button {
@@ -72,11 +109,35 @@
 	max-width: 97%;
 }
 
-.button {
+.button, .onclick-menu:before {
 	padding: 2px 10px;
 	background-color: #fff;
 	border-radius: 20px;
-	border: thin solid #ececec;
+	border: thin solid lightgray;
+	font-size: .75rem;
+}
+.button:focus, .onclick-menu:focus:before {
+	background-color: rgba(0, 0, 0, 0.05);
+	border-color: #16a;
+}
+.button:hover, .onclick-menu:hover:before {
+	background-color: rgba(0, 0, 0, 0.075);
+	border-color: #ccc;
+}
+.onclick-menu-content button:hover, .onclick-menu-content button:focus {
+	background-color: rgba(0, 0, 0, 0.075);
+}
+.button.active {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-color: #bbb;
+}
+.button:active, .onclick-menu:active:before {
+	background-color: rgba(0, 0, 0, 0.1);
+	border-color: #16a;
+}
+.onclick-menu-content button:active {
+	color: white;
+	background-color: #16a;
 }
 
 .closed {
@@ -85,9 +146,10 @@
 
 .nodeProblems {
 	text-align: center;
-	color: #ff8b31;
-	font-weight: 900;
-	font-size: 12px;
+	color: hsl(36, 100%, 40%);
+	font: small-caption;
+	font-weight: bold;
+	font-size: .75rem;
 }
 
 .nodeProblemsText {
@@ -100,20 +162,21 @@
 	position: relative;
 	display: inline-block;
 }
-.onclick-menu:before {
-	font-size: 12px;
-}
 
 .onclick-menu.del:before {
-	content: "Delete";
+	content: "Delete ▾";
 }
 
 .onclick-menu.change:before {
-	content: "Change";
+	content: "▾";
+}
+.onclick-menu.change .onclick-menu-content {
+	left: auto;
+	right: -2em;
 }
 
 .onclick-menu.add:before {
-	content: "Add";
+	content: "Add ▾";
 	margin-left: 5px;
 }
 
@@ -133,7 +196,8 @@
 
 	opacity: 0;
 	visibility: hidden;
-	transition: visibility 0.5s;
+	transition: visibility 0.25s, opacity 0.1s;
+	left: -1em;
 }
 
 .onclick-menu.no-pointer-events {
@@ -158,31 +222,28 @@ Eye candy
 ( colors courtesy of https://kuler.adobe.com/try-color-theme-3350110 )
 */
 .onclick-menu {
+	font: caption-small;
+	font: 400 11px system-ui;
+	font: -moz-button;
 	padding: 0;
 	margin: 0;
 	outline: 0;
 	margin-right: 0.3em;
 	text-align: left;
 }
-.onclick-menu:before {
-	padding: 2px 10px;
-	background-color: #fff;
-	-webkit-border-radius: 20px;
-	-moz-border-radius: 20px;
-	border-radius: 20px;
-	border: thin solid #ececec;
-}
 .onclick-menu-content {
-	background-color: #364656;
+	background-color:white /* #364656 */;
 	width: auto;
 
-	margin-top: 19px;
+	margin-top: 5px;
 	margin-left: 0;
-	padding: 10px;
+	padding: .25em 0;
+	border-radius: .25em;
+	border: thin solid lightgray;
 }
 
 /* arrow for the expanding part */
-.onclick-menu-content:before {
+/*.onclick-menu-content:before {
 	content: "";
 	width: 0;
 	height: 0;
@@ -193,10 +254,10 @@ Eye candy
 
 	position: absolute;
 	top: -10px;
-}
+}*/
 
 .onclick-menu-content li {
-	color: #f2f5e9;
+	color: black /* #f2f5e9 */;
 	list-style-type: none;
 	white-space: nowrap;
 }
@@ -209,10 +270,16 @@ Eye candy
 	cursor: inherit;
 	outline: 0;
 	cursor: pointer;
+	line-height: 2em;
+	padding: 0 2em;
+	font-size: .75rem;
+	width: 100%;
+	text-align: left;
 }
-.onclick-menu-content button:hover {
+/*.onclick-menu-content button:hover {
+	background-color: hsl(210, 20%, 45%);
 	color: #ff8c31;
-}
+}*/
 
 /*custom menu component end*/
 
@@ -228,11 +295,50 @@ button.delete {
 	color: gray;
 }
 
-.premise { background-color: #def; }
+.premise {
+	background-color: #ddeeff;
+}
+.premise:focus.textInput {
+	background-color: #d2e8ff;
+}
+.premise:hover.textInput {
+	background-color: #c7e3ff;
+}
+.premise:active.textInput {
+	background-color: #bddeff;
+}
 
-.syntaxProblem    { background-color: #ff8c31; }
-.semanticsProblem { background-color: #ff8c3170; }
-
+.syntaxProblem {
+	background: rgb(255, 182, 193, 0.333);
+}
+.semanticsProblem {
+	background: rgba(255,211,131,0.333);
+}
+.syntaxProblem:focus.textInput {
+	background: rgb(255, 182, 193, 0.5);
+  }
+.semanticsProblem:focus.textInput {
+	background: rgba(255,211,131,0.5);
+  }
+.syntaxProblem:hover.textInput {
+	background: rgb(255, 182, 193, 0.667);
+  }
+.semanticsProblem:hover.textInput {
+	background: rgba(255,211,131,0.667);
+}
+.syntaxProblem:active.textInput {
+	background: rgb(255, 182, 193, 0.833);
+}
+.semanticsProblem:active.textInput {
+	background: rgba(255,211,131,0.833);
+}
+.syntaxProblem.textInput {
+	border-bottom-color: #a12;
+}
+.semanticsProblem.textInput {
+	border-bottom-color: #c82;
+}
+  
 .jsonImportError {
 	color: #ff8c31;
 	font-size: 14px;
@@ -243,22 +349,47 @@ button.delete {
 .rulesHelp {
 	font-size: smaller;
 }
+.rulesHelp:after {
+	content: ' ';
+	display: block;
+	clear: both;
+	height: 0;
+}
 
 .rulesHelp .rule {
-	display: inline-block;
-	padding: 0.5em;
+	display: inline-table;
+	border-collapse: collapse;
+	margin: 0.5em;
 	text-align: center;
-	vertical-align: top;
+	vertical-align: baseline;
+}
+
+.rulesHelp .rule td, .rulesHelp .rule th {
+	border: initial;
+	padding: .125em;
+}
+
+.rulesHelp .rule td {
+	border-left: .5px solid black;
+}
+
+.rulesHelp .rule td:first-child {
+	border-left: none;
+}
+
+.rulesHelp .rule tr:first-child {
+	border-bottom: .5px solid black;
 }
 
 .rulesHelpTable {
 	border-collapse: collapse;
 	width: 100%;
+	box-sizing: border-box;
 }
 
 .rulesHelpTable th, td {
 	text-align: center;
-	padding: 0px;
+	padding: .25em 0px;
 	border-bottom: 1px solid #ddd;
 	max-width: 400px;
 }
@@ -277,17 +408,34 @@ button.delete {
 
 .rulesHelpTable .formula {
 	text-align: center;
+	display: inline-block;
+	width: initial;
+	min-width: initial;
 }
 
+.rulesHelp > h2 {
+	padding: 0 10px;
+}
 .half {
-	width: 48%;
+	width: 50%;
 	float: left;
-	padding: 10px;
+	padding: 0 0.5rem 0 0;
+	box-sizing: border-box;
+}
+.half + .half {
+	padding: 0 0 0 0.5rem;
+}
+.full {
+	clear: left;
+	width: 100%;
+	float: left;
+	box-sizing: border-box;
 }
 
 @media only screen and (max-width: 1180px) {
 	.half {
 		width:100%;
+		padding: 0;
 	}
 }
 
@@ -305,8 +453,12 @@ button.delete {
 	.closed {
 		display: inline-block;
 	}
-	.formulaEdit, .refEdit {
+	.textInput {
 		border-bottom: none;
+	}
+	.textInput.syntaxProblem, .textInput.semanticsProblem {
+		border-bottom-style: dashed;
+		border-bottom-width: 1px;
 	}
 	/* Print color backgrounds for webkit browsers */
 	body {

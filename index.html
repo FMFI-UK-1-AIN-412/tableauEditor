@@ -3,51 +3,24 @@
   <head>
     <meta charSet="utf-8"/>
     <title>Tableau Editor</title>
-    <!--development-->
-    <!--<link rel="icon" type="image/png" href="src/static/img/favicon.ico">-->
-    <!--<link rel="stylesheet" href="src/static/main.css">-->
-    <!--<script type="text/javascript" src="./elm.js"></script>-->
-
-    <!--build-->
-    <link rel="icon" type="image/png" href="./static/img/favicon.ico">
-    <link rel="stylesheet" href="./static/main.css">
-    <script type="text/javascript" src="./Editor.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.3/css/all.css">
+    <link rel="stylesheet" href="static/main.css?13d74b805ff305296f0e72f463311f13bb4c644c">
+    <script type="text/javascript" src="Editor.js?d5c95c8356e69bcfba6ded76b92a11b977b0852e"></script>
   </head>
   <body>
     <div id="main"></div>
   </body>
   <footer>
     <script type="text/javascript">
-        /* https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding */
-        function b64DecodeUnicode(str) {
-            return decodeURIComponent(atob(str).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-        }
-        var app = Elm.Editor.fullscreen();
-        app.ports.fileSelected.subscribe(function (id) {
-            var node = document.getElementById(id);
-            if (node === null) {
-                return;
-            }
-            var file = node.files[0];
-            if (!file)
-                return;
-            var reader = new FileReader();
-            reader.onload = (function(event) {
-                var dataUri = event.target.result;
-                var base64encoded = dataUri.replace(/^[^,]*,/,"");
-                var data = b64DecodeUnicode(base64encoded);
-                var portData = {
-                    contents: data,
-                    filename: file.name,
-                    jsonImporting: false,
-                    jsonImportError: "",
-                    jsonImportId : "importJson"
-                };
-                app.ports.fileContentRead.send(portData);
-            });
-            reader.readAsDataURL(file);
+        var cachedTableau = localStorage.getItem('tableauEditor');
+        var app = Elm.Editor.init({
+          flags: cachedTableau ? cachedTableau : null
+        });
+        app.ports.print.subscribe(function () {
+          window.print();
+        });
+        app.ports.cache.subscribe(function (tableau) {
+          localStorage.setItem('tableauEditor', tableau);
         });
     </script>
 
