@@ -8,21 +8,17 @@
     <script type="text/javascript" src="Editor.js"></script>
   </head>
   <body>
-    <div id="main"></div>
-  </body>
-  <footer>
     <script type="text/javascript">
-        var cachedTableau = localStorage.getItem('tableauEditor');
-        var app = Elm.Editor.init({
-          flags: cachedTableau ? cachedTableau : null
-        });
-        app.ports.print.subscribe(function () {
-          window.print();
-        });
-        app.ports.cache.subscribe(function (tableau) {
-          localStorage.setItem('tableauEditor', tableau);
-        });
+      var cachedTableau = localStorage.getItem('tableauEditor');
+      var app = Elm.Editor.init({
+        flags: cachedTableau ? cachedTableau : null
+      });
+      app.ports.print.subscribe(function () {
+        window.print();
+      });
+      app.ports.cache.subscribe(function (tableau) {
+        localStorage.setItem('tableauEditor', tableau);
+      });
     </script>
-
-  </footer>
+  </body>
 </html>
