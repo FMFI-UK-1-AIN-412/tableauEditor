@@ -7,5 +7,6 @@ yarn.lock
 .DS_Store
 package-lock.json
 src/.DS_Store
+src/Editor.js
 yarn-error.log
 elm.js

@@ -1,4 +1,4 @@
-module Helper exposing (..)
+module Helpers.Helper exposing (..)
 
 import Formula
 import Result
@@ -14,7 +14,7 @@ hasReference z =
 
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
-    ((Zipper.zNode z).id |> toString) == (Zipper.zNode z).reference.str
+    ((Zipper.zNode z).id |> String.fromInt) == (Zipper.zNode z).reference.str
 
 
 {-| Like `Result.map2` but merges errors (which must be lists).
@@ -58,7 +58,7 @@ errors r =
 
 second : a1 -> a2 -> a2
 second =
-    curry Tuple.second
+    \a b -> Tuple.second ( a, b )
 
 
 isClosed : Zipper.Zipper -> Result (List Validate.Problem) Bool
@@ -101,6 +101,7 @@ assumptions z =
                     (\x ->
                         if x == 0 then
                             Just ()
+
                         else
                             Nothing
                     )

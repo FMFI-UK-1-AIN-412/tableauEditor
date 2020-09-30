@@ -5,6 +5,7 @@ import Formula
 import Tableau exposing (..)
 
 
+
 --crumb hovori o tom, kto je podo mnou
 
 
@@ -133,7 +134,7 @@ above n z =
         0 ->
             z
 
-        n ->
+        _ ->
             above (n - 1) (up z)
 
 
@@ -182,16 +183,16 @@ zWalkPost f (( t, bs ) as z) =
         Closed _ _ ->
             f z
 
-        Alpha t ->
+        Alpha _ ->
             z |> down |> zWalkPost f |> up |> f
 
         Beta tl tr ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
-        Gamma t subst ->
+        Gamma _ subst ->
             z |> down |> zWalkPost f |> up |> f
 
-        Delta t subst ->
+        Delta _ subst ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -205,13 +206,13 @@ fixRefs =
 
 
 getFixedRef : Ref -> Zipper -> Ref
-getFixedRef ({ str, up } as ref) z =
-    case up of
+getFixedRef ref z =
+    case ref.up of
         Nothing ->
             { ref | str = "" }
 
         Just n ->
-            { ref | str = z |> above n |> zNode |> .id |> toString }
+            { ref | str = z |> above n |> zNode |> .id |> String.fromInt }
 
 
 fixNodeRef : Zipper -> Zipper
@@ -346,6 +347,7 @@ findAbove ref ( tableau, bs ) =
     in
     if node.id == ref then
         Just 0
+
     else
         case bs of
             a :: bbs ->
@@ -361,15 +363,14 @@ getRef ref z =
     , up =
         ref
             |> String.toInt
-            |> Result.toMaybe
-            |> Maybe.andThen (flip findAbove z)
+            |> Maybe.andThen (\a -> findAbove a z)
     }
 
 
 getReffed : Ref -> Zipper -> Maybe Zipper
 getReffed r z =
     r.up
-        |> Maybe.map (flip above z)
+        |> Maybe.map (\a -> above a z)
 
 
 setPair : Int -> Ref -> Ref -> Ref -> ( Ref, Ref )
@@ -438,6 +439,7 @@ renumberJustInRefWhenDeleting ref lengthOfPathFromFather =
         Just x ->
             if (x - 1) >= lengthOfPathFromFather then
                 Ref ref.str (Just (x - 1))
+
             else
                 ref
 
@@ -454,6 +456,7 @@ renumberJustInRefWhenExpanding ref lengthOfPathFromFather =
         Just x ->
             if x + 1 >= lengthOfPathFromFather then
                 Ref ref.str (Just (x + 1))
+
             else
                 ref
 
@@ -638,25 +641,28 @@ deleteMe (( t, fatherbs ) as zip) =
                     Closed r1 r2 ->
                         Tableau defNode Open
 
-                    Alpha t ->
-                        t
+                    Alpha st ->
+                        st
 
                     Beta lt rt ->
                         -- mozem zmazat iba ked jedna z biet sa moze stat alfou
                         if lt.node.value == "" then
                             rt
+
                         else if rt.node.value == "" then
                             lt
+
                         else
                             tableau
 
-                    Gamma t s ->
-                        t
+                    Gamma st s ->
+                        st
 
-                    Delta t s ->
-                        t
+                    Delta st s ->
+                        st
             )
             zip
+
     else
         case fatherbs of
             (BetaLeftCrumb fatherNode tr) :: bss ->
@@ -666,6 +672,7 @@ deleteMe (( t, fatherbs ) as zip) =
                             Beta lt rt ->
                                 if lt.node.value == "" then
                                     Tableau tableau.node (Alpha rt)
+
                                 else
                                     tableau
 
@@ -681,6 +688,7 @@ deleteMe (( t, fatherbs ) as zip) =
                             Beta lt rt ->
                                 if rt.node.value == "" then
                                     Tableau tableau.node (Alpha lt)
+
                                 else
                                     tableau
 
@@ -700,14 +708,14 @@ deleteMe (( t, fatherbs ) as zip) =
                             Closed r1 r2 ->
                                 Tableau tableau.node Open
 
-                            Alpha t ->
-                                Tableau tableau.node t.ext
+                            Alpha st ->
+                                Tableau tableau.node st.ext
 
-                            Gamma t s ->
-                                Tableau tableau.node t.ext
+                            Gamma st s ->
+                                Tableau tableau.node st.ext
 
-                            Delta t s ->
-                                Tableau tableau.node t.ext
+                            Delta st s ->
+                                Tableau tableau.node st.ext
 
                             _ ->
                                 tableau
@@ -832,6 +840,7 @@ changeToAlpha : Zipper -> Zipper
 changeToAlpha z =
     if (z |> up) == z then
         z
+
     else
         modifyNode
             (\tableau ->
@@ -840,8 +849,10 @@ changeToAlpha z =
                     Beta lt rt ->
                         if lt.node.value == "" then
                             Tableau tableau.node (Alpha rt)
+
                         else if rt.node.value == "" then
                             Tableau tableau.node (Alpha lt)
+
                         else
                             Tableau tableau.node (Beta lt rt)
 
@@ -861,6 +872,7 @@ changeToBeta : Zipper -> Zipper
 changeToBeta z =
     if (z |> up) == z then
         z
+
     else
         modifyNode
             (\tableau ->
@@ -885,6 +897,7 @@ changeToGamma : Zipper -> Zipper
 changeToGamma z =
     if (z |> up) == z then
         z
+
     else
         modifyNode
             (\tableau ->
@@ -896,8 +909,10 @@ changeToGamma z =
                     Beta lt rt ->
                         if lt.node.value == "" then
                             Tableau tableau.node (Gamma rt defSubstitution)
+
                         else if rt.node.value == "" then
                             Tableau tableau.node (Gamma lt defSubstitution)
+
                         else
                             Tableau tableau.node (Beta lt rt)
 
@@ -914,6 +929,7 @@ changeToDelta : Zipper -> Zipper
 changeToDelta z =
     if (z |> up) == z then
         z
+
     else
         modifyNode
             (\tableau ->
@@ -925,8 +941,10 @@ changeToDelta z =
                     Beta lt rt ->
                         if lt.node.value == "" then
                             Tableau tableau.node (Delta rt defSubstitution)
+
                         else if rt.node.value == "" then
                             Tableau tableau.node (Delta lt defSubstitution)
+
                         else
                             Tableau tableau.node (Beta lt rt)
 

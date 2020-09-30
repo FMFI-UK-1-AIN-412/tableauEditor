@@ -7,6 +7,7 @@ import Tableau
 import Zipper
 
 
+
 {- unfortunately we need to parse the refs
    in a second pass
 -}
@@ -24,7 +25,7 @@ ref =
 
 closedRefs : Decoder ( Tableau.Ref, Tableau.Ref )
 closedRefs =
-    map2 (,)
+    map2 (\a b -> ( a, b ))
         (index 0 ref)
         (index 1 ref)
 
@@ -132,7 +133,7 @@ tableau =
         )
 
 
-decode : String -> Result String Tableau.Tableau
+decode : String -> Result Error Tableau.Tableau
 decode s =
     let
         fn =

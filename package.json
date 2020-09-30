@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "elm": "^0.18.0",
+    "elm": "^0.19.1-no-deps",
     "elm-live": "^2.7.5"
   }
 }

@@ -1,26 +1,31 @@
-port module Editor exposing (..)
+port module Editor exposing (main)
+--, FileReaderPortData, fileContentRead, fileSelected
 
+import Browser
 import Errors
+import File exposing (File)
+import File.Select as Select
+import File.Download as Download
+import FontAwesome exposing (icon, ellipsisHorizontal, exchangeAlt)
 import Formula
-import Helper
+import Helpers.Helper as Helper
+import Json.Decode
 import Helpers.Exporting.Json.Decode
 import Helpers.Exporting.Json.Encode
-import Helpers.Exporting.Ports exposing (FileReaderPortData, fileContentRead, fileSelected)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Http
-import Json.Decode
-import Rules exposing (..)
+import Helpers.Rules as Rules exposing (..)
 import Tableau exposing (..)
+import Task
 import UndoList exposing (UndoList)
 import Validate
 import Zipper exposing (..)
 
 
-main : Program Never Model Msg
+main : Program (Maybe String) Model Msg
 main =
-    Html.program
+    Browser.document
         { init = init
         , update = update
         , view = view
@@ -28,19 +33,23 @@ main =
         }
 
 
+type JsonImport
+    = None
+    | InProgress String
+    | ImportErr String
+
+
 type alias Model =
     UndoList
         { tableau : Tableau
-        , jsonImporting : Bool
-        , jsonImportError : String
-        , jsonImportId : String
+        , jsonImport: JsonImport
         }
 
 
-init : ( Model, Cmd msg )
-init =
-    ( UndoList.fresh
-        { tableau =
+init : Maybe String -> ( Model, Cmd msg )
+init mts =
+    let
+        emptyT =
             { node =
                 { id = 1
                 , value = ""
@@ -50,17 +59,29 @@ init =
                 }
             , ext = Open
             }
-        , jsonImporting = False
-        , jsonImportError = ""
-        , jsonImportId = "importJson"
-        }
-    , Cmd.none
-    )
+
+        initT =
+            case mts of
+                Nothing -> emptyT
+                Just ts ->
+                    case Helpers.Exporting.Json.Decode.decode ts of
+                        Ok t ->
+                            t
+
+                        Err _ ->
+                            emptyT
+    in
+        ( UndoList.fresh
+            { tableau = initT
+            , jsonImport = None
+            }
+        , Cmd.none
+        )
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    fileContentRead JsonRead
+subscriptions _ =
+    Sub.none
 
 
 type Msg
@@ -82,12 +103,22 @@ type Msg
     | ChangeToBeta Zipper.Zipper
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
+    | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
     | Prettify
-    | JsonSelected
-    | JsonRead FileReaderPortData
-    | ChangeButtonsAppearance Zipper.Zipper
+    | JsonSelect
+    | JsonSelected File
+    | JsonRead String
+    | Export
+    | Print
+    | Cache
+
+
+port print : () -> Cmd msg
+
+
+port cache : String -> Cmd msg
 
 
 top : Zipper.Zipper -> Tableau
@@ -103,17 +134,73 @@ topRenumbered =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ present } as model) =
     case msg of
-        JsonSelected ->
-            ( UndoList.new { present | jsonImportError = "", jsonImporting = True } model, fileSelected present.jsonImportId )
+        JsonSelect ->
+            ( model
+            , Select.file [ "application/json" ] JsonSelected
+            )
+
+        JsonSelected file ->
+            ( { model
+                | present =
+                    { present
+                    | jsonImport = InProgress (File.name file)
+                    }
+                }
+            , Task.perform JsonRead (File.toString file)
+            )
+
+        JsonRead contents ->
+            case contents |> Helpers.Exporting.Json.Decode.decode of
+                Ok t ->
+                    ( UndoList.new
+                        { present | jsonImport = None, tableau = t }
+                        model
+                    , cache contents
+                    )
+
+                Err e ->
+                    ( { model
+                        | present =
+                            { present
+                            | jsonImport =
+                                ImportErr (Json.Decode.errorToString e)
+                            }
+                        }
+                    , Cmd.none
+                    )
+
+        Export ->
+            ( model
+            , Download.string
+                "tableau.json"
+                "application/json"
+                <| Helpers.Exporting.Json.Encode.encode 2 present.tableau
+            )
 
         Undo ->
-            ( UndoList.undo model, Cmd.none )
+            ( UndoList.undo
+                { model | present = { present | jsonImport = None } }
+            , Cmd.none
+            )
 
         Redo ->
             ( UndoList.redo model, Cmd.none )
 
+        Print ->
+            ( model, print () )
+
+        Cache ->
+            ( model
+            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau) )
+
         _ ->
-            ( UndoList.new (simpleUpdate msg { present | jsonImportError = "" }) model, Cmd.none )
+            let
+                presentSansImport = { present | jsonImport = None }
+            in
+            ( UndoList.new
+                (simpleUpdate msg presentSansImport)
+                { model | present = presentSansImport }
+            , Cmd.none )
 
 
 simpleUpdate msg model =
@@ -147,6 +234,7 @@ simpleUpdate msg model =
                 in
                 if newZipp /= (z |> up) then
                     { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences Zipper.renumberJustInRefWhenDeleting |> topRenumbered }
+
                 else
                     { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
@@ -180,10 +268,16 @@ simpleUpdate msg model =
             ChangeToDelta z ->
                 { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
 
+            ChangeButtonsAppearance z ->
+                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
+
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
 
-            JsonSelected ->
+            JsonSelect ->
+                model
+
+            JsonSelected _ ->
                 model
 
             Undo ->
@@ -192,71 +286,155 @@ simpleUpdate msg model =
             Redo ->
                 model
 
-            JsonRead { contents } ->
-                case contents |> Helpers.Exporting.Json.Decode.decode of
-                    Ok t ->
-                        { model | jsonImporting = False, tableau = t }
+            JsonRead _ ->
+                model
 
-                    Err e ->
-                        { model | jsonImporting = False, jsonImportError = toString e }
+            Export ->
+                model
 
-            ChangeButtonsAppearance z ->
-                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
+            Print ->
+                model
+
+            Cache ->
+                model
         )
 
 
-view : Model -> Html Msg
+view : Model -> Browser.Document Msg
 view ({ present } as model) =
-    div [ class "tableau" ]
-        [ div [ class "actions" ]
-            [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-            , button [ class "button", attribute "onClick" "javascript:window.print()" ] [ text "Print" ]
-            , jsonExportControl present.tableau
-            , jsonImportControl present.jsonImporting present.jsonImportId
-            , button [ class "button", onClick Undo ] [ text "Undo" ]
-            , button [ class "button", onClick Redo ] [ text "Redo" ]
+    { title = "Tableau Editor"
+    , body =
+        [   div [ class "tableau" ]
+            [ div [ class "actions" ]
+                [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+                , button [ class "button", onClick Print ] [ text "Print" ]
+                , jsonExportControl present.tableau
+                , jsonImportControl present.jsonImport
+                , button [ class "button", onClick Undo ] [ text "Undo" ]
+                , button [ class "button", onClick Redo ] [ text "Redo" ]
+                ]
+            , jsonImportError present.jsonImport
+            , viewNode (Zipper.zipper present.tableau)
+            , verdict present.tableau
+            , problems present.tableau
+            , Rules.help
             ]
-        , jsonImportError present
-        , viewNode (Zipper.zipper present.tableau)
-        , verdict present.tableau
-        , problems present.tableau
-        , Rules.help
         ]
+    }
 
 
 viewNode : Zipper.Zipper -> Html Msg
 viewNode z =
-    let
-        ( tableau, bs ) =
-            z
-    in
     div
         [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
-        , input
-            [ classList
-                [ ( "formulaInput", True )
-                , ( "premise", Helper.isPremise z )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (Zipper.zNode z).value
-            , type_ "text"
-            , onInput <| ChangeText z
-            ]
-            []
-        , text "["
-        , input
-            [ class "formulaReference"
-            , value (Zipper.zNode z).reference.str
-            , onInput <| ChangeRef z
-            ]
-            []
-        , text "]"
-        , viewButtonsAppearanceControlls z
+        [ viewNodeInputs identity z
         , singleNodeProblems z
         , viewControls z
         , viewChildren z
         ]
+
+
+viewSubsNode : Zipper.Zipper -> Html Msg
+viewSubsNode z =
+    div [ class "formula" ]
+        [ viewNodeInputs
+            (\rest -> text "{"
+            :: autoSizeInput
+                (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
+                [ classList
+                    [ ( "textInput textInputVariable", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , onInput <| ChangeVariable z
+                ]
+            :: text "→"
+            :: autoSizeInput
+                (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
+                [ classList
+                    [ ( "textInput textInputTerm", True )
+                    , ( "semanticsProblem", Helper.hasReference z )
+                    ]
+                , onInput <| ChangeTerm z
+                ]
+            :: text "}"
+            :: rest
+            )
+            z
+        , singleNodeProblems z
+        , viewControls z
+        , viewChildren z
+        ]
+
+
+viewNodeInputs : (List (Html Msg) -> List (Html Msg)) -> Zipper.Zipper
+    -> Html Msg
+viewNodeInputs additional z =
+    div [ class "inputGroup" ]
+            ( text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
+            :: autoSizeInput
+                (Zipper.zNode z).value
+                [ classList
+                    [ ( "textInputFormula", True )
+                    , ( "premise", Helper.isPremise z )
+                    ]
+                , class (errorsClass <| Validate.isCorrectFormula z)
+                , type_ "text"
+                , onInput <| ChangeText z
+                ]
+            :: viewRuleType z
+            :: div [ class "onclick-menu change", tabindex 0 ]
+                [ ul [ class "onclick-menu-content" ]
+                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "Change to α" ] ]
+                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
+                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
+                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
+                    ]
+                ]
+            :: text "["
+            :: autoSizeInput
+                (Zipper.zNode z).reference.str
+                [ class "textInputReference"
+                , onInput <| ChangeRef z
+                , class (problemsClass <| Validate.validateNodeRef z)
+                ]
+            :: text "]"
+            :: additional
+                [ viewButtonsAppearanceControlls z ]
+            )
+
+
+autoSizeInput : String -> List (Attribute Msg) -> Html Msg
+autoSizeInput val attrs =
+    input
+        ( type_ "text"
+        :: class "textInput"
+        :: value val
+        -- :: size (String.length val + 1)
+        :: size ((String.length val * 5 + 9) // 6)
+        :: onBlur Cache
+        :: attrs
+        )
+        []
+
+
+viewRuleType : Zipper.Zipper -> Html Msg
+viewRuleType z =
+    if Helper.isPremise z then
+        span [] [ var [] [ text "S" ], sup [] [ text "+" ] ]
+    else
+        case (Zipper.zTableau <| Zipper.up z).ext of
+            Open ->
+                text "O"
+            Closed _ _ ->
+                text "C"
+            Alpha _ ->
+                text "α"
+            Beta _ _ ->
+                text "β"
+            Gamma _ _ ->
+                text "γ"
+            Delta _ _ ->
+                text "δ"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -266,63 +444,16 @@ viewButtonsAppearanceControlls z =
             div [] []
 
         _ ->
-            button [ class "button", onClick (ChangeButtonsAppearance z) ] [ text "⚙" ]
-
-
-viewSubsNode : Zipper.Zipper -> Html Msg
-viewSubsNode z =
-    let
-        ( tableau, bs ) =
-            z
-    in
-    div
-        [ class "formula" ]
-        [ text <| "(" ++ ((Zipper.zNode z).id |> toString) ++ ")"
-        , input
-            [ classList
-                [ ( "formulaInputSubst", True )
-                , ( "semanticsProblem", Helper.hasReference z )
+            button
+                [ class "button"
+                , classList
+                    [ ( "active"
+                      , (Zipper.zTableau z).node.gui.controlsShown )
+                    ]
+                , onClick (ChangeButtonsAppearance z)
+                , title "Toggle node tools"
                 ]
-            , value (Zipper.zNode z).value
-            , type_ "text"
-            , onInput <| ChangeText z
-            ]
-            []
-        , text "{"
-        , input
-            [ classList
-                [ ( "substitutedConstant", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
-            , type_ "text"
-            , onInput <| ChangeVariable z
-            ]
-            []
-        , text "->"
-        , input
-            [ classList
-                [ ( "substitutedVariable", True )
-                , ( "semanticsProblem", Helper.hasReference z )
-                ]
-            , value (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
-            , type_ "text"
-            , onInput <| ChangeTerm z
-            ]
-            []
-        , text "}["
-        , input
-            [ class "formulaReference"
-            , value (Zipper.zNode z).reference.str
-            , onInput <| ChangeRef z
-            ]
-            []
-        , text "]"
-        , viewButtonsAppearanceControlls z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
-        ]
+                [ icon ellipsisHorizontal ]
 
 
 viewChildren : Zipper.Zipper -> Html Msg
@@ -381,11 +512,7 @@ viewClosed z =
 
 
 viewControls : Zipper.Zipper -> Html Msg
-viewControls z =
-    let
-        ( t, bs ) =
-            z
-    in
+viewControls ( ( t, _ )  as z ) =
     div [ class "expandControls" ]
         (case t.ext of
             Tableau.Closed r1 r2 ->
@@ -397,102 +524,83 @@ viewControls z =
                         problemsClass <| Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
 
                     ref2Cls =
-                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r2 z ++ compl
+                        problemsClass <| Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
                 in
                 [ text "* "
-                , input
-                    [ class ("closed button " ++ ref1Cls)
-                    , type_ "text"
+                , autoSizeInput r1.str
+                    [ class ("closed " ++ ref1Cls)
                     , placeholder "Ref"
-                    , size 1
-                    , value r1.str
                     , onInput <| SetClosed 0 z
                     ]
-                    []
-                , input
-                    [ class ("closed button " ++ ref2Cls)
-                    , type_ "text"
+                , text " "
+                , autoSizeInput r2.str
+                    [ class ("closed " ++ ref2Cls)
                     , placeholder "Ref"
-                    , size 1
-                    , value r2.str
                     , onInput <| SetClosed 1 z
                     ]
-                    []
                 , button [ class "button", onClick (MakeOpen z) ] [ text "Open" ]
                 ]
 
             _ ->
                 let
                     deleteMeButton =
-                        case (z |> Zipper.up) == z of
-                            False ->
-                                case z |> Zipper.up |> Zipper.zTableau |> .ext of
-                                    Beta _ _ ->
-                                        case t.node.value of
-                                            "" ->
-                                                case t.ext of
-                                                    Open ->
-                                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                        if (z |> Zipper.up) /= z then
+                            case z |> Zipper.up |> Zipper.zTableau |> .ext of
+                                Beta _ _ ->
+                                    case t.node.value of
+                                        "" ->
+                                            case t.ext of
+                                                Open ->
+                                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
-                                                    _ ->
-                                                        div [] []
+                                                _ ->
+                                                    div [] []
 
-                                            _ ->
-                                                div [] []
+                                        _ ->
+                                            div [] []
 
-                                    _ ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                                _ ->
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                        else
+                            case t.ext of
+                                Alpha _ ->
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
-                            True ->
-                                case t.ext of
-                                    Alpha _ ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
+                                Open ->
+                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
-                                    Open ->
-                                        button [ onClick (DeleteMe z) ] [ text "node" ]
-
-                                    _ ->
-                                        div [] []
+                                _ ->
+                                    div [] []
 
                     switchBetasButton =
                         case t.ext of
                             Beta _ _ ->
-                                button [ class "button", onClick (SwitchBetas z) ] [ text "->|<-" ]
+                                button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
 
                             _ ->
                                 div [] []
                 in
-                case t.node.gui.controlsShown of
-                    True ->
-                        [ button [ class "button", onClick (ExpandAlpha z) ] [ text "+" ]
-                        , div [ class "onclick-menu add", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ExpandBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ExpandGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ExpandDelta z) ] [ text "δ" ] ]
-                                ]
+                if t.node.gui.controlsShown then
+                    [ button [ class "button", onClick (ExpandAlpha z) ] [ text "Add α" ]
+                    , div [ class "onclick-menu add", tabindex 0 ]
+                        [ ul [ class "onclick-menu-content" ]
+                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "Add α" ] ]
+                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
+                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
+                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
                             ]
-                        , div [ class "onclick-menu change", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "α" ] ]
-                                , li [] [ button [ onClick (ChangeToBeta z) ] [ text "β" ] ]
-                                , li [] [ button [ onClick (ChangeToGamma z) ] [ text "γ" ] ]
-                                , li [] [ button [ onClick (ChangeToDelta z) ] [ text "δ" ] ]
-                                ]
-                            ]
-                        , div [ class "onclick-menu del", tabindex 0 ]
-                            [ ul [ class "onclick-menu-content" ]
-                                [ li [] [ deleteMeButton ]
-                                , li [] [ button [ onClick (Delete z) ] [ text "subtree" ] ]
-                                ]
-                            ]
-                        , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
-                        , switchBetasButton
                         ]
-
-                    False ->
-                        []
+                    , div [ class "onclick-menu del", tabindex 0 ]
+                        [ ul [ class "onclick-menu-content" ]
+                            [ li [] [ deleteMeButton ]
+                            , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
+                            ]
+                        ]
+                    , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
+                    , switchBetasButton
+                    ]
+                else
+                    []
         )
 
 
@@ -504,6 +612,7 @@ singleNodeProblems z =
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
+
     else
         div [ class "nodeProblems" ]
             (List.map
@@ -520,6 +629,7 @@ problems t =
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
+
     else
         div [ class "problems" ]
             [ p [] [ text "Problems" ]
@@ -536,10 +646,15 @@ problemItem : Validate.Problem -> Html Msg
 problemItem pi =
     li [ class (problemClass pi) ]
         [ text "("
-        , text <| toString <| .id <| Zipper.zNode <| pi.zip
+        , text <| String.fromInt <| .id <| Zipper.zNode <| pi.zip
         , text ") "
         , text <| pi.msg
         ]
+
+
+errorsClass : Result (List Validate.Problem) a -> String
+errorsClass =
+    Errors.errors >> problemsClass
 
 
 problemsClass : List Validate.Problem -> String
@@ -562,61 +677,33 @@ problemClass { typ } =
             "semanticsProblem"
 
 
-jsonDataUri : String -> String
-jsonDataUri json =
-    "data:application/json;charset=utf-8," ++ Http.encodeUri json
-
-
-jsonExportControl : Tableau -> Html msg
+jsonExportControl : Tableau -> Html Msg
 jsonExportControl t =
-    a
-        [ type_ "button"
-        , href <| jsonDataUri <| Helpers.Exporting.Json.Encode.encode 2 t
-        , downloadAs "tableau.json"
-        ]
-        [ button [ class "button" ] [ text "Export as JSON" ] ]
+    button [ class "button", onClick Export ] [ text "Export as JSON" ]
 
 
-jsonImportControl : Bool -> String -> Html Msg
-jsonImportControl jsonImporting jsonImportId =
-    case jsonImporting of
-        True ->
-            text "Loading file..."
-
-        False ->
-            label [ for jsonImportId ]
-                [ button
-                    {- This is really ugly, but:
-                       - we really need the buton and onClick, if we want it to look like a button
-                         (embedding the label in a button or vice versa works in webkit but not in firefox)
-                       - Adding another Msg / Cmd just for this...
-                    -}
-                    [ attribute "onClick" ("javascript:document.getElementById('" ++ jsonImportId ++ "').click();")
-                    , class "button"
-                    ]
-                    [ text "Import from JSON"
-                    ]
-                , input
-                    [ type_ "file"
-                    , id jsonImportId
-                    , accept "application/json"
-                    , on "change"
-                        (Json.Decode.succeed JsonSelected)
-                    ]
-                    []
-                ]
-
-
-jsonImportError : { a | jsonImportError : String } -> Html msg
-jsonImportError model =
-    case model.jsonImportError of
-        "" ->
-            div [] []
+jsonImportControl : JsonImport -> Html Msg
+jsonImportControl jsonImport =
+    case jsonImport of
+        InProgress fname ->
+            text <| "Loading tableau from file" ++ fname ++ "…"
 
         _ ->
+            button
+                [ class "button", onClick JsonSelect ]
+                [ text "Import from JSON" ]
+
+
+jsonImportError : JsonImport -> Html msg
+jsonImportError jsonImport =
+    case jsonImport of
+        ImportErr e ->
             p
                 [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ toString model.jsonImportError ]
+                [ text <| "Error importing tableau: " ++ e ]
+
+        _ ->
+            div [] []
 
 
 verdict : Tableau -> Html msg
@@ -639,6 +726,7 @@ verdict t =
     in
     if List.isEmpty ass then
         div [ class "verdict" ] [ p [] [ text "This tableau doesn't prove anything." ] ]
+
     else
         div [ class "verdict" ]
             [ p []

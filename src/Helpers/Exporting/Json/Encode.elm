@@ -1,7 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(Alpha, Beta, Closed, Delta, Gamma, Open), GUI, Node, Tableau)
+import Tableau exposing (Extension(..), GUI, Node, Tableau)
 
 
 jsonRef : { a | str : String } -> Value
@@ -47,10 +47,7 @@ jsonTblList tableau =
             [ ( "type", string "closed" ) ]
                 ++ jsonNodeList tableau.node
                 ++ [ ( "closed"
-                     , list
-                        [ jsonRef r1
-                        , jsonRef r2
-                        ]
+                     , list jsonRef [r1, r2]
                      )
                    ]
 
