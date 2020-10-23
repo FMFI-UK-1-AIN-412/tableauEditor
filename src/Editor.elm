@@ -1,4 +1,4 @@
-port module Editor exposing (main)
+port module Editor exposing (main, top, topRenumbered)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
@@ -7,7 +7,9 @@ import File exposing (File)
 import File.Select as Select
 import File.Download as Download
 import FontAwesome exposing (icon, ellipsisHorizontal, exchangeAlt)
-import Formula
+import Formula exposing (Formula(..))
+import Formula.Signed exposing (Signed(..))
+import Formula.Parser
 import Helpers.Helper as Helper
 import Json.Decode
 import Helpers.Exporting.Json.Decode
@@ -54,7 +56,7 @@ init mts =
                 { id = 1
                 , value = ""
                 , reference = { str = "1", up = Just 0 }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
             , ext = Open
@@ -716,10 +718,10 @@ verdict t =
             List.partition
                 (\sf ->
                     case sf of
-                        Formula.T _ ->
+                        T _ ->
                             True
 
-                        Formula.F _ ->
+                        F _ ->
                             False
                 )
                 ass
@@ -735,9 +737,9 @@ verdict t =
                 , text ":"
                 ]
             , p []
-                [ text (premises |> List.map (Formula.signedGetFormula >> Formula.strFormula) |> String.join " , ")
+                [ text (premises |> List.map (Formula.Signed.getFormula >> Formula.toString) |> String.join " , ")
                 , text " ⊦ "
-                , text (conclusions |> List.map (Formula.signedGetFormula >> Formula.strFormula) |> String.join " , ")
+                , text (conclusions |> List.map (Formula.Signed.getFormula >> Formula.toString) |> String.join " , ")
                 ]
             ]
 

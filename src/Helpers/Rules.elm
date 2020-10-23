@@ -1,7 +1,9 @@
 module Helpers.Rules exposing (..)
 
 import Dict
-import Formula exposing (..)
+import Formula exposing (Formula(..))
+import Formula.Signed exposing (Signed(..))
+import Term exposing (Term(..))
 import Html exposing (Attribute, Html, div, h2, h3, p, table, td, text, tr)
 import Html.Attributes exposing (..)
 import Markdown
@@ -50,63 +52,63 @@ gammas =
 renderAlpha : Signed Formula -> Html msg
 renderAlpha a =
     table [ class "rule" ]
-        <| tr [] [ td [] [ text <| strSigned a ] ]
+        <| tr [] [ td [] [ text <| Formula.Signed.toString a ] ]
             :: List.map
-                (\f -> tr [] [ td []  [ text <| strSigned f ] ])
-                (signedSubformulas a)
+                (\f -> tr [] [ td []  [ text <| Formula.Signed.toString f ] ])
+                (Formula.Signed.subformulas a)
 
 
 renderBeta b =
     let
-        subfs = signedSubformulas b
+        subfs = Formula.Signed.subformulas b
     in
         table [ class "rule" ]
-            [ tr [] [ td [ colspan (List.length subfs)] [ text <| strSigned b ] ]
+            [ tr [] [ td [ colspan (List.length subfs)] [ text <| Formula.Signed.toString b ] ]
             , tr []
                 <| List.map
-                    (\f ->  td []  [ text <| strSigned f ])
+                    (\f ->  td []  [ text <| Formula.Signed.toString f ])
                     subfs
             ]
 
 
 renderGamma g =
     table [ class "rule" ]
-        <| tr [] [ td [] [ text <| strSigned g ] ]
+        <| tr [] [ td [] [ text <| Formula.Signed.toString g ] ]
             :: List.map
                 (\f -> tr []
                     [ td []
-                        [ text <| strSigned <| demoSubst "x" "t" f ]
+                        [ text <| Formula.Signed.toString <| demoSubst "x" "t" f ]
                     ]
                 )
-                (signedSubformulas g)
+                (Formula.Signed.subformulas g)
 
 
 renderDelta d =
     table [ class "rule" ]
-        <| tr [] [ td [] [ text <| strSigned d ] ]
+        <| tr [] [ td [] [ text <| Formula.Signed.toString d ] ]
             :: List.map
                 (\f -> tr []
                     [ td []
-                        [ text <| strSigned <| demoSubst "x" "y" f ]
+                        [ text <| Formula.Signed.toString <| demoSubst "x" "y" f ]
                     ]
                 )
-                (signedSubformulas d)
+                (Formula.Signed.subformulas d)
 
 
 demoSubst : String -> String -> Signed Formula -> Signed Formula
 demoSubst x y =
     signedMap
         (Result.withDefault FF
-            << substitute (Dict.singleton x (Formula.Var y)))
+            << Formula.substitute (Dict.singleton x (Var y)))
 
-signedMap : (a -> a) -> Formula.Signed a -> Formula.Signed a
+signedMap : (a -> a) -> Signed a -> Signed a
 signedMap f sx =
     case sx of
-        Formula.T x ->
-            Formula.T (f x)
+        T x ->
+            T (f x)
 
-        Formula.F x ->
-            Formula.F (f x)
+        F x ->
+            F (f x)
 
 symbolsTable =
     div [ class "half" ]
