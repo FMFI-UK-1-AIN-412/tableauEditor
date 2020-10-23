@@ -1,6 +1,7 @@
 module Helpers.Helper exposing (..)
 
-import Formula
+import Formula exposing (Formula)
+import Formula.Signed exposing (Signed)
 import Result
 import Tableau
 import Validate
@@ -92,7 +93,7 @@ isClosed z =
             Validate.isCorrectNode z |> Result.map (always True)
 
 
-assumptions : Zipper.Zipper -> List (Formula.Signed Formula.Formula)
+assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second

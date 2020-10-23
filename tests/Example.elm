@@ -4,6 +4,8 @@ import Dict
 import Editor exposing (topRenumbered)
 import Expect exposing (Expectation)
 import Formula
+import Formula.Parser
+import Term exposing (Term(..))
 import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
@@ -35,7 +37,7 @@ tableauExample =
         { id = 1
         , value = ""
         , reference = { str = "1", up = Just 0 }
-        , formula = Formula.parseSigned ""
+        , formula = Formula.Parser.parseSigned ""
         , gui = defGUI
         }
     , ext = Open
@@ -51,7 +53,7 @@ tableauWithAlpha =
         { id = 1
         , value = ""
         , reference = { str = "1", up = Just 0 }
-        , formula = Formula.parseSigned ""
+        , formula = Formula.Parser.parseSigned ""
         , gui = { controlsShown = False }
         }
     , ext =
@@ -60,7 +62,7 @@ tableauWithAlpha =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
             , ext = Open
@@ -77,7 +79,7 @@ zipperWithAplhaDown =
             { id = 1
             , value = ""
             , reference = { str = "", up = Nothing }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
       , ext = Open
@@ -86,7 +88,7 @@ zipperWithAplhaDown =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
       ]
@@ -98,7 +100,7 @@ zipperWithAlphaDownBetaLeft =
             { id = 1
             , value = ""
             , reference = { str = "", up = Nothing }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
       , ext = Open
@@ -107,14 +109,14 @@ zipperWithAlphaDownBetaLeft =
             { id = 1
             , value = ""
             , reference = { str = "", up = Nothing }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
             , ext = Open
@@ -123,7 +125,7 @@ zipperWithAlphaDownBetaLeft =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
       ]
@@ -135,7 +137,7 @@ zipperOnlyAlphaOfRightBeta =
             { id = 1
             , value = ""
             , reference = { str = "", up = Nothing }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
       , ext = Open
@@ -144,21 +146,21 @@ zipperOnlyAlphaOfRightBeta =
             { id = 1
             , value = ""
             , reference = { str = "", up = Nothing }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
       , BetaRightCrumb
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
             { node =
                 { id = 1
                 , value = ""
                 , reference = { str = "", up = Nothing }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
             , ext = Open
@@ -172,7 +174,7 @@ onlyAlphaOfRightBetaRenumbered =
         { id = 1
         , value = ""
         , reference = { str = "1", up = Just 0 }
-        , formula = Formula.parseSigned ""
+        , formula = Formula.Parser.parseSigned ""
         , gui = { controlsShown = False }
         }
     , ext =
@@ -181,7 +183,7 @@ onlyAlphaOfRightBetaRenumbered =
                 { id = 2
                 , value = ""
                 , reference = { str = "", up = Nothing }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
             , ext = Open
@@ -190,7 +192,7 @@ onlyAlphaOfRightBetaRenumbered =
                 { id = 3
                 , value = ""
                 , reference = { str = "", up = Nothing }
-                , formula = Formula.parseSigned ""
+                , formula = Formula.Parser.parseSigned ""
                 , gui = { controlsShown = False }
                 }
             , ext =
@@ -199,7 +201,7 @@ onlyAlphaOfRightBetaRenumbered =
                         { id = 4
                         , value = ""
                         , reference = { str = "", up = Nothing }
-                        , formula = Formula.parseSigned ""
+                        , formula = Formula.Parser.parseSigned ""
                         , gui = defGUI
                         }
                     , ext = Open
@@ -222,7 +224,7 @@ zipperZWalkPostResult =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
         , ext =
@@ -231,7 +233,7 @@ zipperZWalkPostResult =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -240,7 +242,7 @@ zipperZWalkPostResult =
                             { id = 3
                             , value = ""
                             , reference = { str = "", up = Nothing }
-                            , formula = Formula.parseSigned ""
+                            , formula = Formula.Parser.parseSigned ""
                             , gui = { controlsShown = False }
                             }
                         , ext =
@@ -249,7 +251,7 @@ zipperZWalkPostResult =
                                     { id = 4
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
-                                    , formula = Formula.parseSigned ""
+                                    , formula = Formula.Parser.parseSigned ""
                                     , gui = defGUI
                                     }
                                 , ext = Open
@@ -259,7 +261,7 @@ zipperZWalkPostResult =
                             { id = 5
                             , value = ""
                             , reference = { str = "", up = Nothing }
-                            , formula = Formula.parseSigned ""
+                            , formula = Formula.Parser.parseSigned ""
                             , gui = { controlsShown = False }
                             }
                         , ext =
@@ -268,7 +270,7 @@ zipperZWalkPostResult =
                                     { id = 6
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
-                                    , formula = Formula.parseSigned ""
+                                    , formula = Formula.Parser.parseSigned ""
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
@@ -277,7 +279,7 @@ zipperZWalkPostResult =
                                             { id = 7
                                             , value = ""
                                             , reference = { str = "", up = Nothing }
-                                            , formula = Formula.parseSigned ""
+                                            , formula = Formula.Parser.parseSigned ""
                                             , gui = defGUI
                                             }
                                         , ext = Open
@@ -287,7 +289,7 @@ zipperZWalkPostResult =
                                     { id = 8
                                     , value = ""
                                     , reference = { str = "", up = Nothing }
-                                    , formula = Formula.parseSigned ""
+                                    , formula = Formula.Parser.parseSigned ""
                                     , gui = defGUI
                                     }
                                 , ext = Open
@@ -307,7 +309,7 @@ testReferenceRewritingResult =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
         , ext =
@@ -316,7 +318,7 @@ testReferenceRewritingResult =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
                 , ext = Open
@@ -330,7 +332,7 @@ fixRefsTest =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
         , ext =
@@ -339,7 +341,7 @@ fixRefsTest =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
                 , ext = Open
@@ -353,7 +355,7 @@ fixRefsTestResult =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
         , ext =
@@ -362,7 +364,7 @@ fixRefsTestResult =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
                 , ext = Open
@@ -376,7 +378,7 @@ gammaExampleResult =
             { id = 1
             , value = ""
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned ""
+            , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
         , ext =
@@ -385,7 +387,7 @@ gammaExampleResult =
                     { id = 1
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
                 , ext = Open
@@ -410,7 +412,7 @@ validateGammaSubstituteFunction =
             { id = 1
             , value = "T \\forall x P(f(x))"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T \\forall x P(f(x))"
+            , formula = Formula.Parser.parseSigned "T \\forall x P(f(x))"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -419,7 +421,7 @@ validateGammaSubstituteFunction =
                     { id = 2
                     , value = "T P(f(Diana))"
                     , reference = { str = "1", up = Just 1 }
-                    , formula = Formula.parseSigned "T P(f(Diana))"
+                    , formula = Formula.Parser.parseSigned "T P(f(Diana))"
                     , gui = defGUI
                     }
                 , ext = Open
@@ -434,7 +436,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
             { id = 1
             , value = "T \\forall x P(x, k)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            , formula = Formula.Parser.parseSigned "T \\forall x P(x, k)"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -443,7 +445,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , formula = Formula.Parser.parseSigned "T \\forall z \\exists p Z(p, f(z))"
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -452,7 +454,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                             { id = 3
                             , value = "T \\exists p Z(p, f(k))"
                             , reference = { str = "2", up = Just 1 }
-                            , formula = Formula.parseSigned "T \\exists p Z(p, f(k))"
+                            , formula = Formula.Parser.parseSigned "T \\exists p Z(p, f(k))"
                             , gui = defGUI
                             }
                         , ext = Open
@@ -468,7 +470,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
             { id = 1
             , value = "T \\forall x P(x, k)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T \\forall x P(x, k)"
+            , formula = Formula.Parser.parseSigned "T \\forall x P(x, k)"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -477,7 +479,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T \\forall z \\exists p Z(p, f(z))"
+                    , formula = Formula.Parser.parseSigned "T \\forall z \\exists p Z(p, f(z))"
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -486,7 +488,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                             { id = 3
                             , value = "T P(z, k)"
                             , reference = { str = "1", up = Just 2 }
-                            , formula = Formula.parseSigned "T P(z, k)"
+                            , formula = Formula.Parser.parseSigned "T P(z, k)"
                             , gui = defGUI
                             }
                         , ext = Open
@@ -502,7 +504,7 @@ validateRenumberingAdding =
             { id = 1
             , value = "T (a \\/ b)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T (a \\/ b)"
+            , formula = Formula.Parser.parseSigned "T (a \\/ b)"
             , gui = { controlsShown = True }
             }
         , ext =
@@ -511,7 +513,7 @@ validateRenumberingAdding =
                     { id = 2
                     , value = "T (a /\\ (b \\/ c))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T (a /\\ b)"
+                    , formula = Formula.Parser.parseSigned "T (a /\\ b)"
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -520,7 +522,7 @@ validateRenumberingAdding =
                             { id = 3
                             , value = "T (b \\/ c)"
                             , reference = { str = "2", up = Just 1 }
-                            , formula = Formula.parseSigned "T (b \\/ c)"
+                            , formula = Formula.Parser.parseSigned "T (b \\/ c)"
                             , gui = { controlsShown = False }
                             }
                         , ext =
@@ -529,7 +531,7 @@ validateRenumberingAdding =
                                     { id = 4
                                     , value = "T a"
                                     , reference = { str = "1", up = Just 3 }
-                                    , formula = Formula.parseSigned "T a"
+                                    , formula = Formula.Parser.parseSigned "T a"
                                     , gui = defGUI
                                     }
                                 , ext = Open
@@ -538,7 +540,7 @@ validateRenumberingAdding =
                                     { id = 4
                                     , value = "T b"
                                     , reference = { str = "1", up = Just 3 }
-                                    , formula = Formula.parseSigned "T b"
+                                    , formula = Formula.Parser.parseSigned "T b"
                                     , gui = defGUI
                                     }
                                 , ext = Open
@@ -554,7 +556,7 @@ validateRenumberingAddingResult =
             { id = 1
             , value = "T (a \\/ b)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T (a \\/ b)"
+            , formula = Formula.Parser.parseSigned "T (a \\/ b)"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -563,7 +565,7 @@ validateRenumberingAddingResult =
                     { id = 2
                     , value = ""
                     , reference = { str = "", up = Nothing }
-                    , formula = Formula.parseSigned ""
+                    , formula = Formula.Parser.parseSigned ""
                     , gui = { controlsShown = True }
                     }
                 , ext =
@@ -572,7 +574,7 @@ validateRenumberingAddingResult =
                             { id = 3
                             , value = "T (a /\\ (b \\/ c))"
                             , reference = { str = "3", up = Just 0 }
-                            , formula = Formula.parseSigned "T (a /\\ b)"
+                            , formula = Formula.Parser.parseSigned "T (a /\\ b)"
                             , gui = { controlsShown = False }
                             }
                         , ext =
@@ -581,7 +583,7 @@ validateRenumberingAddingResult =
                                     { id = 4
                                     , value = "T (b \\/ c)"
                                     , reference = { str = "3", up = Just 1 }
-                                    , formula = Formula.parseSigned "T (b \\/ c)"
+                                    , formula = Formula.Parser.parseSigned "T (b \\/ c)"
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
@@ -590,7 +592,7 @@ validateRenumberingAddingResult =
                                             { id = 5
                                             , value = "T a"
                                             , reference = { str = "1", up = Just 4 }
-                                            , formula = Formula.parseSigned "T a"
+                                            , formula = Formula.Parser.parseSigned "T a"
                                             , gui = defGUI
                                             }
                                         , ext = Open
@@ -599,7 +601,7 @@ validateRenumberingAddingResult =
                                             { id = 6
                                             , value = "T b"
                                             , reference = { str = "1", up = Just 4 }
-                                            , formula = Formula.parseSigned "T b"
+                                            , formula = Formula.Parser.parseSigned "T b"
                                             , gui = defGUI
                                             }
                                         , ext = Open
@@ -616,7 +618,7 @@ validateRenumberingDeleting =
             { id = 1
             , value = "T (a\\/b)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T (a\\/b)"
+            , formula = Formula.Parser.parseSigned "T (a\\/b)"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -625,7 +627,7 @@ validateRenumberingDeleting =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T (b/\\(c\\/a))"
+                    , formula = Formula.Parser.parseSigned "T (b/\\(c\\/a))"
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -634,7 +636,7 @@ validateRenumberingDeleting =
                             { id = 3
                             , value = "Tb"
                             , reference = { str = "2", up = Just 1 }
-                            , formula = Formula.parseSigned "T b"
+                            , formula = Formula.Parser.parseSigned "T b"
                             , gui = { controlsShown = True }
                             }
                         , ext =
@@ -643,7 +645,7 @@ validateRenumberingDeleting =
                                     { id = 4
                                     , value = "T (c\\/a)"
                                     , reference = { str = "2", up = Just 2 }
-                                    , formula = Formula.parseSigned "T (c\\/a)"
+                                    , formula = Formula.Parser.parseSigned "T (c\\/a)"
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
@@ -652,7 +654,7 @@ validateRenumberingDeleting =
                                             { id = 5
                                             , value = "Tc"
                                             , reference = { str = "4", up = Just 1 }
-                                            , formula = Formula.parseSigned "Tc"
+                                            , formula = Formula.Parser.parseSigned "Tc"
                                             , gui = { controlsShown = True }
                                             }
                                         , ext = Open
@@ -661,7 +663,7 @@ validateRenumberingDeleting =
                                             { id = 6
                                             , value = "Ta"
                                             , reference = { str = "4", up = Just 1 }
-                                            , formula = Formula.parseSigned "Ta"
+                                            , formula = Formula.Parser.parseSigned "Ta"
                                             , gui = { controlsShown = True }
                                             }
                                         , ext = Open
@@ -678,7 +680,7 @@ validateRenumberingDeletingResult =
             { id = 1
             , value = "T (a\\/b)"
             , reference = { str = "1", up = Just 0 }
-            , formula = Formula.parseSigned "T (a\\/b)"
+            , formula = Formula.Parser.parseSigned "T (a\\/b)"
             , gui = { controlsShown = False }
             }
         , ext =
@@ -687,7 +689,7 @@ validateRenumberingDeletingResult =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
                     , reference = { str = "2", up = Just 0 }
-                    , formula = Formula.parseSigned "T (b/\\(c\\/a))"
+                    , formula = Formula.Parser.parseSigned "T (b/\\(c\\/a))"
                     , gui = { controlsShown = False }
                     }
                 , ext =
@@ -696,7 +698,7 @@ validateRenumberingDeletingResult =
                             { id = 3
                             , value = "T (c\\/a)"
                             , reference = { str = "2", up = Just 1 }
-                            , formula = Formula.parseSigned "T (c\\/a)"
+                            , formula = Formula.Parser.parseSigned "T (c\\/a)"
                             , gui = { controlsShown = False }
                             }
                         , ext =
@@ -705,7 +707,7 @@ validateRenumberingDeletingResult =
                                     { id = 4
                                     , value = "Tc"
                                     , reference = { str = "3", up = Just 1 }
-                                    , formula = Formula.parseSigned "Tc"
+                                    , formula = Formula.Parser.parseSigned "Tc"
                                     , gui = { controlsShown = True }
                                     }
                                 , ext = Open
@@ -714,7 +716,7 @@ validateRenumberingDeletingResult =
                                     { id = 5
                                     , value = "Ta"
                                     , reference = { str = "3", up = Just 1 }
-                                    , formula = Formula.parseSigned "Ta"
+                                    , formula = Formula.Parser.parseSigned "Ta"
                                     , gui = { controlsShown = True }
                                     }
                                 , ext = Open
@@ -768,8 +770,8 @@ suiteZipper =
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
-                            |> Maybe.withDefault (Formula.Fun "f" [ Formula.Var "x" ])
-                            |> Formula.strTerm
+                            |> Maybe.withDefault (Fun "f" [ Var "x" ])
+                            |> Term.toString
                         )
                         (validateGammaSubstituteFunction
                             |> Zipper.down
@@ -789,8 +791,8 @@ suiteZipper =
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
-                            |> Maybe.withDefault (Formula.Var "z")
-                            |> Formula.strTerm
+                            |> Maybe.withDefault (Var "z")
+                            |> Term.toString
                         )
                         (validateGammaNewVariableSimilarToExistingBoundAbove
                             |> Zipper.down
@@ -810,8 +812,8 @@ suiteZipper =
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
-                            |> Maybe.withDefault (Formula.Var "k")
-                            |> Formula.strTerm
+                            |> Maybe.withDefault (Var "k")
+                            |> Term.toString
                         )
                         (validateGammaNewVariableSimilarToExistingFreeAbove
                             |> Zipper.down

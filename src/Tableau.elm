@@ -1,7 +1,9 @@
 module Tableau exposing (..)
 
-import Formula
+import Formula exposing (Formula)
 import Parser
+import Formula.Signed exposing (Signed)
+import Formula.Parser
 
 
 type alias Tableau =
@@ -14,7 +16,7 @@ type alias Node =
     { id : Int
     , value : String
     , reference : Ref
-    , formula : Result (List Parser.DeadEnd) (Formula.Signed Formula.Formula)
+    , formula : Result (List Parser.DeadEnd) (Signed Formula)
     , gui : GUI
     }
 
@@ -59,4 +61,4 @@ defGUI =
 
 defNode : Node
 defNode =
-    { id = 1, value = "", reference = defRef, formula = Formula.parseSigned "", gui = defGUI }
+    { id = 1, value = "", reference = defRef, formula = Formula.Parser.parseSigned "", gui = defGUI }

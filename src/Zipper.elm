@@ -1,8 +1,10 @@
 module Zipper exposing (..)
 
 import Debug exposing (log)
-import Formula
+import Formula 
+import Formula.Parser
 import Tableau exposing (..)
+import Formula.Signed 
 
 
 
@@ -507,7 +509,7 @@ setFormula text =
                 oldNode =
                     tableau.node
             in
-            { tableau | node = { oldNode | value = text, formula = Formula.parseSigned text } }
+            { tableau | node = { oldNode | value = text, formula = Formula.Parser.parseSigned text } }
         )
 
 
@@ -967,9 +969,9 @@ prettify t =
         prettifyNode n =
             let
                 newValue =
-                    case Formula.parseSigned n.value of
+                    case Formula.Parser.parseSigned n.value of
                         Ok f ->
-                            Formula.strSigned f
+                            Formula.Signed.toString f
 
                         Err _ ->
                             n.value
