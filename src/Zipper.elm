@@ -5,6 +5,7 @@ import Formula
 import Formula.Parser
 import Tableau exposing (..)
 import Formula.Signed 
+import Html exposing (table)
 
 
 
@@ -17,6 +18,7 @@ type Crumb
     | BetaRightCrumb Node Tableau
     | GammaCrumb Node Tableau.Substitution
     | DeltaCrumb Node Tableau.Substitution
+    | RCrumb Node
 
 
 type alias BreadCrumbs =
@@ -57,6 +59,9 @@ children z =
         Delta _ _ ->
             [ down z ]
 
+        R _ ->
+            [down z]
+
 
 down : Zipper -> Zipper
 down ( t, bs ) =
@@ -69,6 +74,9 @@ down ( t, bs ) =
 
         Delta subtableau substitution ->
             ( subtableau, DeltaCrumb t.node substitution :: bs )
+
+        R subt ->
+            ( subt, RCrumb t.node :: bs )
 
         _ ->
             ( t, bs )
@@ -115,6 +123,9 @@ up ( t, bs ) =
 
         (DeltaCrumb n subst) :: bss ->
             ( Tableau n (Delta t subst), bss )
+
+        (RCrumb n) :: bss ->
+            ( Tableau n (R t), bss )
 
         [] ->
             ( t, bs )
@@ -195,6 +206,9 @@ zWalkPost f (( t, bs ) as z) =
             z |> down |> zWalkPost f |> up |> f
 
         Delta _ subst ->
+            z |> down |> zWalkPost f |> up |> f
+
+        R _ ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -317,6 +331,16 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
 
+        R t ->
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 t (num + 1)
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (R new_tableau), num1 )
+
         Closed r1 r2 ->
             let
                 node =
@@ -419,6 +443,11 @@ renumberJusts tableau f lengthOfPathFromFather =
             Tableau
                 tableau.node
                 (Delta (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
+
+        R t ->
+            Tableau
+                tableau.node
+                (R (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
         Open ->
             tableau
@@ -539,6 +568,9 @@ extendAlpha z =
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Delta t s)))
 
+                    R t ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (R t)))
+
                     Closed r1 r2 ->
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Closed r1 r2)))
             )
@@ -564,6 +596,9 @@ extendBeta z =
 
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
+
+                    R t ->
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (R t)) (Tableau defNode Open))
 
                     _ ->
                         tableau
@@ -591,6 +626,9 @@ extendGamma z =
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Delta t s)) defSubstitution)
 
+                    R t ->
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (R t)) defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -616,6 +654,37 @@ extendDelta z =
 
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Delta (Tableau defNode (Delta t s)) defSubstitution)
+
+                    R t ->
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (R t)) defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+
+extendR : Zipper -> Zipper
+extendR z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode Open))
+
+                    Alpha t ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (Alpha t)))
+
+                    Beta lt rt ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (Beta lt rt)))
+
+                    Gamma t s ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (Gamma t s)))
+
+                    Delta t s ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (Delta t s)))
+
+                    R t ->
+                        Tableau (closeControls tableau.node) (R (Tableau defNode (R t)))
 
                     _ ->
                         tableau
@@ -661,6 +730,9 @@ deleteMe (( t, fatherbs ) as zip) =
                         st
 
                     Delta st s ->
+                        st
+
+                    R st ->
                         st
             )
             zip
@@ -717,6 +789,9 @@ deleteMe (( t, fatherbs ) as zip) =
                                 Tableau tableau.node st.ext
 
                             Delta st s ->
+                                Tableau tableau.node st.ext
+
+                            R st ->
                                 Tableau tableau.node st.ext
 
                             _ ->
@@ -864,6 +939,9 @@ changeToAlpha z =
                     Delta t s ->
                         Tableau tableau.node (Alpha t)
 
+                    R t ->
+                        Tableau tableau.node (Alpha t)
+
                     _ ->
                         tableau
             )
@@ -887,6 +965,9 @@ changeToBeta z =
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     Delta t s ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    R t ->
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     _ ->
@@ -921,6 +1002,9 @@ changeToGamma z =
                     Delta t s ->
                         Tableau tableau.node (Gamma t s)
 
+                    R t ->
+                        Tableau tableau.node (Gamma t defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -952,6 +1036,44 @@ changeToDelta z =
 
                     Gamma t s ->
                         Tableau tableau.node (Delta t s)
+
+                    R t ->
+                        Tableau tableau.node (Delta t defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToR : Zipper -> Zipper
+changeToR z =
+    if (z |> up) == z then
+        z
+
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (R t)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (R rt)
+
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (R lt)
+
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node (R t)
+
+                    Delta t s ->
+                        Tableau tableau.node (R t)
 
                     _ ->
                         tableau
@@ -993,6 +1115,9 @@ prettify t =
 
                     Delta tbl subs ->
                         Tableau (tableau.node |> prettifyNode) (Delta (prettify tbl) subs)
+
+                    R tbl ->
+                        Tableau (tableau.node |> prettifyNode) (R (prettify tbl))
 
                     Open ->
                         Tableau (tableau.node |> prettifyNode) Open

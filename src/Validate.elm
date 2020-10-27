@@ -238,6 +238,9 @@ isCorrectRule (( t, bs ) as z) =
         (Zipper.DeltaCrumb _ _) :: _ ->
             validateDeltaRule z
 
+        (Zipper.RCrumb _) :: _ ->       --zmenit
+            Ok z
+
         [] ->
             Ok z
 

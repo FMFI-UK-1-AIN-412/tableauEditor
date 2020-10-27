@@ -73,6 +73,11 @@ jsonTblList tableau =
                 ++ [ ( "child", jsonTableau t ) ]
                 ++ encodeSubstitution s
 
+        R t ->
+            [ ( "type", string "r" ) ]
+                ++ jsonNodeList tableau.node
+                ++ [ ( "child", jsonTableau t ) ]
+
 
 jsonTableau : Tableau -> Value
 jsonTableau t =
