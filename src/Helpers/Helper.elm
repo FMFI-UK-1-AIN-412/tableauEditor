@@ -86,6 +86,11 @@ isClosed z =
                 (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
+        Tableau.R t ->
+            merge2 second
+                (Validate.isCorrectNode z)
+                (isClosed (Zipper.down z))
+
         Tableau.Open ->
             Validate.isCorrectNode z |> Result.map (always False)
 

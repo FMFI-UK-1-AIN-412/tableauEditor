@@ -98,6 +98,7 @@ type Msg
     | MakeOpen Zipper.Zipper
     | ExpandGamma Zipper.Zipper
     | ExpandDelta Zipper.Zipper
+    | ExpandR Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
@@ -105,6 +106,7 @@ type Msg
     | ChangeToBeta Zipper.Zipper
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
+    | ChangeToR Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -223,6 +225,9 @@ simpleUpdate msg model =
             ExpandDelta z ->
                 { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
+            ExpandR z ->
+                {model | tableau = z |> Zipper.extendR |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRef new |> top }
 
@@ -269,6 +274,9 @@ simpleUpdate msg model =
 
             ChangeToDelta z ->
                 { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
+
+            ChangeToR z ->
+                { model | tableau = z |> Zipper.changeToR |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -390,6 +398,7 @@ viewNodeInputs additional z =
                     , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
                     , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
                     , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
+                    , li [] [ button [ onClick (ChangeToR z) ] [ text "Change to R" ] ]
                     ]
                 ]
             :: text "["
@@ -437,6 +446,8 @@ viewRuleType z =
                 text "γ"
             Delta _ _ ->
                 text "δ"
+            R _ ->
+                text "R"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -479,6 +490,9 @@ viewChildren z =
         Tableau.Delta t subs ->
             viewDelta z
 
+        Tableau.R t ->
+            viewR z
+
 
 viewAlpha : Zipper.Zipper -> Html Msg
 viewAlpha z =
@@ -501,6 +515,11 @@ viewGamma z =
 viewDelta : Zipper.Zipper -> Html Msg
 viewDelta z =
     div [ class "delta" ] [ viewSubsNode (Zipper.down z) ]
+
+
+viewR : Zipper.Zipper -> Html Msg
+viewR z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ] --zmenit class monzo
 
 
 viewOpen : Zipper.Zipper -> Html Msg
@@ -590,6 +609,7 @@ viewControls ( ( t, _ )  as z ) =
                             , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
                             , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
                             , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
+                            , li [] [ button [ onClick (ExpandR z) ] [ text "Add R" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]
