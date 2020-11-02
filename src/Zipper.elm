@@ -234,12 +234,8 @@ getFixedRef ref z =
 fixNodeRef : Zipper -> Zipper
 fixNodeRef z =
     modifyNode
-        (\t ->
-            let
-                nodetmp =
-                    t.node
-            in
-            { t | node = { nodetmp | reference = getFixedRef nodetmp.reference z } }
+        (\({node} as tableau) ->
+            { tableau | node = { node | reference = getFixedRef node.reference z } }
         )
         z
 
@@ -355,12 +351,8 @@ renumber2 tableau num =
 modifyRef : Ref -> Zipper -> Zipper
 modifyRef ref z =
     modifyNode
-        (\tableau ->
-            let
-                nodetmp =
-                    tableau.node
-            in
-            { tableau | node = { nodetmp | reference = ref } }
+        (\({node} as tableau) ->
+            { tableau | node = {node | reference = ref } }
         )
         z
 
@@ -533,12 +525,8 @@ closeControls oldNode =
 setFormula : String -> Zipper -> Zipper
 setFormula text =
     modifyNode
-        (\tableau ->
-            let
-                oldNode =
-                    tableau.node
-            in
-            { tableau | node = { oldNode | value = text, formula = Formula.Parser.parseSigned text } }
+        (\({node} as tableau) ->
+            { tableau | node = { node | value = text, formula = Formula.Parser.parseSigned text } }
         )
 
 
