@@ -6,6 +6,7 @@ import Json.Decode exposing (..)
 import Tableau
 import Zipper
 import Formula.Parser
+import Tableau exposing (Tableau)
 
 
 
@@ -94,6 +95,13 @@ gamma =
         (field "node" node)
         (map2 Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
+r : Decoder Tableau.Tableau
+r = 
+    map2
+        Tableau.Tableau
+        (field "node" node)
+        (map Tableau.R (field "child" (Json.Decode.lazy (\_ -> tableau))))
+
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
 tblTypeDecoder typ =
@@ -115,6 +123,9 @@ tblTypeDecoder typ =
 
         "delta" ->
             delta
+
+        "r" ->
+            r
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")
