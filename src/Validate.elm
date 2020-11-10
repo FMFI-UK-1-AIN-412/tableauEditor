@@ -824,6 +824,13 @@ validateDeltaRule z =
             )
         |> Result.map (always z)
 
+todoCheck : Zipper.Zipper -> Bool
+todoCheck z = 
+    case (Zipper.zNode z).formula of
+
+        _ ->
+            False
+
 
 validateReflexivityRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validateReflexivityRule z = 
@@ -842,12 +849,6 @@ validateReflexivityRule z =
             )
         |> Result.map (always z)
 
-todoCheck : Zipper.Zipper -> Bool
-todoCheck z = 
-    case (Zipper.zNode z).formula of
-        
-        _ ->
-            False
         
 
 {- vim: set sw=2 ts=2 sts=2 et :s -}

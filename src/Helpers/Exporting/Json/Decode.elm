@@ -95,6 +95,7 @@ gamma =
         (field "node" node)
         (map2 Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
+
 r : Decoder Tableau.Tableau
 r = 
     map2
