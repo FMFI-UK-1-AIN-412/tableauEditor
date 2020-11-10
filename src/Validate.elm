@@ -238,8 +238,8 @@ isCorrectRule (( t, bs ) as z) =
         (Zipper.DeltaCrumb _ _) :: _ ->
             validateDeltaRule z
 
-        (Zipper.RCrumb _) :: _ ->       --zmenit
-            Ok z
+        (Zipper.RCrumb _) :: _ ->
+            validateReflexivityRule z
 
         [] ->
             Ok z
@@ -825,5 +825,29 @@ validateDeltaRule z =
         |> Result.map (always z)
 
 
+validateReflexivityRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateReflexivityRule z = 
+    Zipper.getReffed (Zipper.zNode z).reference z
+        |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
+        |> Result.map (always z)
+        |> Result.andThen
+            (checkPredicate isPointingOnSelf
+                (semanticsProblem z "must be pointing on itself")
+            )
+
+        |> Result.map (always z)
+        |> Result.andThen
+            (checkPredicate todoCheck
+                (semanticsProblem z "formula is not equality")
+            )
+        |> Result.map (always z)
+
+todoCheck : Zipper.Zipper -> Bool
+todoCheck z = 
+    case (Zipper.zNode z).formula of
+        
+        _ ->
+            False
+        
 
 {- vim: set sw=2 ts=2 sts=2 et :s -}
