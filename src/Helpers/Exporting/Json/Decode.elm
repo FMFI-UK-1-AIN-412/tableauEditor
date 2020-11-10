@@ -5,6 +5,7 @@ import Formula
 import Json.Decode exposing (..)
 import Tableau
 import Zipper
+import Formula.Parser
 
 
 
@@ -37,7 +38,7 @@ node =
         (field "id" int)
         (field "value" string)
         (field "reference" ref)
-        (map Formula.parseSigned (field "value" string))
+        (map Formula.Parser.parseSigned (field "value" string))
         (succeed { controlsShown = False })
 
 

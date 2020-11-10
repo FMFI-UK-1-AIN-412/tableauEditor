@@ -3,12 +3,16 @@ module Validate exposing (..)
 
 import Dict
 import Errors
-import Formula
+import Formula exposing (Formula(..))
+import Formula.Signed exposing (Signed(..))
+import Formula.Parser
+import Term exposing (Term(..))
 import Helpers.Parser
 import Parser
 import Set
 import Tableau exposing (..)
 import Zipper
+
 
 
 type ProblemType
@@ -152,12 +156,12 @@ parseProblem z =
     Helpers.Parser.deadEndsToString >> syntaxProblem z
 
 
-validateFormula : Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+validateFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
 validateFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z)
 
 
-validateReffedFormula : Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+validateReffedFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
 validateReffedFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (\e -> semanticsProblem z "Referenced formula is invalid")
 
@@ -180,7 +184,7 @@ validateNodeRef z =
 checkFormula :
     String
     -> Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) (Formula.Signed Formula.Formula)
+    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) (Signed Formula)
 checkFormula str z =
     z
         |> Zipper.zNode
@@ -188,7 +192,7 @@ checkFormula str z =
         |> Result.mapError (\_ -> semanticsProblem z (str ++ " is invalid."))
 
 
-checkReffedFormula : String -> Tableau.Ref -> Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+checkReffedFormula : String -> Tableau.Ref -> Zipper.Zipper -> Result (List Problem) (Signed Formula)
 checkReffedFormula str r z =
     z
         |> Zipper.getReffed r
@@ -202,7 +206,7 @@ areCloseRefsComplementary :
     -> Zipper.Zipper
     -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
 areCloseRefsComplementary r1 r2 z =
-    Errors.merge2 Formula.isSignedComplementary
+    Errors.merge2 Formula.Signed.isComplementary
         (checkReffedFormula "First close" r1 z)
         (checkReffedFormula "Second close" r2 z)
         |> Result.andThen (resultFromBool z (semanticsProblem z "Closing formulas are not complementary."))
@@ -278,12 +282,12 @@ validateAlphaRule z =
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.andThen validateReffedFormula
         |> Result.andThen
-            (checkPredicate Formula.isAlpha
+            (checkPredicate Formula.Signed.isAlpha
                 (semanticsProblem z "Referenced formula is not α")
             )
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
-            (checkPredicate (\( a, b ) -> Formula.isSignedSubformulaOf a b)
+            (checkPredicate (\( a, b ) -> Formula.Signed.isSubformulaOf a b)
                 (semanticsProblem z
                     ("Is not an α-subformula of ("
                         ++ String.fromInt (Zipper.getReffed (Zipper.zNode z).reference z |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
@@ -340,7 +344,7 @@ validateBeta this other =
             ft
                 |> Result.map List.singleton
                 |> Result.map2 (::) fo
-                |> Result.map (List.sortBy Formula.strSigned)
+                |> Result.map (List.sortBy Formula.Signed.toString)
 
         -- This is a hack, but defining an ordering on formulas...
         reffed =
@@ -356,11 +360,11 @@ validateBeta this other =
                     )
                 |> Result.andThen (\z -> getReffedSignedFormula z)
                 |> Result.andThen
-                    (checkPredicate Formula.isBeta
+                    (checkPredicate Formula.Signed.isBeta
                         (semanticsProblem this "Referenced formula is not β")
                     )
-                |> Result.map Formula.signedSubformulas
-                |> Result.map (List.sortBy Formula.strSigned)
+                |> Result.map Formula.Signed.subformulas
+                |> Result.map (List.sortBy Formula.Signed.toString)
     in
     Errors.merge2 (==) children reffed
         |> Result.andThen (resultFromBool this (semanticsProblem this "Wrong β subformulas."))
@@ -392,11 +396,11 @@ isSimilarAbove : String -> Zipper.Zipper -> Bool
 isSimilarAbove variable z =
     let
         maybeParsed =
-            z |> Zipper.zNode |> .value |> Formula.parseSigned
+            z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
     in
     case maybeParsed of
         Ok parsed ->
-            Set.member variable (Formula.freeFormula (parsed |> Formula.signedGetFormula))
+            Set.member variable (Formula.free (parsed |> Formula.Signed.getFormula))
                 || (if (z |> Zipper.up) == z then
                         False
 
@@ -410,94 +414,94 @@ isSimilarAbove variable z =
 
 isNewVariableValid : String -> Zipper.Zipper -> Bool
 isNewVariableValid variable z =
-    case getTermFromResult (Formula.parseTerm variable) of
-        Formula.Var s ->
+    case getTermFromResult (Formula.Parser.parseTerm variable) of
+        Var s ->
             not (isSimilarAbove variable (z |> Zipper.up))
 
-        Formula.Fun _ _ ->
+        Fun _ _ ->
             False
 
 
 isNewVariableVariable : String -> Zipper.Zipper -> Bool
 isNewVariableVariable variable _ =
-    case getTermFromResult (Formula.parseTerm variable) of
-        Formula.Var s ->
+    case getTermFromResult (Formula.Parser.parseTerm variable) of
+        Var s ->
             True
 
-        Formula.Fun _ _ ->
+        Fun _ _ ->
             False
 
 
 isNewVariableFunction : String -> Bool
 isNewVariableFunction variable =
-    case getTermFromResult (Formula.parseTerm variable) of
-        Formula.Var s ->
+    case getTermFromResult (Formula.Parser.parseTerm variable) of
+        Var s ->
             True
 
-        Formula.Fun _ _ ->
+        Fun _ _ ->
             False
 
 
-getTermFromResult : Result (List Parser.DeadEnd) Formula.Term -> Formula.Term
+getTermFromResult : Result (List Parser.DeadEnd) Term -> Term
 getTermFromResult r =
     case r of
         Ok term ->
             term
 
         Err err ->
-            Formula.Fun "default" []
+            Fun "default" []
 
 
-makeS : Tableau.Substitution -> Formula.Substitution
+makeS : Tableau.Substitution -> Term.Substitution
 makeS subs =
     let
         newTerm =
-            subs.term |> Formula.parseTerm |> getTermFromResult
+            subs.term |> Formula.Parser.parseTerm |> getTermFromResult
     in
     Dict.fromList [ ( subs.var, newTerm ) ]
 
 
-substitutionIsValid : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
+substitutionIsValid : Term.Substitution -> Signed Formula -> Signed Formula -> Bool
 substitutionIsValid substitution new original =
     let
         applyToSigned :
-            (Formula.Substitution -> Formula.Formula -> Result String Formula.Formula)
-            -> Formula.Substitution
-            -> Formula.Signed Formula.Formula
-            -> Formula.Signed Formula.Formula
+            (Term.Substitution -> Formula -> Result String Formula)
+            -> Term.Substitution
+            -> Signed Formula
+            -> Signed Formula
         applyToSigned function subst sf =
             case sf of
-                Formula.T formula ->
-                    Formula.T (checkSubstitution (function subst formula))
+                T formula ->
+                    T (checkSubstitution (function subst formula))
 
-                Formula.F formula ->
-                    Formula.F (checkSubstitution (function subst formula))
+                F formula ->
+                    F (checkSubstitution (function subst formula))
 
-        checkSubstitution : Result String Formula.Formula -> Formula.Formula
+        checkSubstitution : Result String Formula -> Formula
         checkSubstitution r =
             case r of
                 Ok f ->
                     f
 
                 Err msg ->
-                    Formula.Atom "default" []
+                    Atom "default" []
     in
     new == applyToSigned Formula.removeQuantifierAndSubstitute substitution original
 
 
-isSubstituable : Formula.Substitution -> Formula.Signed Formula.Formula -> Formula.Signed Formula.Formula -> Bool
+isSubstituable : Term.Substitution -> Signed Formula -> Signed Formula -> Bool
 isSubstituable substitution new original =
     let
-        removeSign : Formula.Substitution -> Formula.Signed Formula.Formula -> Bool
+        removeSign : Term.Substitution -> Signed Formula -> Bool
         removeSign s sf =
             case sf of
-                Formula.T formula ->
+                T formula ->
                     removeQuantifierAndSubstitute s formula
 
-                Formula.F formula ->
+                F formula ->
                     removeQuantifierAndSubstitute s formula
 
-        removeQuantifierAndSubstitute : Formula.Substitution -> Formula.Formula -> Bool
+        removeQuantifierAndSubstitute : Term.Substitution -> Formula -> Bool
         removeQuantifierAndSubstitute s f =
             case f of
                 Formula.ForAll v subf ->
@@ -517,7 +521,7 @@ isSubstituable substitution new original =
                 _ ->
                     trySubs substitution f
 
-        trySubs : Formula.Substitution -> Formula.Formula -> Bool
+        trySubs : Term.Substitution -> Formula -> Bool
         trySubs s f =
             case Formula.substitute s f of
                 Ok _ ->
@@ -537,7 +541,7 @@ validateGammaRule z =
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.andThen validateReffedFormula
         |> Result.andThen
-            (checkPredicate Formula.isGamma
+            (checkPredicate Formula.Signed.isGamma
                 (semanticsProblem z "Referenced formula is not γ")
             )
         |> Result.map (always z)
@@ -648,7 +652,7 @@ checkNewVariable pred x z =
             Err x
 
 
-getReffedSignedFormula : Zipper.Zipper -> Result (List Problem) (Formula.Signed Formula.Formula)
+getReffedSignedFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
 getReffedSignedFormula z =
     case Zipper.getReffed (Zipper.zNode z).reference z of
         Just rz ->
@@ -671,7 +675,7 @@ validateDeltaRule z =
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.andThen validateReffedFormula
         |> Result.andThen
-            (checkPredicate Formula.isDelta
+            (checkPredicate Formula.Signed.isDelta
                 (semanticsProblem z "Referenced formula is not delta")
             )
         |> Result.map (always z)
@@ -791,8 +795,8 @@ validateDeltaRule z =
                         |> Maybe.withDefault (Dict.fromList [])
                         |> Dict.values
                         |> List.head
-                        |> Maybe.withDefault (Formula.Var "default")
-                        |> Formula.strTerm
+                        |> Maybe.withDefault (Var "default")
+                        |> Term.toString
                     )
                 )
                 (semanticsProblem z
