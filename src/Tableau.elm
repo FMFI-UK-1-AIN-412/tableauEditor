@@ -42,7 +42,7 @@ type Extension
     | Beta Tableau Tableau
     | Gamma Tableau Substitution
     | Delta Tableau Substitution
-    | R Tableau 
+    | Refl Tableau 
 
 
 defSubstitution : Substitution

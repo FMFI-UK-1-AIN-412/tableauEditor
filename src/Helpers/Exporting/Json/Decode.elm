@@ -96,12 +96,12 @@ gamma =
         (map2 Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
-r : Decoder Tableau.Tableau
-r = 
+refl : Decoder Tableau.Tableau
+refl = 
     map2
         Tableau.Tableau
         (field "node" node)
-        (map Tableau.R (field "child" (Json.Decode.lazy (\_ -> tableau))))
+        (map Tableau.Refl (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
@@ -125,8 +125,8 @@ tblTypeDecoder typ =
         "delta" ->
             delta
 
-        "r" ->
-            r
+        "refl" ->
+            refl
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")
