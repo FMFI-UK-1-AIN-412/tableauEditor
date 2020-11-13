@@ -10,11 +10,11 @@ import Markdown
 
 
 fA =
-    Atom "A" []
+    PredAtom "A" []
 
 
 fB =
-    Atom "B" []
+    PredAtom "B" []
 
 
 alphas =
@@ -34,11 +34,11 @@ betas =
 
 
 fG =
-    Atom "P" [ Var "x" ]
+    PredAtom "P" [ Var "x" ]
 
 
 fD =
-    Atom "P" [ Var "x" ]
+    PredAtom "P" [ Var "x" ]
 
 
 deltas =

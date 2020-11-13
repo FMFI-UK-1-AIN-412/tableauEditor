@@ -238,8 +238,8 @@ isCorrectRule (( t, bs ) as z) =
         (Zipper.DeltaCrumb _ _) :: _ ->
             validateDeltaRule z
 
-        (Zipper.RCrumb _) :: _ ->
-            validateReflexivityRule z
+        (Zipper.ReflCrumb _) :: _ ->
+            validateReflRule z
 
         [] ->
             Ok z
@@ -487,7 +487,7 @@ substitutionIsValid substitution new original =
                     f
 
                 Err msg ->
-                    Atom "default" []
+                    PredAtom "default" []
     in
     new == applyToSigned Formula.removeQuantifierAndSubstitute substitution original
 
@@ -824,28 +824,32 @@ validateDeltaRule z =
             )
         |> Result.map (always z)
 
-todoCheck : Zipper.Zipper -> Bool
-todoCheck z = 
+checkIsRefl : Zipper.Zipper -> Bool
+checkIsRefl z = 
     case (Zipper.zNode z).formula of
+        Ok (T (EqAtom lt rt)) ->
+            if lt == rt then
+             True
+            else
+             False
 
         _ ->
             False
 
 
-validateReflexivityRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validateReflexivityRule z = 
+validateReflRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateReflRule z = 
     Zipper.getReffed (Zipper.zNode z).reference z
         |> Result.fromMaybe (semanticsProblem z "Invalid reference.")
         |> Result.map (always z)
         |> Result.andThen
             (checkPredicate isPointingOnSelf
-                (semanticsProblem z "must be pointing on itself")
+                (semanticsProblem z "Reflexivity must be a premise")
             )
-
         |> Result.map (always z)
         |> Result.andThen
-            (checkPredicate todoCheck
-                (semanticsProblem z "formula is not equality")
+            (checkPredicate checkIsRefl
+                (semanticsProblem z "Formula is not reflexivity")
             )
         |> Result.map (always z)
 
