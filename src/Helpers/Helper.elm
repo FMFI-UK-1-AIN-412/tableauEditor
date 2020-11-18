@@ -15,8 +15,13 @@ hasReference z =
 
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
-    List.length (Zipper.zNode z).references == 0
-
+    case (Zipper.up z) |> Zipper.zTableau |> .ext of
+        Tableau.Alpha _ ->
+            List.length (Zipper.zNode z).references == 0
+        
+        _ ->
+            False
+    
 
 {-| Like `Result.map2` but merges errors (which must be lists).
 -}
