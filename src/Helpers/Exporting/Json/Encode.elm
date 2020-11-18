@@ -9,12 +9,12 @@ jsonRef r =
     string r.str
 
 
-jsonNode : { b | id : Int, reference : { a | str : String }, value : String, gui : GUI } -> Value
-jsonNode { id, value, reference, gui } =
+jsonNode : { b | id : Int, references : List { a | str : String }, value : String, gui : GUI } -> Value
+jsonNode { id, value, references, gui } =
     object
         [ ( "id", int id )
         , ( "value", string value )
-        , ( "reference", jsonRef reference )
+        , ( "references", list jsonRef references )
         ]
 
 

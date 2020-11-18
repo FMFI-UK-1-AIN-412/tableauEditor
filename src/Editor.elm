@@ -55,7 +55,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , reference = { str = "1", up = Just 0 }
+                , references = [{ str = "1", up = Just 0 }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -229,7 +229,7 @@ simpleUpdate msg model =
                 {model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ChangeRef z new ->
-                { model | tableau = z |> Zipper.setRef new |> top }
+                { model | tableau = z |> Zipper.setRefs new |> top }
 
             Delete z ->
                 { model | tableau = z |> Zipper.delete |> topRenumbered }
@@ -403,7 +403,7 @@ viewNodeInputs additional z =
                 ]
             :: text "["
             :: autoSizeInput
-                (Zipper.zNode z).reference.str
+                (Tableau.refsToString (Zipper.zNode z).references)
                 [ class "textInputReference"
                 , onInput <| ChangeRef z
                 , class (problemsClass <| Validate.validateNodeRef z)
