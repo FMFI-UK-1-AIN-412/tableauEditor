@@ -384,7 +384,7 @@ validateBeta this other =
                     |> Result.andThen
                         (checkIsPointingOnSelf
                             isPointingOnSelf
-                            (semanticsProblem this "β can not be premise")
+                            (semanticsProblem this "β can not be pointing on itself")
                         )
                     |> Result.andThen (\z -> getReffedSignedFormula z)
                     |> Result.andThen
@@ -579,7 +579,7 @@ validateGammaRule z =
         |> Result.andThen
             (checkIsPointingOnSelf
                 isPointingOnSelf
-                (semanticsProblem z "γ can not be premise")
+                (semanticsProblem z "γ can not be pointing on itself")
             )
         |> Result.andThen (\z1 -> getReffedSignedFormula z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
@@ -716,7 +716,7 @@ validateDeltaRule z =
         |> Result.andThen
             (checkIsPointingOnSelf
                 isPointingOnSelf
-                (semanticsProblem z "delta can not be premise")
+                (semanticsProblem z "delta can not be pointing on itself")
             )
         |> Result.andThen (\z1 -> getReffedSignedFormula z1)
         |> Result.map (always z)
