@@ -221,8 +221,8 @@ fixRefs =
 -- Na kazdy vrchol zavolame najskor fixNodeRef a potom fixCloseRefs
 
 
-getFixedRef : Ref -> Zipper -> Ref
-getFixedRef ref z =
+getFixedRef : Zipper -> Ref -> Ref
+getFixedRef z ref =
     case ref.up of
         Nothing ->
             { ref | str = "" }
@@ -235,7 +235,7 @@ fixNodeRef : Zipper -> Zipper
 fixNodeRef z =
     modifyNode
         (\({node} as tableau) ->
-            { tableau | node = { node | reference = getFixedRef node.reference z } }
+            { tableau | node = { node | references = List.map (getFixedRef z) node.references } }
         )
         z
 
@@ -254,7 +254,7 @@ fixClosedRefs z =
                 in
                 case ext of
                     Closed ref1 ref2 ->
-                        Tableau node (Closed (getFixedRef ref1 z) (getFixedRef ref2 z))
+                        Tableau node (Closed (getFixedRef z ref1) (getFixedRef z ref2))
 
                     _ ->
                         t
@@ -348,11 +348,11 @@ renumber2 tableau num =
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
 
-modifyRef : Ref -> Zipper -> Zipper
-modifyRef ref z =
+modifyRef : List Ref -> Zipper -> Zipper
+modifyRef refs z =
     modifyNode
         (\({node} as tableau) ->
-            { tableau | node = {node | reference = ref } }
+            { tableau | node = {node | references = refs } }
         )
         z
 
@@ -375,8 +375,8 @@ findAbove ref ( tableau, bs ) =
                 Nothing
 
 
-getRef : String -> Zipper -> Ref
-getRef ref z =
+getRef : Zipper -> String -> Ref
+getRef z ref =
     { str = ref
     , up =
         ref
@@ -389,6 +389,26 @@ getReffed : Ref -> Zipper -> Maybe Zipper
 getReffed r z =
     r.up
         |> Maybe.map (\a -> above a z)
+
+
+zFirstRef : Zipper -> Ref
+zFirstRef z = 
+    case z |> zNode |> .references of
+        x :: xs ->
+            x
+
+        _ ->
+            Tableau.defRef
+
+
+zSecondRef : Zipper -> Ref
+zSecondRef z = 
+    case z |> zNode |> .references of
+        x0 :: x1 :: xs ->
+            x1
+
+        _ ->
+            Tableau.defRef
 
 
 setPair : Int -> Ref -> Ref -> Ref -> ( Ref, Ref )
@@ -489,28 +509,30 @@ renumberJustInRefWhenExpanding ref lengthOfPathFromFather =
 
 renumberJust : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJust t f lengthOfPathFromFather =
-    case t.node.reference.up of
-        Just 0 ->
-            t
+    let
+        func ref = 
+            case ref.up of
+                Just 0 ->
+                    ref
+                Just x ->
+                    f ref lengthOfPathFromFather
+                Nothing ->
+                    ref
+    in
+    let
+        oldReferences =
+            t.node.references
 
-        Just x ->
-            let
-                oldReference =
-                    t.node.reference
+        oldNode =
+            t.node
 
-                oldNode =
-                    t.node
+        newNode =
+            { oldNode | references = List.map func oldReferences }
 
-                newNode =
-                    { oldNode | reference = f oldReference lengthOfPathFromFather }
-
-                newTableau =
-                    { t | node = newNode }
-            in
-            newTableau
-
-        Nothing ->
-            t
+        newTableau =
+            { t | node = newNode }
+    in
+    newTableau
 
 
 closeControls : Node -> Node
@@ -530,9 +552,9 @@ setFormula text =
         )
 
 
-setRef : String -> Zipper -> Zipper
-setRef new z =
-    z |> modifyRef (getRef new z)
+setRefs : String -> Zipper -> Zipper
+setRefs new z =
+    z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
 
 
 extendAlpha : Zipper -> Zipper
@@ -807,7 +829,7 @@ setClosed which newRefStr z =
                 Closed r1 r2 ->
                     let
                         newRef =
-                            setPair which (z |> getRef newRefStr) r1 r2
+                            setPair which (newRefStr |> getRef z) r1 r2
                     in
                     Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
 

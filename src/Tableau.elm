@@ -15,7 +15,7 @@ type alias Tableau =
 type alias Node =
     { id : Int
     , value : String
-    , reference : Ref
+    , references : List Ref
     , formula : Result (List Parser.DeadEnd) (Signed Formula)
     , gui : GUI
     }
@@ -62,4 +62,21 @@ defGUI =
 
 defNode : Node
 defNode =
-    { id = 1, value = "", reference = defRef, formula = Formula.Parser.parseSigned "", gui = defGUI }
+    { id = 1, value = "", references = [], formula = Formula.Parser.parseSigned "", gui = defGUI }
+
+
+strRefsToList : String -> List String
+strRefsToList str = 
+    let lst = 
+            List.filter (\a -> a /= "") (String.split "," (String.replace " " "" str))
+    in
+    if String.right 1 str == "," then
+        List.append lst [""]
+    else if String.left 1 str == "," then
+        "" :: lst
+    else
+        lst
+
+refsToString : List Ref -> String
+refsToString lst = 
+    String.join "," (List.map (\r -> r.str) lst)

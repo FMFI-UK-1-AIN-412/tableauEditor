@@ -38,7 +38,7 @@ node =
         Tableau.Node
         (field "id" int)
         (field "value" string)
-        (field "reference" ref)
+        (field "references" (list ref))
         (map Formula.Parser.parseSigned (field "value" string))
         (succeed { controlsShown = False })
 
@@ -166,12 +166,12 @@ reRefTableau t =
 reRef : Zipper.Zipper -> Zipper.Zipper
 reRef z =
     z
-        |> Zipper.setRef (z |> Zipper.zNode |> .reference |> .str)
+        |> Zipper.setRefs (z |> Zipper.zNode |> .references |> List.map .str |> String.join ",")
         |> Zipper.modifyNode
             (\t ->
                 case t.ext of
                     Tableau.Closed r1 r2 ->
-                        Tableau.Tableau t.node (Tableau.Closed (z |> Zipper.getRef r1.str) (z |> Zipper.getRef r2.str))
+                        Tableau.Tableau t.node (Tableau.Closed (r1.str |> Zipper.getRef z) (r2.str |> Zipper.getRef z))
 
                     _ ->
                         t

@@ -10,12 +10,12 @@ import Zipper
 
 hasReference : Zipper.Zipper -> Bool
 hasReference z =
-    ((Zipper.zNode z).reference.str == "") && ((Zipper.zNode z).value /= "")
+    (List.length (Zipper.zNode z).references == 0) && ((Zipper.zNode z).value /= "")
 
 
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
-    ((Zipper.zNode z).id |> String.fromInt) == (Zipper.zNode z).reference.str
+    List.length (Zipper.zNode z).references == 0
 
 
 {-| Like `Result.map2` but merges errors (which must be lists).
@@ -102,7 +102,7 @@ assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second
-            ((Zipper.zNode z).reference.up
+            ((Zipper.zFirstRef z).up
                 |> Maybe.andThen
                     (\x ->
                         if x == 0 then
