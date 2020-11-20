@@ -10,7 +10,7 @@ import Zipper
 
 hasReference : Zipper.Zipper -> Bool
 hasReference z =
-    (List.length (Zipper.zNode z).references == 0) && ((Zipper.zNode z).value /= "")
+    (List.isEmpty (Zipper.zNode z).references) && ((Zipper.zNode z).value /= "")
 
 
 isPremise : Zipper.Zipper -> Bool
