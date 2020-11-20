@@ -9,7 +9,7 @@ jsonRef r =
     string r.str
 
 
-jsonNode : { b | id : Int, references : List { a | str : String }, value : String, gui : GUI } -> Value
+jsonNode : Tableau.Node -> Value
 jsonNode { id, value, references, gui } =
     object
         [ ( "id", int id )

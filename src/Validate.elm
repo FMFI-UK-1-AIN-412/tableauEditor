@@ -115,7 +115,7 @@ isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
 
 
-isValidNodeRef : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+isValidNodeRef : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
@@ -130,7 +130,7 @@ isValidNodeRef z =
             Err (syntaxProblem z ("There are too many references."))
 
 
-areValidCloseRefs : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+areValidCloseRefs : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 areValidCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -151,7 +151,7 @@ isValidRef str r z =
 
 areCorrectCloseRefs :
     Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 areCorrectCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -186,7 +186,7 @@ validateRef str r z =
             []
 
 
-validateNodeRef : Zipper.Zipper -> List { msg : String, typ : ProblemType, zip : Zipper.Zipper }
+validateNodeRef : Zipper.Zipper -> List Problem
 validateNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
@@ -203,7 +203,7 @@ validateNodeRef z =
 checkFormula :
     String
     -> Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) (Signed Formula)
+    -> Result (List Problem) (Signed Formula)
 checkFormula str z =
     z
         |> Zipper.zNode
@@ -223,7 +223,7 @@ areCloseRefsComplementary :
     Ref
     -> Ref
     -> Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 areCloseRefsComplementary r1 r2 z =
     Errors.merge2 Formula.Signed.isComplementary
         (checkReffedFormula "First close" r1 z)
@@ -233,7 +233,7 @@ areCloseRefsComplementary r1 r2 z =
 
 isCorrectRule :
     ( Tableau, Zipper.BreadCrumbs )
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 isCorrectRule (( t, bs ) as z) =
     case bs of
         (Zipper.AlphaCrumb _) :: _ ->
@@ -323,19 +323,19 @@ validateAlphaRule z =
         |> Result.map (always z)
 
 
-validateBetaRuleLeft : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+validateBetaRuleLeft : Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateBetaRuleLeft z =
     validateBeta z (z |> Zipper.up |> Zipper.right)
 
 
-validateBetaRuleRight : Zipper.Zipper -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+validateBetaRuleRight : Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateBetaRuleRight z =
     validateBeta z (z |> Zipper.up |> Zipper.left)
 
 
-isPointingOnSelf : Zipper.Zipper -> Bool --rozdelit na first a second
-isPointingOnSelf this =
-    case this |> Zipper.zFirstRef |> .up of
+isPointingOnSelf : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> Bool
+isPointingOnSelf extractRef this =
+    case this |> extractRef |> .up of
         Just 0 ->
             True
 
@@ -356,7 +356,7 @@ checkIsPointingOnSelf pred x z =
 validateBeta :
     Zipper.Zipper
     -> Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 validateBeta this other =
     let
         ft =
@@ -383,7 +383,7 @@ validateBeta this other =
                     |> Result.map (always this)
                     |> Result.andThen
                         (checkIsPointingOnSelf
-                            isPointingOnSelf
+                            (isPointingOnSelf Zipper.zFirstRef)
                             (semanticsProblem this "β can not be pointing on itself")
                         )
                     |> Result.andThen (\z -> getReffedSignedFormula z)
@@ -402,7 +402,7 @@ validateBeta this other =
 betasHaveSameRef :
     Zipper.Zipper
     -> Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 betasHaveSameRef this other =
     let
         -- The invalid refs will be reported already
@@ -563,7 +563,7 @@ isSubstituable substitution new original =
 
 validateGammaRule :
     Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateGammaRule z =
     if List.length (Zipper.zNode z).references /= 1 then
         Err (semanticsProblem z "γ must have one reference")
@@ -578,7 +578,7 @@ validateGammaRule z =
         |> Result.map (always z)
         |> Result.andThen
             (checkIsPointingOnSelf
-                isPointingOnSelf
+                (isPointingOnSelf Zipper.zFirstRef)
                 (semanticsProblem z "γ can not be pointing on itself")
             )
         |> Result.andThen (\z1 -> getReffedSignedFormula z1)
@@ -700,7 +700,7 @@ getReffedSignedFormula z =
 
 validateDeltaRule :
     Zipper.Zipper
-    -> Result (List { msg : String, typ : ProblemType, zip : Zipper.Zipper }) ( Tableau, Zipper.BreadCrumbs )
+    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateDeltaRule z =
     if List.length (Zipper.zNode z).references /= 1 then
         Err (semanticsProblem z "Delta must have one reference")
@@ -715,7 +715,7 @@ validateDeltaRule z =
         |> Result.map (always z)
         |> Result.andThen
             (checkIsPointingOnSelf
-                isPointingOnSelf
+                (isPointingOnSelf Zipper.zFirstRef)
                 (semanticsProblem z "delta can not be pointing on itself")
             )
         |> Result.andThen (\z1 -> getReffedSignedFormula z1)
