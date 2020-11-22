@@ -221,8 +221,8 @@ fixRefs =
 -- Na kazdy vrchol zavolame najskor fixNodeRef a potom fixCloseRefs
 
 
-getFixedRef : Zipper -> Ref -> Ref
-getFixedRef z ref =
+getFixedRef : Ref -> Zipper -> Ref
+getFixedRef ref z =
     case ref.up of
         Nothing ->
             { ref | str = "" }
@@ -235,7 +235,7 @@ fixNodeRef : Zipper -> Zipper
 fixNodeRef z =
     modifyNode
         (\({node} as tableau) ->
-            { tableau | node = { node | references = List.map (getFixedRef z) node.references } }
+            { tableau | node = { node | references = List.map (\ref -> getFixedRef ref z) node.references } }
         )
         z
 
@@ -254,7 +254,7 @@ fixClosedRefs z =
                 in
                 case ext of
                     Closed ref1 ref2 ->
-                        Tableau node (Closed (getFixedRef z ref1) (getFixedRef z ref2))
+                        Tableau node (Closed (getFixedRef ref1 z) (getFixedRef ref2 z))
 
                     _ ->
                         t
