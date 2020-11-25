@@ -9,12 +9,12 @@ jsonRef r =
     string r.str
 
 
-jsonNode : { b | id : Int, reference : { a | str : String }, value : String, gui : GUI } -> Value
-jsonNode { id, value, reference, gui } =
+jsonNode : Tableau.Node -> Value
+jsonNode { id, value, references, gui } =
     object
         [ ( "id", int id )
         , ( "value", string value )
-        , ( "reference", jsonRef reference )
+        , ( "references", list jsonRef references )
         ]
 
 
@@ -72,6 +72,11 @@ jsonTblList tableau =
                 ++ jsonNodeList tableau.node
                 ++ [ ( "child", jsonTableau t ) ]
                 ++ encodeSubstitution s
+
+        Refl t ->
+            [ ( "type", string "refl" ) ]
+                ++ jsonNodeList tableau.node
+                ++ [ ( "child", jsonTableau t ) ]
 
 
 jsonTableau : Tableau -> Value

@@ -5,6 +5,7 @@ import Formula
 import Formula.Parser
 import Tableau exposing (..)
 import Formula.Signed 
+import Html exposing (table)
 
 
 
@@ -17,6 +18,7 @@ type Crumb
     | BetaRightCrumb Node Tableau
     | GammaCrumb Node Tableau.Substitution
     | DeltaCrumb Node Tableau.Substitution
+    | ReflCrumb Node
 
 
 type alias BreadCrumbs =
@@ -57,6 +59,9 @@ children z =
         Delta _ _ ->
             [ down z ]
 
+        Refl _ ->
+            [down z]
+
 
 down : Zipper -> Zipper
 down ( t, bs ) =
@@ -69,6 +74,9 @@ down ( t, bs ) =
 
         Delta subtableau substitution ->
             ( subtableau, DeltaCrumb t.node substitution :: bs )
+
+        Refl subt ->
+            ( subt, ReflCrumb t.node :: bs )
 
         _ ->
             ( t, bs )
@@ -115,6 +123,9 @@ up ( t, bs ) =
 
         (DeltaCrumb n subst) :: bss ->
             ( Tableau n (Delta t subst), bss )
+
+        (ReflCrumb n) :: bss ->
+            ( Tableau n (Refl t), bss )
 
         [] ->
             ( t, bs )
@@ -197,6 +208,9 @@ zWalkPost f (( t, bs ) as z) =
         Delta _ subst ->
             z |> down |> zWalkPost f |> up |> f
 
+        Refl _ ->
+            z |> down |> zWalkPost f |> up |> f
+
 
 fixRefs : Zipper -> Zipper
 fixRefs =
@@ -220,12 +234,8 @@ getFixedRef ref z =
 fixNodeRef : Zipper -> Zipper
 fixNodeRef z =
     modifyNode
-        (\t ->
-            let
-                nodetmp =
-                    t.node
-            in
-            { t | node = { nodetmp | reference = getFixedRef nodetmp.reference z } }
+        (\({node} as tableau) ->
+            { tableau | node = { node | references = List.map (\ref -> getFixedRef ref z) node.references } }
         )
         z
 
@@ -317,6 +327,16 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
 
+        Refl t ->
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 t (num + 1)
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (Refl new_tableau), num1 )
+
         Closed r1 r2 ->
             let
                 node =
@@ -328,15 +348,11 @@ renumber2 tableau num =
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
 
-modifyRef : Ref -> Zipper -> Zipper
-modifyRef ref z =
+modifyRef : List Ref -> Zipper -> Zipper
+modifyRef refs z =
     modifyNode
-        (\tableau ->
-            let
-                nodetmp =
-                    tableau.node
-            in
-            { tableau | node = { nodetmp | reference = ref } }
+        (\({node} as tableau) ->
+            { tableau | node = {node | references = refs } }
         )
         z
 
@@ -359,8 +375,8 @@ findAbove ref ( tableau, bs ) =
                 Nothing
 
 
-getRef : String -> Zipper -> Ref
-getRef ref z =
+getRef : Zipper -> String -> Ref
+getRef z ref =
     { str = ref
     , up =
         ref
@@ -373,6 +389,26 @@ getReffed : Ref -> Zipper -> Maybe Zipper
 getReffed r z =
     r.up
         |> Maybe.map (\a -> above a z)
+
+
+zFirstRef : Zipper -> Ref
+zFirstRef z = 
+    case z |> zNode |> .references of
+        x :: xs ->
+            x
+
+        _ ->
+            Tableau.defRef
+
+
+zSecondRef : Zipper -> Ref
+zSecondRef z = 
+    case z |> zNode |> .references of
+        x0 :: x1 :: xs ->
+            x1
+
+        _ ->
+            Tableau.defRef
 
 
 setPair : Int -> Ref -> Ref -> Ref -> ( Ref, Ref )
@@ -419,6 +455,11 @@ renumberJusts tableau f lengthOfPathFromFather =
             Tableau
                 tableau.node
                 (Delta (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
+
+        Refl t ->
+            Tableau
+                tableau.node
+                (Refl (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
         Open ->
             tableau
@@ -468,28 +509,30 @@ renumberJustInRefWhenExpanding ref lengthOfPathFromFather =
 
 renumberJust : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJust t f lengthOfPathFromFather =
-    case t.node.reference.up of
-        Just 0 ->
-            t
+    let
+        func ref = 
+            case ref.up of
+                Just 0 ->
+                    ref
+                Just x ->
+                    f ref lengthOfPathFromFather
+                Nothing ->
+                    ref
+    in
+    let
+        oldReferences =
+            t.node.references
 
-        Just x ->
-            let
-                oldReference =
-                    t.node.reference
+        oldNode =
+            t.node
 
-                oldNode =
-                    t.node
+        newNode =
+            { oldNode | references = List.map func oldReferences }
 
-                newNode =
-                    { oldNode | reference = f oldReference lengthOfPathFromFather }
-
-                newTableau =
-                    { t | node = newNode }
-            in
-            newTableau
-
-        Nothing ->
-            t
+        newTableau =
+            { t | node = newNode }
+    in
+    newTableau
 
 
 closeControls : Node -> Node
@@ -504,18 +547,14 @@ closeControls oldNode =
 setFormula : String -> Zipper -> Zipper
 setFormula text =
     modifyNode
-        (\tableau ->
-            let
-                oldNode =
-                    tableau.node
-            in
-            { tableau | node = { oldNode | value = text, formula = Formula.Parser.parseSigned text } }
+        (\({node} as tableau) ->
+            { tableau | node = { node | value = text, formula = Formula.Parser.parseSigned text } }
         )
 
 
-setRef : String -> Zipper -> Zipper
-setRef new z =
-    z |> modifyRef (getRef new z)
+setRefs : String -> Zipper -> Zipper
+setRefs new z =
+    z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
 
 
 extendAlpha : Zipper -> Zipper
@@ -538,6 +577,9 @@ extendAlpha z =
 
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Delta t s)))
+
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Refl t)))
 
                     Closed r1 r2 ->
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Closed r1 r2)))
@@ -565,6 +607,9 @@ extendBeta z =
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
 
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Refl t)) (Tableau defNode Open))
+
                     _ ->
                         tableau
             )
@@ -591,6 +636,9 @@ extendGamma z =
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Delta t s)) defSubstitution)
 
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Refl t)) defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -616,6 +664,37 @@ extendDelta z =
 
                     Delta t s ->
                         Tableau (closeControls tableau.node) (Delta (Tableau defNode (Delta t s)) defSubstitution)
+
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Refl t)) defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+
+extendRefl : Zipper -> Zipper
+extendRefl z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode Open))
+
+                    Alpha t ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Alpha t)))
+
+                    Beta lt rt ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Beta lt rt)))
+
+                    Gamma t s ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Gamma t s)))
+
+                    Delta t s ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Delta t s)))
+
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Refl t)))
 
                     _ ->
                         tableau
@@ -661,6 +740,9 @@ deleteMe (( t, fatherbs ) as zip) =
                         st
 
                     Delta st s ->
+                        st
+
+                    Refl st ->
                         st
             )
             zip
@@ -719,6 +801,9 @@ deleteMe (( t, fatherbs ) as zip) =
                             Delta st s ->
                                 Tableau tableau.node st.ext
 
+                            Refl st ->
+                                Tableau tableau.node st.ext
+
                             _ ->
                                 tableau
                     )
@@ -744,7 +829,7 @@ setClosed which newRefStr z =
                 Closed r1 r2 ->
                     let
                         newRef =
-                            setPair which (z |> getRef newRefStr) r1 r2
+                            setPair which (newRefStr |> getRef z) r1 r2
                     in
                     Tableau tableau.node (Closed (Tuple.first newRef) (Tuple.second newRef))
 
@@ -864,6 +949,9 @@ changeToAlpha z =
                     Delta t s ->
                         Tableau tableau.node (Alpha t)
 
+                    Refl t ->
+                        Tableau tableau.node (Alpha t)
+
                     _ ->
                         tableau
             )
@@ -887,6 +975,9 @@ changeToBeta z =
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     Delta t s ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    Refl t ->
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     _ ->
@@ -921,6 +1012,9 @@ changeToGamma z =
                     Delta t s ->
                         Tableau tableau.node (Gamma t s)
 
+                    Refl t ->
+                        Tableau tableau.node (Gamma t defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -952,6 +1046,44 @@ changeToDelta z =
 
                     Gamma t s ->
                         Tableau tableau.node (Delta t s)
+
+                    Refl t ->
+                        Tableau tableau.node (Delta t defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToRefl : Zipper -> Zipper
+changeToRefl z =
+    if (z |> up) == z then
+        z
+
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (Refl t)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Refl rt)
+
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Refl lt)
+
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Refl t)
+
+                    Delta t s ->
+                        Tableau tableau.node (Refl t)
 
                     _ ->
                         tableau
@@ -993,6 +1125,9 @@ prettify t =
 
                     Delta tbl subs ->
                         Tableau (tableau.node |> prettifyNode) (Delta (prettify tbl) subs)
+
+                    Refl tbl ->
+                        Tableau (tableau.node |> prettifyNode) (Refl (prettify tbl))
 
                     Open ->
                         Tableau (tableau.node |> prettifyNode) Open

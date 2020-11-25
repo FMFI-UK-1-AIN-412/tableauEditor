@@ -55,7 +55,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , reference = { str = "1", up = Just 0 }
+                , references = [{ str = "1", up = Just 0 }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -98,6 +98,7 @@ type Msg
     | MakeOpen Zipper.Zipper
     | ExpandGamma Zipper.Zipper
     | ExpandDelta Zipper.Zipper
+    | ExpandRefl Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
@@ -105,6 +106,7 @@ type Msg
     | ChangeToBeta Zipper.Zipper
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
+    | ChangeToRefl Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -223,8 +225,11 @@ simpleUpdate msg model =
             ExpandDelta z ->
                 { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
+            ExpandRefl z ->
+                {model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
             ChangeRef z new ->
-                { model | tableau = z |> Zipper.setRef new |> top }
+                { model | tableau = z |> Zipper.setRefs new |> top }
 
             Delete z ->
                 { model | tableau = z |> Zipper.delete |> topRenumbered }
@@ -269,6 +274,9 @@ simpleUpdate msg model =
 
             ChangeToDelta z ->
                 { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
+
+            ChangeToRefl z ->
+                { model | tableau = z |> Zipper.changeToRefl |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -390,11 +398,12 @@ viewNodeInputs additional z =
                     , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
                     , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
                     , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
+                    , li [] [ button [ onClick (ChangeToRefl z) ] [ text "Change to Reflexivity" ] ]
                     ]
                 ]
             :: text "["
             :: autoSizeInput
-                (Zipper.zNode z).reference.str
+                (Tableau.refsToString (Zipper.zNode z).references)
                 [ class "textInputReference"
                 , onInput <| ChangeRef z
                 , class (problemsClass <| Validate.validateNodeRef z)
@@ -437,6 +446,8 @@ viewRuleType z =
                 text "γ"
             Delta _ _ ->
                 text "δ"
+            Refl _ ->
+                text "Reflexivity"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -479,6 +490,9 @@ viewChildren z =
         Tableau.Delta t subs ->
             viewDelta z
 
+        Tableau.Refl t ->
+            viewRefl z
+
 
 viewAlpha : Zipper.Zipper -> Html Msg
 viewAlpha z =
@@ -501,6 +515,11 @@ viewGamma z =
 viewDelta : Zipper.Zipper -> Html Msg
 viewDelta z =
     div [ class "delta" ] [ viewSubsNode (Zipper.down z) ]
+
+
+viewRefl : Zipper.Zipper -> Html Msg
+viewRefl z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ] --zmenit class monzo
 
 
 viewOpen : Zipper.Zipper -> Html Msg
@@ -590,6 +609,7 @@ viewControls ( ( t, _ )  as z ) =
                             , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
                             , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
                             , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
+                            , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexiviy" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]

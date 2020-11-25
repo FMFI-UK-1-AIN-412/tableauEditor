@@ -10,13 +10,18 @@ import Zipper
 
 hasReference : Zipper.Zipper -> Bool
 hasReference z =
-    ((Zipper.zNode z).reference.str == "") && ((Zipper.zNode z).value /= "")
+    (List.isEmpty (Zipper.zNode z).references) && ((Zipper.zNode z).value /= "")
 
 
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
-    ((Zipper.zNode z).id |> String.fromInt) == (Zipper.zNode z).reference.str
-
+    case (Zipper.up z) |> Zipper.zTableau |> .ext of
+        Tableau.Alpha _ ->
+            List.length (Zipper.zNode z).references == 0
+        
+        _ ->
+            False
+    
 
 {-| Like `Result.map2` but merges errors (which must be lists).
 -}
@@ -86,6 +91,11 @@ isClosed z =
                 (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
+        Tableau.Refl t ->
+            merge2 second
+                (Validate.isCorrectNode z)
+                (isClosed (Zipper.down z))
+
         Tableau.Open ->
             Validate.isCorrectNode z |> Result.map (always False)
 
@@ -97,7 +107,7 @@ assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second
-            ((Zipper.zNode z).reference.up
+            ((Zipper.zFirstRef z).up
                 |> Maybe.andThen
                     (\x ->
                         if x == 0 then
