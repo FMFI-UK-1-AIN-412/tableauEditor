@@ -36,7 +36,7 @@ tableauExample =
     { node =
         { id = 1
         , value = ""
-        , reference = { str = "1", up = Just 0 }
+        , references = [{ str = "1", up = Just 0 }]
         , formula = Formula.Parser.parseSigned ""
         , gui = defGUI
         }
@@ -52,7 +52,7 @@ tableauWithAlpha =
     { node =
         { id = 1
         , value = ""
-        , reference = { str = "1", up = Just 0 }
+        , references = [{ str = "1", up = Just 0 }]
         , formula = Formula.Parser.parseSigned ""
         , gui = { controlsShown = False }
         }
@@ -61,7 +61,7 @@ tableauWithAlpha =
             { node =
                 { id = 1
                 , value = ""
-                , reference = { str = "", up = Nothing }
+                , references = [{ str = "", up = Nothing }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -78,7 +78,7 @@ zipperWithAplhaDown =
     ( { node =
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , references = [{ str = "", up = Nothing }]
             , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
@@ -87,7 +87,7 @@ zipperWithAplhaDown =
     , [ AlphaCrumb
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -99,7 +99,7 @@ zipperWithAlphaDownBetaLeft =
     ( { node =
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , references = [{ str = "", up = Nothing }]
             , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
@@ -108,14 +108,14 @@ zipperWithAlphaDownBetaLeft =
     , [ BetaLeftCrumb
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , references = [{ str = "", up = Nothing }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
             { node =
                 { id = 1
                 , value = ""
-                , reference = { str = "", up = Nothing }
+                , references = [{ str = "", up = Nothing }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -124,7 +124,7 @@ zipperWithAlphaDownBetaLeft =
       , AlphaCrumb
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -136,7 +136,7 @@ zipperOnlyAlphaOfRightBeta =
     ( { node =
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , references = [{ str = "", up = Nothing }]
             , formula = Formula.Parser.parseSigned ""
             , gui = defGUI
             }
@@ -145,21 +145,21 @@ zipperOnlyAlphaOfRightBeta =
     , [ AlphaCrumb
             { id = 1
             , value = ""
-            , reference = { str = "", up = Nothing }
+            , references = [{ str = "", up = Nothing }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
       , BetaRightCrumb
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
             { node =
                 { id = 1
                 , value = ""
-                , reference = { str = "", up = Nothing }
+                , references = [{ str = "", up = Nothing }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -173,7 +173,7 @@ onlyAlphaOfRightBetaRenumbered =
     { node =
         { id = 1
         , value = ""
-        , reference = { str = "1", up = Just 0 }
+        , references = [{ str = "1", up = Just 0 }]
         , formula = Formula.Parser.parseSigned ""
         , gui = { controlsShown = False }
         }
@@ -182,7 +182,7 @@ onlyAlphaOfRightBetaRenumbered =
             { node =
                 { id = 2
                 , value = ""
-                , reference = { str = "", up = Nothing }
+                , references = [{ str = "", up = Nothing }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -191,7 +191,7 @@ onlyAlphaOfRightBetaRenumbered =
             { node =
                 { id = 3
                 , value = ""
-                , reference = { str = "", up = Nothing }
+                , references = [{ str = "", up = Nothing }]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = { controlsShown = False }
                 }
@@ -200,7 +200,7 @@ onlyAlphaOfRightBetaRenumbered =
                     { node =
                         { id = 4
                         , value = ""
-                        , reference = { str = "", up = Nothing }
+                        , references = [{ str = "", up = Nothing }]
                         , formula = Formula.Parser.parseSigned ""
                         , gui = defGUI
                         }
@@ -223,7 +223,7 @@ zipperZWalkPostResult =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -232,7 +232,7 @@ zipperZWalkPostResult =
                 { node =
                     { id = 2
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = { controlsShown = False }
                     }
@@ -241,7 +241,7 @@ zipperZWalkPostResult =
                         { node =
                             { id = 3
                             , value = ""
-                            , reference = { str = "", up = Nothing }
+                            , references = [{ str = "", up = Nothing }]
                             , formula = Formula.Parser.parseSigned ""
                             , gui = { controlsShown = False }
                             }
@@ -250,7 +250,7 @@ zipperZWalkPostResult =
                                 { node =
                                     { id = 4
                                     , value = ""
-                                    , reference = { str = "", up = Nothing }
+                                    , references = [{ str = "", up = Nothing }]
                                     , formula = Formula.Parser.parseSigned ""
                                     , gui = defGUI
                                     }
@@ -260,7 +260,7 @@ zipperZWalkPostResult =
                         { node =
                             { id = 5
                             , value = ""
-                            , reference = { str = "", up = Nothing }
+                            , references = [{ str = "", up = Nothing }]
                             , formula = Formula.Parser.parseSigned ""
                             , gui = { controlsShown = False }
                             }
@@ -269,7 +269,7 @@ zipperZWalkPostResult =
                                 { node =
                                     { id = 6
                                     , value = ""
-                                    , reference = { str = "", up = Nothing }
+                                    , references = [{ str = "", up = Nothing }]
                                     , formula = Formula.Parser.parseSigned ""
                                     , gui = { controlsShown = False }
                                     }
@@ -278,7 +278,7 @@ zipperZWalkPostResult =
                                         { node =
                                             { id = 7
                                             , value = ""
-                                            , reference = { str = "", up = Nothing }
+                                            , references = [{ str = "", up = Nothing }]
                                             , formula = Formula.Parser.parseSigned ""
                                             , gui = defGUI
                                             }
@@ -288,7 +288,7 @@ zipperZWalkPostResult =
                                 { node =
                                     { id = 8
                                     , value = ""
-                                    , reference = { str = "", up = Nothing }
+                                    , references = [{ str = "", up = Nothing }]
                                     , formula = Formula.Parser.parseSigned ""
                                     , gui = defGUI
                                     }
@@ -308,7 +308,7 @@ testReferenceRewritingResult =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -317,7 +317,7 @@ testReferenceRewritingResult =
                 { node =
                     { id = 2
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
@@ -331,7 +331,7 @@ fixRefsTest =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -340,7 +340,7 @@ fixRefsTest =
                 { node =
                     { id = 2
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
@@ -354,7 +354,7 @@ fixRefsTestResult =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -363,7 +363,7 @@ fixRefsTestResult =
                 { node =
                     { id = 2
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
@@ -377,7 +377,7 @@ gammaExampleResult =
         { node =
             { id = 1
             , value = ""
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
@@ -386,7 +386,7 @@ gammaExampleResult =
                 { node =
                     { id = 1
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = defGUI
                     }
@@ -411,7 +411,7 @@ validateGammaSubstituteFunction =
         { node =
             { id = 1
             , value = "T \\forall x P(f(x))"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T \\forall x P(f(x))"
             , gui = { controlsShown = False }
             }
@@ -420,7 +420,7 @@ validateGammaSubstituteFunction =
                 { node =
                     { id = 2
                     , value = "T P(f(Diana))"
-                    , reference = { str = "1", up = Just 1 }
+                    , references = [{ str = "1", up = Just 1 }]
                     , formula = Formula.Parser.parseSigned "T P(f(Diana))"
                     , gui = defGUI
                     }
@@ -435,7 +435,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
         { node =
             { id = 1
             , value = "T \\forall x P(x, k)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T \\forall x P(x, k)"
             , gui = { controlsShown = False }
             }
@@ -444,7 +444,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
-                    , reference = { str = "2", up = Just 0 }
+                    , references = [{ str = "2", up = Just 0 }]
                     , formula = Formula.Parser.parseSigned "T \\forall z \\exists p Z(p, f(z))"
                     , gui = { controlsShown = False }
                     }
@@ -453,7 +453,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                         { node =
                             { id = 3
                             , value = "T \\exists p Z(p, f(k))"
-                            , reference = { str = "2", up = Just 1 }
+                            , references = [{ str = "2", up = Just 1 }]
                             , formula = Formula.Parser.parseSigned "T \\exists p Z(p, f(k))"
                             , gui = defGUI
                             }
@@ -469,7 +469,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
         { node =
             { id = 1
             , value = "T \\forall x P(x, k)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T \\forall x P(x, k)"
             , gui = { controlsShown = False }
             }
@@ -478,7 +478,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
-                    , reference = { str = "2", up = Just 0 }
+                    , references = [{ str = "2", up = Just 0 }]
                     , formula = Formula.Parser.parseSigned "T \\forall z \\exists p Z(p, f(z))"
                     , gui = { controlsShown = False }
                     }
@@ -487,7 +487,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                         { node =
                             { id = 3
                             , value = "T P(z, k)"
-                            , reference = { str = "1", up = Just 2 }
+                            , references = [{ str = "1", up = Just 2 }]
                             , formula = Formula.Parser.parseSigned "T P(z, k)"
                             , gui = defGUI
                             }
@@ -503,7 +503,7 @@ validateRenumberingAdding =
         { node =
             { id = 1
             , value = "T (a \\/ b)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T (a \\/ b)"
             , gui = { controlsShown = True }
             }
@@ -512,7 +512,7 @@ validateRenumberingAdding =
                 { node =
                     { id = 2
                     , value = "T (a /\\ (b \\/ c))"
-                    , reference = { str = "2", up = Just 0 }
+                    , references = [{ str = "2", up = Just 0 }]
                     , formula = Formula.Parser.parseSigned "T (a /\\ b)"
                     , gui = { controlsShown = False }
                     }
@@ -521,7 +521,7 @@ validateRenumberingAdding =
                         { node =
                             { id = 3
                             , value = "T (b \\/ c)"
-                            , reference = { str = "2", up = Just 1 }
+                            , references = [{ str = "2", up = Just 1 }]
                             , formula = Formula.Parser.parseSigned "T (b \\/ c)"
                             , gui = { controlsShown = False }
                             }
@@ -530,7 +530,7 @@ validateRenumberingAdding =
                                 { node =
                                     { id = 4
                                     , value = "T a"
-                                    , reference = { str = "1", up = Just 3 }
+                                    , references = [{ str = "1", up = Just 3 }]
                                     , formula = Formula.Parser.parseSigned "T a"
                                     , gui = defGUI
                                     }
@@ -539,7 +539,7 @@ validateRenumberingAdding =
                                 { node =
                                     { id = 4
                                     , value = "T b"
-                                    , reference = { str = "1", up = Just 3 }
+                                    , references = [{ str = "1", up = Just 3 }]
                                     , formula = Formula.Parser.parseSigned "T b"
                                     , gui = defGUI
                                     }
@@ -555,7 +555,7 @@ validateRenumberingAddingResult =
         { node =
             { id = 1
             , value = "T (a \\/ b)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T (a \\/ b)"
             , gui = { controlsShown = False }
             }
@@ -564,7 +564,7 @@ validateRenumberingAddingResult =
                 { node =
                     { id = 2
                     , value = ""
-                    , reference = { str = "", up = Nothing }
+                    , references = [{ str = "", up = Nothing }]
                     , formula = Formula.Parser.parseSigned ""
                     , gui = { controlsShown = True }
                     }
@@ -573,7 +573,7 @@ validateRenumberingAddingResult =
                         { node =
                             { id = 3
                             , value = "T (a /\\ (b \\/ c))"
-                            , reference = { str = "3", up = Just 0 }
+                            , references = [{ str = "3", up = Just 0 }]
                             , formula = Formula.Parser.parseSigned "T (a /\\ b)"
                             , gui = { controlsShown = False }
                             }
@@ -582,7 +582,7 @@ validateRenumberingAddingResult =
                                 { node =
                                     { id = 4
                                     , value = "T (b \\/ c)"
-                                    , reference = { str = "3", up = Just 1 }
+                                    , references = [{ str = "3", up = Just 1 }]
                                     , formula = Formula.Parser.parseSigned "T (b \\/ c)"
                                     , gui = { controlsShown = False }
                                     }
@@ -591,7 +591,7 @@ validateRenumberingAddingResult =
                                         { node =
                                             { id = 5
                                             , value = "T a"
-                                            , reference = { str = "1", up = Just 4 }
+                                            , references = [{ str = "1", up = Just 4 }]
                                             , formula = Formula.Parser.parseSigned "T a"
                                             , gui = defGUI
                                             }
@@ -600,7 +600,7 @@ validateRenumberingAddingResult =
                                         { node =
                                             { id = 6
                                             , value = "T b"
-                                            , reference = { str = "1", up = Just 4 }
+                                            , references = [{ str = "1", up = Just 4 }]
                                             , formula = Formula.Parser.parseSigned "T b"
                                             , gui = defGUI
                                             }
@@ -617,7 +617,7 @@ validateRenumberingDeleting =
         { node =
             { id = 1
             , value = "T (a\\/b)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T (a\\/b)"
             , gui = { controlsShown = False }
             }
@@ -626,7 +626,7 @@ validateRenumberingDeleting =
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
-                    , reference = { str = "2", up = Just 0 }
+                    , references = [{ str = "2", up = Just 0 }]
                     , formula = Formula.Parser.parseSigned "T (b/\\(c\\/a))"
                     , gui = { controlsShown = False }
                     }
@@ -635,7 +635,7 @@ validateRenumberingDeleting =
                         { node =
                             { id = 3
                             , value = "Tb"
-                            , reference = { str = "2", up = Just 1 }
+                            , references = [{ str = "2", up = Just 1 }]
                             , formula = Formula.Parser.parseSigned "T b"
                             , gui = { controlsShown = True }
                             }
@@ -644,7 +644,7 @@ validateRenumberingDeleting =
                                 { node =
                                     { id = 4
                                     , value = "T (c\\/a)"
-                                    , reference = { str = "2", up = Just 2 }
+                                    , references = [{ str = "2", up = Just 2 }]
                                     , formula = Formula.Parser.parseSigned "T (c\\/a)"
                                     , gui = { controlsShown = False }
                                     }
@@ -653,7 +653,7 @@ validateRenumberingDeleting =
                                         { node =
                                             { id = 5
                                             , value = "Tc"
-                                            , reference = { str = "4", up = Just 1 }
+                                            , references = [{ str = "4", up = Just 1 }]
                                             , formula = Formula.Parser.parseSigned "Tc"
                                             , gui = { controlsShown = True }
                                             }
@@ -662,7 +662,7 @@ validateRenumberingDeleting =
                                         { node =
                                             { id = 6
                                             , value = "Ta"
-                                            , reference = { str = "4", up = Just 1 }
+                                            , references = [{ str = "4", up = Just 1 }]
                                             , formula = Formula.Parser.parseSigned "Ta"
                                             , gui = { controlsShown = True }
                                             }
@@ -679,7 +679,7 @@ validateRenumberingDeletingResult =
         { node =
             { id = 1
             , value = "T (a\\/b)"
-            , reference = { str = "1", up = Just 0 }
+            , references = [{ str = "1", up = Just 0 }]
             , formula = Formula.Parser.parseSigned "T (a\\/b)"
             , gui = { controlsShown = False }
             }
@@ -688,7 +688,7 @@ validateRenumberingDeletingResult =
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
-                    , reference = { str = "2", up = Just 0 }
+                    , references = [{ str = "2", up = Just 0 }]
                     , formula = Formula.Parser.parseSigned "T (b/\\(c\\/a))"
                     , gui = { controlsShown = False }
                     }
@@ -697,7 +697,7 @@ validateRenumberingDeletingResult =
                         { node =
                             { id = 3
                             , value = "T (c\\/a)"
-                            , reference = { str = "2", up = Just 1 }
+                            , references = [{ str = "2", up = Just 1 }]
                             , formula = Formula.Parser.parseSigned "T (c\\/a)"
                             , gui = { controlsShown = False }
                             }
@@ -706,7 +706,7 @@ validateRenumberingDeletingResult =
                                 { node =
                                     { id = 4
                                     , value = "Tc"
-                                    , reference = { str = "3", up = Just 1 }
+                                    , references = [{ str = "3", up = Just 1 }]
                                     , formula = Formula.Parser.parseSigned "Tc"
                                     , gui = { controlsShown = True }
                                     }
@@ -715,7 +715,7 @@ validateRenumberingDeletingResult =
                                 { node =
                                     { id = 5
                                     , value = "Ta"
-                                    , reference = { str = "3", up = Just 1 }
+                                    , references = [{ str = "3", up = Just 1 }]
                                     , formula = Formula.Parser.parseSigned "Ta"
                                     , gui = { controlsShown = True }
                                     }

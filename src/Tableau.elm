@@ -62,7 +62,7 @@ defGUI =
 
 defNode : Node
 defNode =
-    { id = 1, value = "", references = [], formula = Formula.Parser.parseSigned "", gui = defGUI }
+    { id = 1, value = "", references = [defRef], formula = Formula.Parser.parseSigned "", gui = defGUI }
 
 
 strRefsToList : String -> List String
