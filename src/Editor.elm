@@ -22,6 +22,7 @@ import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
 import Validate
+import ValidateCommon
 import Zipper exposing (..)
 
 
@@ -659,12 +660,12 @@ problems t =
             ]
 
 
-problemList : List Validate.Problem -> Html Msg
+problemList : List ValidateCommon.Problem -> Html Msg
 problemList pl =
     ul [ class "problemList" ] (List.map problemItem pl)
 
 
-problemItem : Validate.Problem -> Html Msg
+problemItem : ValidateCommon.Problem -> Html Msg
 problemItem pi =
     li [ class (problemClass pi) ]
         [ text "("
@@ -674,12 +675,12 @@ problemItem pi =
         ]
 
 
-errorsClass : Result (List Validate.Problem) a -> String
+errorsClass : Result (List ValidateCommon.Problem) a -> String
 errorsClass =
     Errors.errors >> problemsClass
 
 
-problemsClass : List Validate.Problem -> String
+problemsClass : List ValidateCommon.Problem -> String
 problemsClass pl =
     case pl of
         [] ->
@@ -689,13 +690,13 @@ problemsClass pl =
             problemClass p
 
 
-problemClass : { a | typ : Validate.ProblemType } -> String
+problemClass : { a | typ : ValidateCommon.ProblemType } -> String
 problemClass { typ } =
     case typ of
-        Validate.Syntax ->
+        ValidateCommon.Syntax ->
             "syntaxProblem"
 
-        Validate.Semantics ->
+        ValidateCommon.Semantics ->
             "semanticsProblem"
 
 

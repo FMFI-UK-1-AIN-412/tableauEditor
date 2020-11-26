@@ -1,6 +1,5 @@
 module Validate exposing (..)
 
-
 import Dict
 import Errors
 import Formula exposing (Formula(..))
@@ -12,29 +11,7 @@ import Parser
 import Set
 import Tableau exposing (..)
 import Zipper
-
-
-
-type ProblemType
-    = Syntax
-    | Semantics
-
-
-type alias Problem =
-    { typ : ProblemType
-    , msg : String
-    , zip : Zipper.Zipper
-    }
-
-
-syntaxProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
-syntaxProblem z s =
-    [ { typ = Syntax, msg = s, zip = z } ]
-
-
-semanticsProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
-semanticsProblem z s =
-    [ { typ = Semantics, msg = s, zip = z } ]
+import ValidateCommon exposing(..)
 
 
 -- error : x -> Result x a -> x
@@ -200,25 +177,6 @@ validateNodeRef z =
             syntaxProblem z "There are too many references."
 
 
-checkFormula :
-    String
-    -> Zipper.Zipper
-    -> Result (List Problem) (Signed Formula)
-checkFormula str z =
-    z
-        |> Zipper.zNode
-        |> .formula
-        |> Result.mapError (\_ -> semanticsProblem z (str ++ " is invalid."))
-
-
-checkReffedFormula : String -> Tableau.Ref -> Zipper.Zipper -> Result (List Problem) (Signed Formula)
-checkReffedFormula str r z =
-    z
-        |> Zipper.getReffed r
-        |> Result.fromMaybe (semanticsProblem z (str ++ " reference is invalid."))
-        |> Result.andThen (checkFormula (str ++ " referenced formula"))
-
-
 areCloseRefsComplementary :
     Ref
     -> Ref
@@ -268,36 +226,6 @@ isCorrectRule (( t, bs ) as z) =
 -- Top of the tableau, this must be a premise
 
 
-makeSemantic : List { b | typ : ProblemType } -> List { b | typ : ProblemType }
-makeSemantic =
-    List.map (\p -> { p | typ = Semantics })
-
-
-resultFromBool : a -> x -> Bool -> Result x a
-resultFromBool a x b =
-    if b then
-        Ok a
-
-    else
-        Err x
-
-
-
-{- Check the value using a predicate.
-   Pass the value along if predicate returns true,
-   return the given error otherwise
--}
-
-
-checkPredicate : (a -> Bool) -> x -> a -> Result x a
-checkPredicate pred x a =
-    if pred a then
-        Ok a
-
-    else
-        Err x
-
-
 validateAlphaRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validateAlphaRule z =
     if List.length (Zipper.zNode z).references /= 1 then
@@ -333,26 +261,6 @@ validateBetaRuleRight z =
     validateBeta z (z |> Zipper.up |> Zipper.left)
 
 
-isPointingOnSelf : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> Bool
-isPointingOnSelf extractRef this =
-    case this |> extractRef |> .up of
-        Just 0 ->
-            True
-
-        _ ->
-            False
-
-
-checkIsPointingOnSelf : (Zipper.Zipper -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
-checkIsPointingOnSelf pred x z =
-    case pred z of
-        True ->
-            Err x
-
-        False ->
-            Ok z
-
-
 validateBeta :
     Zipper.Zipper
     -> Zipper.Zipper
@@ -386,7 +294,7 @@ validateBeta this other =
                             (isPointingOnSelf Zipper.zFirstRef)
                             (semanticsProblem this "β can not be pointing on itself")
                         )
-                    |> Result.andThen (\z -> getReffedSignedFormula z)
+                    |> Result.andThen (\z -> getReffedSignedFormula Zipper.zFirstRef z)
                     |> Result.andThen
                         (checkPredicate Formula.Signed.isBeta
                             (semanticsProblem this "Referenced formula is not β")
@@ -581,7 +489,7 @@ validateGammaRule z =
                 (isPointingOnSelf Zipper.zFirstRef)
                 (semanticsProblem z "γ can not be pointing on itself")
             )
-        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
+        |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substituable
@@ -683,21 +591,6 @@ checkNewVariable pred x z =
             Err x
 
 
-getReffedSignedFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
-getReffedSignedFormula z =
-    case Zipper.getReffed (Zipper.zFirstRef z) z of
-        Just rz ->
-            case rz |> Zipper.zNode |> .formula of
-                Ok sf ->
-                    Ok sf
-
-                Err _ ->
-                    Err (syntaxProblem z "reffed formula incorrectly parsed")
-
-        Nothing ->
-            Err (semanticsProblem z "no reffed formula")
-
-
 validateDeltaRule :
     Zipper.Zipper
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
@@ -718,7 +611,7 @@ validateDeltaRule z =
                 (isPointingOnSelf Zipper.zFirstRef)
                 (semanticsProblem z "delta can not be pointing on itself")
             )
-        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
+        |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map (always z)
         |> Result.andThen
             -- checking existing variable above + if new constant is variable or function
@@ -728,7 +621,7 @@ validateDeltaRule z =
                     "Your new variable can't be empty or function."
                 )
             )
-        |> Result.andThen (\z1 -> getReffedSignedFormula z1)
+        |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
             -- checking substitutable
@@ -865,7 +758,7 @@ checkIsRefl z =
              False
 
         _ ->
-            False
+            False       
 
 
 validateReflRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper

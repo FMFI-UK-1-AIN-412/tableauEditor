@@ -5,6 +5,7 @@ import Formula.Signed exposing (Signed)
 import Result
 import Tableau
 import Validate
+import ValidateCommon
 import Zipper
 
 
@@ -67,7 +68,7 @@ second =
     \a b -> Tuple.second ( a, b )
 
 
-isClosed : Zipper.Zipper -> Result (List Validate.Problem) Bool
+isClosed : Zipper.Zipper -> Result (List ValidateCommon.Problem) Bool
 isClosed z =
     case (Zipper.zTableau z).ext of
         Tableau.Alpha t ->
