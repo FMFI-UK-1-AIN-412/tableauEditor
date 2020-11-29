@@ -3,13 +3,15 @@ module Example exposing (..)
 import Dict
 import Editor exposing (topRenumbered)
 import Expect exposing (Expectation)
-import Formula
+import Formula exposing (Formula(..))
 import Formula.Parser
+import Formula.Signed exposing (Signed(..))
 import Term exposing (Term(..))
 import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
 import Validate
+import ValidateLeibnitz
 import Zipper exposing (..)
 
 
@@ -845,5 +847,60 @@ suiteZipper =
                         |> topRenumbered
                         |> zipper
                     )
+            )
+        ]
+
+suiteLeibnitz : Test
+suiteLeibnitz =
+    describe "Replacing term with variable"
+        [ test "replace variable with variable in eq atom" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Var "a") (Var "[]")
+                        (T (EqAtom (Var "b") (Var "a")))
+                        (T (EqAtom (Var "b") (Var "c")))
+                        zipperExample
+                    ) 
+                    (Ok (T (EqAtom (Var "b") (Var "[]")))) 
+            )
+        , test "replace variable with variable in predicate atom" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                        (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
+                        (T (PredAtom "p" [Fun "f"[Var "b", Var "x"]] ))
+                        zipperExample
+                    ) 
+                    (Ok (T (PredAtom "p" [Fun "f"[Var "b", Var "[]"]] )))
+            )
+        , test "replace function with variable in predicate atom" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                        (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
+                        (T (PredAtom "p" [Fun "z"[Var "b", Var "b"]] ))
+                        zipperExample
+                    ) 
+                    (Ok (T (PredAtom "p" [Var "[]"] )))
+            )
+        , test "no change" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                        (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
+                        (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
+                        zipperExample
+                    ) 
+                    (Ok (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )) 
+            )
+        , test "replace in conjunction" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Var "c") (Var "[]")
+                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "c"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
+                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "x"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "x")) ) )
+                        zipperExample
+                    ) 
+                    (Ok (T (Conj (EqAtom (Fun "f"[Var "b", Var "[]"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "[]")) ) )) 
             )
         ]
