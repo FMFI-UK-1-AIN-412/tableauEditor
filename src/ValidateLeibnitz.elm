@@ -1,4 +1,4 @@
-module ValidateLeibnitz exposing (validateLeibnitzRule)
+module ValidateLeibnitz exposing (validateLeibnitzRule, replaceTermWithVar)
 
 import Dict
 import Errors
