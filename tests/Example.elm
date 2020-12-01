@@ -858,30 +858,30 @@ suiteLeibnitz =
                 Expect.equal
                     (ValidateLeibnitz.replaceTermWithVar (Var "a") (Var "[]")
                         (T (EqAtom (Var "b") (Var "a")))
-                        (T (EqAtom (Var "b") (Var "c")))
+                        (T (EqAtom (Var "x") (Var "c")))
                         zipperExample
                     ) 
                     (Ok (T (EqAtom (Var "b") (Var "[]")))) 
-            )
-        , test "replace variable with variable in predicate atom" 
-            (\() ->
-                Expect.equal
-                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
-                        (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
-                        (T (PredAtom "p" [Fun "f"[Var "b", Var "x"]] ))
-                        zipperExample
-                    ) 
-                    (Ok (T (PredAtom "p" [Fun "f"[Var "b", Var "[]"]] )))
             )
         , test "replace function with variable in predicate atom" 
             (\() ->
                 Expect.equal
                     (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
-                        (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
-                        (T (PredAtom "p" [Fun "z"[Var "b", Var "b"]] ))
+                        (T (PredAtom "p" [Fun "f"[Var "b"]] ))
+                        (T (PredAtom "p" [Fun "f"[Var "b", Var "x"]] ))
                         zipperExample
                     ) 
                     (Ok (T (PredAtom "p" [Var "[]"] )))
+            )
+        , test "replace function with variable in predicate atom 2" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                        (T (PredAtom "p" [Fun "f"[Fun "f"[Var "b"], Var "b"]] ))
+                        (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
+                        zipperExample
+                    ) 
+                    (Ok (T (PredAtom "p" [Fun "f"[Var "[]", Var "b"]] )))
             )
         , test "no change" 
             (\() ->
@@ -897,10 +897,30 @@ suiteLeibnitz =
             (\() ->
                 Expect.equal
                     (ValidateLeibnitz.replaceTermWithVar (Var "c") (Var "[]")
-                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "c"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
-                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "x"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "x")) ) )
+                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "c"]) (Var "x")) (EqAtom (Fun "f"[Var "c"]) (Var "b")) ) )
+                        (T (Conj (EqAtom (Fun "f"[Var "b", Var "x"]) (Var "x")) (EqAtom (Fun "f"[Var "x"]) (Var "x")) ) )
                         zipperExample
                     ) 
-                    (Ok (T (Conj (EqAtom (Fun "f"[Var "b", Var "[]"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "[]")) ) )) 
+                    (Ok (T (Conj (EqAtom (Fun "f"[Var "b", Var "[]"]) (Var "x")) (EqAtom (Fun "f"[Var "[]"]) (Var "b")) ) )) 
+            )
+        , test "replace in for all" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Var "c") (Var "[]")
+                        (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "a", Var "b", Var "c"], Fun "g"[Var "a"] ]))))
+                       (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "a"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "o", Var "o", Var "o"], Fun "h"[Var "a"] ]))))
+                        zipperExample
+                    ) 
+                    (Ok (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "a", Var "b", Var "[]"], Fun "g"[Var "a"] ]))))) 
+            )
+        , test "replace in exists" 
+            (\() ->
+                Expect.equal
+                    (ValidateLeibnitz.replaceTermWithVar (Fun "f"[Var "c", Var "z"]) (Var "[]")
+                        (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "c", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "g"[Var "a"] ]))))
+                       (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "h"[Var "a"] ]))))
+                        zipperExample
+                    ) 
+                    (Ok (T (Exists "x" (Conj (EqAtom (Var "[]") (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "g"[Var "a"] ]))))) 
             )
         ]

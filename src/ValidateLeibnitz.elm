@@ -9,6 +9,7 @@ import Tableau exposing (..)
 import Zipper
 import ValidateCommon exposing(..)
 import Html exposing (th)
+import Html exposing (var)
 
 
 isEquality : Signed Formula -> Bool
@@ -43,12 +44,12 @@ replaceInTerms : Term -> Term -> List Term -> List Term -> Zipper.Zipper -> List
 replaceInTerms term var refTerms currentTerms z =
     case refTerms of
         [] ->
-            refTerms
+            []
         
         refTerm :: rts ->
             case currentTerms of
                 [] ->
-                    refTerms
+                    []
 
                 currentTerm :: cts ->
                     (replaceInTerm term var refTerm currentTerm z) ::
@@ -57,28 +58,23 @@ replaceInTerms term var refTerms currentTerms z =
 
 replaceInTerm : Term -> Term -> Term -> Term -> Zipper.Zipper -> Term
 replaceInTerm term var refTerm currentTerm z =
-    case refTerm of
-        Var refStr ->
-            case currentTerm of
-                Var currentStr ->
-                    if refStr /= currentStr then
-                        var
-                    else 
-                        Var refStr
+    if refTerm == term && refTerm /= currentTerm then  
+        var
+    else
+        case refTerm of
+            Var refStr ->
+                Var refStr
 
-                Fun currentStr currentTerms ->
-                    var
-
-        Fun refStr refTerms ->
-            case currentTerm of
-                Fun currentStr currentTerms ->
-                    if refStr /= currentStr then
+            Fun refStr refTerms ->
+                case currentTerm of
+                    Fun currentStr currentTerms ->
+                        if refStr == currentStr then
+                            Fun refStr (replaceInTerms term var refTerms currentTerms z)
+                        else
+                            Fun refStr refTerms  --nema zmysel nahradzat vnutri funckie ked ma iny nazov
+                    
+                    Var currentStr ->
                         var
-                    else 
-                        Fun refStr (replaceInTerms term var refTerms currentTerms z)
-                
-                Var currentStr ->
-                    var
 
 
 replaceInFormula : Term -> Term -> Formula -> Formula -> Zipper.Zipper -> 
