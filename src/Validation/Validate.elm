@@ -1,4 +1,4 @@
-module Validate exposing (..)
+module Validation.Validate exposing (..)
 
 import Dict
 import Errors
@@ -11,7 +11,7 @@ import Parser
 import Set
 import Tableau exposing (..)
 import Zipper
-import ValidateCommon exposing(..)
+import Validation.Common exposing(..)
 
 
 -- error : x -> Result x a -> x

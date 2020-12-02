@@ -1,4 +1,4 @@
-module ValidateCommon exposing(..)
+module Validation.Common exposing(..)
 
 import Dict
 import Errors
