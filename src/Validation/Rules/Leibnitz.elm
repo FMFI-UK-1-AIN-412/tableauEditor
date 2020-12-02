@@ -68,10 +68,19 @@ replaceInTerm term var refTerm currentTerm z =
                         if refStr == currentStr then
                             Fun refStr (replaceInTerms term var refTerms currentTerms z)
                         else
-                            Fun refStr refTerms  --nema zmysel nahradzat vnutri funckie ked ma iny nazov
+                            Fun refStr refTerms
                     
                     Var currentStr ->
                         var
+
+
+differentStructureError : Zipper.Zipper -> List Problem
+differentStructureError z = 
+    (semanticsProblem z ("The formulas ("
+    ++ String.fromInt (Zipper.getReffed (Zipper.zSecondRef z) z 
+    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0) ++ ")"
+    ++ " and (" ++ String.fromInt (z |> Zipper.zNode >> .id) ++ ")" 
+    ++ " should not have different structure"))
 
 
 replaceInFormula : Term -> Term -> Formula -> Formula -> Zipper.Zipper -> 
@@ -85,7 +94,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInTerms term var refTerms currentTerms z))
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         EqAtom refLt refRt ->
             case currentF of
@@ -95,7 +104,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInTerm term var refRt currentRt z))
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         Neg refSf ->
             case currentF of
@@ -104,7 +113,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf currentSf z) 
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         Conj refSf1 refSf2 ->
             case currentF of
@@ -114,7 +123,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf2 currentSf2 z)
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         Disj refSf1 refSf2 ->
             case currentF of
@@ -124,7 +133,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf2 currentSf2 z)
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         Impl refSf1 refSf2 ->
             case currentF of
@@ -134,7 +143,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf2 currentSf2 z)
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         ForAll refX refSf ->
             case currentF of
@@ -143,7 +152,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf currentSf z) 
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         Exists refX refSf ->
             case currentF of
@@ -152,7 +161,7 @@ replaceInFormula term var refF currentF z =
                     (replaceInFormula term var refSf currentSf z) 
 
                 _ ->
-                    Err (semanticsProblem z "...should only differ in terms")
+                    Err (differentStructureError z)
 
         _ ->
             Err (semanticsProblem z "wrong formula type")
@@ -184,6 +193,13 @@ applyFunToSigned function subst sf =
             |> Result.withDefault (T (Formula.PredAtom "default" []))
 
 
+mapNotSubstitutableError : String -> Zipper.Zipper -> List Problem
+mapNotSubstitutableError err z = 
+    (semanticsProblem z 
+    (String.replace "[]"  ("[] in ("++(String.fromInt(Zipper.getReffed (Zipper.zSecondRef z) z 
+    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0))++ ")") err))
+
+
 checkSubstitutable : Term.Substitution -> Result (List Problem) (Signed Formula) -> Zipper.Zipper
  -> Result (List Problem) Zipper.Zipper
 checkSubstitutable σ replaced z = 
@@ -192,18 +208,18 @@ checkSubstitutable σ replaced z =
             Err problem
         Ok f ->  
             Formula.substitute σ (Formula.Signed.getFormula f)
-            |> Result.mapError (\err -> (semanticsProblem z err))
+            |> Result.mapError (\err -> mapNotSubstitutableError err z)
             |> Result.map (always z)
 
 
 checkValidSubst : Term.Substitution -> Result (List Problem) (Signed Formula) -> Signed Formula
- ->Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+ -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 checkValidSubst σ replaced currentF z = 
     case replaced of 
         Err problem -> 
             Err problem
-        Ok f ->  
-            if applyFunToSigned Formula.substitute σ f == currentF then
+        Ok repl ->  
+            if (applyFunToSigned Formula.substitute σ repl) == currentF then
                 Ok z 
             else
                 Err (semanticsProblem z "Substitution invalid")
