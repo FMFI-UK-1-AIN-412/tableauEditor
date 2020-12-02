@@ -1,4 +1,4 @@
-module Validation.Leibnitz exposing (validateLeibnitzRule, replaceTermWithVar)
+module Validation.Rules.Leibnitz exposing (validate, replaceTermWithVar)
 
 import Dict
 import Formula exposing (Formula(..))
@@ -230,8 +230,8 @@ checkSubsts refEq refF z =
     |> Result.andThen (checkValidSubst σ2 replaced currentF)
 
 
-validateLeibnitzRule : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validateLeibnitzRule z =
+validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate z =
     if List.length (Zipper.zNode z).references /= 2 then
         Err (semanticsProblem z "Leibnitz must have 2 references")
     else

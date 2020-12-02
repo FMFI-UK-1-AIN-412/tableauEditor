@@ -21,7 +21,7 @@ import Helpers.Rules as Rules exposing (..)
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
-import Validation.Validate
+import Validate
 import Validation.Common
 import Zipper exposing (..)
 
@@ -388,7 +388,7 @@ viewNodeInputs additional z =
                     [ ( "textInputFormula", True )
                     , ( "premise", Helper.isPremise z )
                     ]
-                , class (errorsClass <| Validation.Validate.isCorrectFormula z)
+                , class (errorsClass <| Validate.isCorrectFormula z)
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
@@ -407,7 +407,7 @@ viewNodeInputs additional z =
                 (Tableau.refsToString (Zipper.zNode z).references)
                 [ class "textInputReference"
                 , onInput <| ChangeRef z
-                , class (problemsClass <| Validation.Validate.validateNodeRef z)
+                , class (problemsClass <| Validate.validateNodeRef z)
                 ]
             :: text "]"
             :: additional
@@ -540,13 +540,13 @@ viewControls ( ( t, _ )  as z ) =
             Tableau.Closed r1 r2 ->
                 let
                     compl =
-                        Errors.errors <| Validation.Validate.areCloseRefsComplementary r1 r2 z
+                        Errors.errors <| Validate.areCloseRefsComplementary r1 r2 z
 
                     ref1Cls =
-                        problemsClass <| Validation.Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
+                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
 
                     ref2Cls =
-                        problemsClass <| Validation.Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
+                        problemsClass <| Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
                 in
                 [ text "* "
                 , autoSizeInput r1.str
@@ -631,7 +631,7 @@ singleNodeProblems : Zipper -> Html Msg
 singleNodeProblems z =
     let
         errors =
-            Errors.errors <| Validation.Validate.isCorrectNode <| z
+            Errors.errors <| Validate.isCorrectNode <| z
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
@@ -648,7 +648,7 @@ problems : Tableau -> Html Msg
 problems t =
     let
         errors =
-            Errors.errors <| Validation.Validate.isCorrectTableau <| Zipper.zipper <| t
+            Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
     in
     if List.isEmpty errors then
         div [ class "problems" ] []

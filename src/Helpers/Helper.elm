@@ -4,7 +4,7 @@ import Formula exposing (Formula)
 import Formula.Signed exposing (Signed)
 import Result
 import Tableau
-import Validation.Validate
+import Validate
 import Validation.Common
 import Zipper
 
@@ -73,35 +73,35 @@ isClosed z =
     case (Zipper.zTableau z).ext of
         Tableau.Alpha t ->
             merge2 second
-                (Validation.Validate.isCorrectNode z)
+                (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
         Tableau.Beta lt rt ->
             merge3 (\_ b c -> b && c)
-                (Validation.Validate.isCorrectNode z)
+                (Validate.isCorrectNode z)
                 (isClosed (Zipper.left z))
                 (isClosed (Zipper.right z))
 
         Tableau.Gamma t s ->
             merge2 second
-                (Validation.Validate.isCorrectNode z)
+                (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
         Tableau.Delta t s ->
             merge2 second
-                (Validation.Validate.isCorrectNode z)
+                (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
         Tableau.Refl t ->
             merge2 second
-                (Validation.Validate.isCorrectNode z)
+                (Validate.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
         Tableau.Open ->
-            Validation.Validate.isCorrectNode z |> Result.map (always False)
+            Validate.isCorrectNode z |> Result.map (always False)
 
         Tableau.Closed r1 r2 ->
-            Validation.Validate.isCorrectNode z |> Result.map (always True)
+            Validate.isCorrectNode z |> Result.map (always True)
 
 
 assumptions : Zipper.Zipper -> List (Signed Formula)
