@@ -46,7 +46,7 @@ replaceInTerms term var refTerms currentTerms z =
         refTerm :: rts ->
             case currentTerms of
                 [] ->
-                    []
+                    refTerms
 
                 currentTerm :: cts ->
                     (replaceInTerm term var refTerm currentTerm z) ::
