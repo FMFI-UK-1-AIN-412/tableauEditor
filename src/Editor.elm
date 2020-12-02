@@ -21,8 +21,8 @@ import Helpers.Rules as Rules exposing (..)
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
-import Validate
-import ValidateCommon
+import Validation.Validate
+import Validation.Common
 import Zipper exposing (..)
 
 
@@ -388,7 +388,7 @@ viewNodeInputs additional z =
                     [ ( "textInputFormula", True )
                     , ( "premise", Helper.isPremise z )
                     ]
-                , class (errorsClass <| Validate.isCorrectFormula z)
+                , class (errorsClass <| Validation.Validate.isCorrectFormula z)
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
@@ -407,7 +407,7 @@ viewNodeInputs additional z =
                 (Tableau.refsToString (Zipper.zNode z).references)
                 [ class "textInputReference"
                 , onInput <| ChangeRef z
-                , class (problemsClass <| Validate.validateNodeRef z)
+                , class (problemsClass <| Validation.Validate.validateNodeRef z)
                 ]
             :: text "]"
             :: additional
@@ -540,13 +540,13 @@ viewControls ( ( t, _ )  as z ) =
             Tableau.Closed r1 r2 ->
                 let
                     compl =
-                        Errors.errors <| Validate.areCloseRefsComplementary r1 r2 z
+                        Errors.errors <| Validation.Validate.areCloseRefsComplementary r1 r2 z
 
                     ref1Cls =
-                        problemsClass <| Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
+                        problemsClass <| Validation.Validate.validateRef "Invalid close ref. #1" r1 z ++ compl
 
                     ref2Cls =
-                        problemsClass <| Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
+                        problemsClass <| Validation.Validate.validateRef "Invalid close ref. #2" r2 z ++ compl
                 in
                 [ text "* "
                 , autoSizeInput r1.str
@@ -631,7 +631,7 @@ singleNodeProblems : Zipper -> Html Msg
 singleNodeProblems z =
     let
         errors =
-            Errors.errors <| Validate.isCorrectNode <| z
+            Errors.errors <| Validation.Validate.isCorrectNode <| z
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
@@ -648,7 +648,7 @@ problems : Tableau -> Html Msg
 problems t =
     let
         errors =
-            Errors.errors <| Validate.isCorrectTableau <| Zipper.zipper <| t
+            Errors.errors <| Validation.Validate.isCorrectTableau <| Zipper.zipper <| t
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
@@ -660,12 +660,12 @@ problems t =
             ]
 
 
-problemList : List ValidateCommon.Problem -> Html Msg
+problemList : List Validation.Common.Problem -> Html Msg
 problemList pl =
     ul [ class "problemList" ] (List.map problemItem pl)
 
 
-problemItem : ValidateCommon.Problem -> Html Msg
+problemItem : Validation.Common.Problem -> Html Msg
 problemItem pi =
     li [ class (problemClass pi) ]
         [ text "("
@@ -675,12 +675,12 @@ problemItem pi =
         ]
 
 
-errorsClass : Result (List ValidateCommon.Problem) a -> String
+errorsClass : Result (List Validation.Common.Problem) a -> String
 errorsClass =
     Errors.errors >> problemsClass
 
 
-problemsClass : List ValidateCommon.Problem -> String
+problemsClass : List Validation.Common.Problem -> String
 problemsClass pl =
     case pl of
         [] ->
@@ -690,13 +690,13 @@ problemsClass pl =
             problemClass p
 
 
-problemClass : { a | typ : ValidateCommon.ProblemType } -> String
+problemClass : { a | typ : Validation.Common.ProblemType } -> String
 problemClass { typ } =
     case typ of
-        ValidateCommon.Syntax ->
+        Validation.Common.Syntax ->
             "syntaxProblem"
 
-        ValidateCommon.Semantics ->
+        Validation.Common.Semantics ->
             "semanticsProblem"
 
 

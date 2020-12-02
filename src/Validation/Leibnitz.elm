@@ -1,15 +1,12 @@
-module ValidateLeibnitz exposing (validateLeibnitzRule, replaceTermWithVar)
+module Validation.Leibnitz exposing (validateLeibnitzRule, replaceTermWithVar)
 
 import Dict
-import Errors
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
 import Term exposing (Term(..))
 import Tableau exposing (..)
 import Zipper
-import ValidateCommon exposing(..)
-import Html exposing (th)
-import Html exposing (var)
+import Validation.Common exposing(..)
 
 
 isEquality : Signed Formula -> Bool
