@@ -17,6 +17,7 @@ import Validation.Rules.Beta
 import Validation.Rules.Reflexivity
 import Validation.Rules.Gamma
 import Validation.Rules.Delta
+import Validation.Rules.Leibnitz
 
 
 -- error : x -> Result x a -> x
@@ -201,7 +202,7 @@ isCorrectRule (( t, bs ) as z) =
             Validation.Rules.Delta.validate z
 
         (Zipper.ReflCrumb _) :: _ ->
-            Validation.Rules.Reflexivity.validate z
+            Validation.Rules.Leibnitz.validate z
 
         [] ->
             Ok z
