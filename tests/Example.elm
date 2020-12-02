@@ -10,8 +10,9 @@ import Term exposing (Term(..))
 import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
-import Validation.Validate
-import Validation.Leibnitz
+import Validate
+import Validation.Common
+import Validation.Rules.Leibnitz
 import Zipper exposing (..)
 
 
@@ -764,11 +765,11 @@ suiteZipper =
         , test "substitute function in gamma "
             (\() ->
                 Expect.equal
-                    (Validation.Validate.isNewVariableValid
+                    (Validation.Common.isNewVariableValid
                         (validateGammaSubstituteFunction
                             |> Zipper.down
                             |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Validate.makeS
+                            |> Maybe.map Validation.Common.makeS
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
@@ -784,12 +785,12 @@ suiteZipper =
         , test "substitution in gamma - substitute for existing bound above"
             (\() ->
                 Expect.equal
-                    (Validation.Validate.isNewVariableValid
+                    (Validation.Common.isNewVariableValid
                         (validateGammaNewVariableSimilarToExistingBoundAbove
                             |> Zipper.down
                             |> Zipper.down
                             |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Validate.makeS
+                            |> Maybe.map Validation.Common.makeS
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
@@ -806,11 +807,11 @@ suiteZipper =
         , test "substitution in gamma - substitute for existing free above"
             (\() ->
                 Expect.equal
-                    (Validation.Validate.isNewVariableValid
+                    (Validation.Common.isNewVariableValid
                         (validateGammaNewVariableSimilarToExistingFreeAbove
                             |> Zipper.down
                             |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Validate.makeS
+                            |> Maybe.map Validation.Common.makeS
                             |> Maybe.withDefault (Dict.fromList [])
                             |> Dict.values
                             |> List.head
@@ -856,7 +857,7 @@ suiteLeibnitz =
         [ test "replace variable with variable in eq atom" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Var "a") (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Var "a") (Var "[]")
                         (T (EqAtom (Var "b") (Var "a")))
                         (T (EqAtom (Var "x") (Var "c")))
                         zipperExample
@@ -866,7 +867,7 @@ suiteLeibnitz =
         , test "replace function with variable in predicate atom" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
                         (T (PredAtom "p" [Fun "f"[Var "b"]] ))
                         (T (PredAtom "p" [Fun "f"[Var "b", Var "x"]] ))
                         zipperExample
@@ -876,7 +877,7 @@ suiteLeibnitz =
         , test "replace function with variable in predicate atom 2"
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
                         (T (PredAtom "p" [Fun "f"[Fun "f"[Var "b"], Var "b"]] ))
                         (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
                         zipperExample
@@ -886,7 +887,7 @@ suiteLeibnitz =
         , test "no change" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Fun "f"[Var "b"]) (Var "[]")
                         (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
                         (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
                         zipperExample
@@ -896,7 +897,7 @@ suiteLeibnitz =
         , test "replace in conjunction" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Var "c") (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Var "c") (Var "[]")
                         (T (Conj (EqAtom (Fun "f"[Var "b", Var "c"]) (Var "x")) (EqAtom (Fun "f"[Var "c"]) (Var "b")) ) )
                         (T (Conj (EqAtom (Fun "f"[Var "b", Var "x"]) (Var "x")) (EqAtom (Fun "f"[Var "x"]) (Var "x")) ) )
                         zipperExample
@@ -906,7 +907,7 @@ suiteLeibnitz =
         , test "replace in for all" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Var "c") (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Var "c") (Var "[]")
                         (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "a", Var "b", Var "c"], Fun "g"[Var "a"] ]))))
                        (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "a"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "o", Var "o", Var "o"], Fun "h"[Var "a"] ]))))
                         zipperExample
@@ -916,7 +917,7 @@ suiteLeibnitz =
         , test "replace in exists" 
             (\() ->
                 Expect.equal
-                    (Validation.Leibnitz.replaceTermWithVar (Fun "f"[Var "c", Var "z"]) (Var "[]")
+                    (Validation.Rules.Leibnitz.replaceTermWithVar (Fun "f"[Var "c", Var "z"]) (Var "[]")
                         (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "c", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "g"[Var "a"] ]))))
                        (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "h"[Var "a"] ]))))
                         zipperExample
