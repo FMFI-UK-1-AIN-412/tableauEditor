@@ -202,6 +202,9 @@ isCorrectRule (( t, bs ) as z) =
             Validation.Rules.Delta.validate z
 
         (Zipper.ReflCrumb _) :: _ ->
+            Validation.Rules.Reflexivity.validate z
+
+        (Zipper.LeibnitzCrumb _) :: _ ->
             Validation.Rules.Leibnitz.validate z
 
         [] ->

@@ -43,6 +43,7 @@ type Extension
     | Gamma Tableau Substitution
     | Delta Tableau Substitution
     | Refl Tableau 
+    | Leibnitz Tableau
 
 
 defSubstitution : Substitution

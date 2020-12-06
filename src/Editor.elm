@@ -100,6 +100,7 @@ type Msg
     | ExpandGamma Zipper.Zipper
     | ExpandDelta Zipper.Zipper
     | ExpandRefl Zipper.Zipper
+    | ExpandLeibnitz Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
@@ -108,6 +109,7 @@ type Msg
     | ChangeToGamma Zipper.Zipper
     | ChangeToDelta Zipper.Zipper
     | ChangeToRefl Zipper.Zipper
+    | ChangeToLeibnitz Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -229,6 +231,9 @@ simpleUpdate msg model =
             ExpandRefl z ->
                 {model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
+            ExpandLeibnitz z ->
+                {model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRefs new |> top }
 
@@ -278,6 +283,9 @@ simpleUpdate msg model =
 
             ChangeToRefl z ->
                 { model | tableau = z |> Zipper.changeToRefl |> topRenumbered }
+
+            ChangeToLeibnitz z ->
+                { model | tableau = z |> Zipper.changeToLeibnitz |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -400,6 +408,7 @@ viewNodeInputs additional z =
                     , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
                     , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
                     , li [] [ button [ onClick (ChangeToRefl z) ] [ text "Change to Reflexivity" ] ]
+                    , li [] [ button [ onClick (ChangeToLeibnitz z) ] [ text "Change to Leibnitz" ] ]
                     ]
                 ]
             :: text "["
@@ -449,6 +458,8 @@ viewRuleType z =
                 text "δ"
             Refl _ ->
                 text "Reflexivity"
+            Leibnitz _ ->
+                text "Leibnitz"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -494,6 +505,9 @@ viewChildren z =
         Tableau.Refl t ->
             viewRefl z
 
+        Tableau.Leibnitz t ->
+            viewLeibnitz z
+
 
 viewAlpha : Zipper.Zipper -> Html Msg
 viewAlpha z =
@@ -520,7 +534,12 @@ viewDelta z =
 
 viewRefl : Zipper.Zipper -> Html Msg
 viewRefl z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ] --zmenit class monzo
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewLeibnitz : Zipper.Zipper -> Html Msg
+viewLeibnitz z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
 
 
 viewOpen : Zipper.Zipper -> Html Msg
@@ -611,6 +630,7 @@ viewControls ( ( t, _ )  as z ) =
                             , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
                             , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
                             , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexiviy" ] ]
+                            , li [] [ button [ onClick (ExpandLeibnitz z) ] [ text "Add Leibnitz" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]

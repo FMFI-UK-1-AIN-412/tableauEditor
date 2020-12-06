@@ -19,6 +19,7 @@ type Crumb
     | GammaCrumb Node Tableau.Substitution
     | DeltaCrumb Node Tableau.Substitution
     | ReflCrumb Node
+    | LeibnitzCrumb Node
 
 
 type alias BreadCrumbs =
@@ -62,6 +63,9 @@ children z =
         Refl _ ->
             [down z]
 
+        Leibnitz _ ->
+            [down z]
+
 
 down : Zipper -> Zipper
 down ( t, bs ) =
@@ -77,6 +81,9 @@ down ( t, bs ) =
 
         Refl subt ->
             ( subt, ReflCrumb t.node :: bs )
+
+        Leibnitz subt ->
+            ( subt, LeibnitzCrumb t.node :: bs )
 
         _ ->
             ( t, bs )
@@ -126,6 +133,9 @@ up ( t, bs ) =
 
         (ReflCrumb n) :: bss ->
             ( Tableau n (Refl t), bss )
+
+        (LeibnitzCrumb n) :: bss ->
+            ( Tableau n (Leibnitz t), bss )
 
         [] ->
             ( t, bs )
@@ -209,6 +219,9 @@ zWalkPost f (( t, bs ) as z) =
             z |> down |> zWalkPost f |> up |> f
 
         Refl _ ->
+            z |> down |> zWalkPost f |> up |> f
+
+        Leibnitz _ ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -337,6 +350,16 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } (Refl new_tableau), num1 )
 
+        Leibnitz t ->
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 t (num + 1)
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (Leibnitz new_tableau), num1 )
+
         Closed r1 r2 ->
             let
                 node =
@@ -461,6 +484,11 @@ renumberJusts tableau f lengthOfPathFromFather =
                 tableau.node
                 (Refl (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
+        Leibnitz t ->
+            Tableau
+                tableau.node
+                (Leibnitz (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+
         Open ->
             tableau
 
@@ -579,7 +607,10 @@ extendAlpha z =
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Delta t s)))
 
                     Refl t ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Refl t)))
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Refl t)))
+
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Leibnitz t)))
 
                     Closed r1 r2 ->
                         Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Closed r1 r2)))
@@ -610,6 +641,9 @@ extendBeta z =
                     Refl t ->
                         Tableau (closeControls tableau.node) (Beta (Tableau defNode (Refl t)) (Tableau defNode Open))
 
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Leibnitz t)) (Tableau defNode Open))
+
                     _ ->
                         tableau
             )
@@ -638,6 +672,9 @@ extendGamma z =
 
                     Refl t ->
                         Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Refl t)) defSubstitution)
+
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Leibnitz t)) defSubstitution)
 
                     _ ->
                         tableau
@@ -668,6 +705,9 @@ extendDelta z =
                     Refl t ->
                         Tableau (closeControls tableau.node) (Delta (Tableau defNode (Refl t)) defSubstitution)
 
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Leibnitz t)) defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -696,8 +736,43 @@ extendRefl z =
                     Refl t ->
                         Tableau (closeControls tableau.node) (Refl (Tableau defNode (Refl t)))
 
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Leibnitz t)))
+
                     _ ->
                         tableau
+            )
+
+
+extendLeibnitz : Zipper -> Zipper
+extendLeibnitz z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode Open))
+
+                    Alpha t ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Alpha t)))
+
+                    Beta lt rt ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Beta lt rt)))
+
+                    Gamma t s ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Gamma t s)))
+
+                    Delta t s ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Delta t s)))
+
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Refl t)))
+
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Leibnitz t)))
+
+                    Closed r1 r2 ->
+                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Closed r1 r2)))
             )
 
 
@@ -743,6 +818,9 @@ deleteMe (( t, fatherbs ) as zip) =
                         st
 
                     Refl st ->
+                        st
+
+                    Leibnitz st ->
                         st
             )
             zip
@@ -802,6 +880,9 @@ deleteMe (( t, fatherbs ) as zip) =
                                 Tableau tableau.node st.ext
 
                             Refl st ->
+                                Tableau tableau.node st.ext
+
+                            Leibnitz st ->
                                 Tableau tableau.node st.ext
 
                             _ ->
@@ -952,6 +1033,9 @@ changeToAlpha z =
                     Refl t ->
                         Tableau tableau.node (Alpha t)
 
+                    Leibnitz t ->
+                        Tableau tableau.node (Alpha t)
+
                     _ ->
                         tableau
             )
@@ -978,6 +1062,9 @@ changeToBeta z =
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     Refl t ->
+                        Tableau tableau.node (Beta t (Tableau defNode Open))
+
+                    Leibnitz t ->
                         Tableau tableau.node (Beta t (Tableau defNode Open))
 
                     _ ->
@@ -1015,6 +1102,9 @@ changeToGamma z =
                     Refl t ->
                         Tableau tableau.node (Gamma t defSubstitution)
 
+                    Leibnitz t ->
+                        Tableau tableau.node (Gamma t defSubstitution)
+
                     _ ->
                         tableau
             )
@@ -1048,6 +1138,9 @@ changeToDelta z =
                         Tableau tableau.node (Delta t s)
 
                     Refl t ->
+                        Tableau tableau.node (Delta t defSubstitution)
+
+                    Leibnitz t ->
                         Tableau tableau.node (Delta t defSubstitution)
 
                     _ ->
@@ -1084,6 +1177,47 @@ changeToRefl z =
 
                     Delta t s ->
                         Tableau tableau.node (Refl t)
+
+                    Leibnitz t ->
+                        Tableau tableau.node (Refl t)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToLeibnitz : Zipper -> Zipper
+changeToLeibnitz z =
+    if (z |> up) == z then
+        z
+
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (Leibnitz t)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (Leibnitz rt)
+
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (Leibnitz lt)
+
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Gamma t s ->
+                        Tableau tableau.node (Leibnitz t)
+
+                    Delta t s ->
+                        Tableau tableau.node (Leibnitz t)
+
+                    Refl t ->
+                        Tableau tableau.node (Leibnitz t)
 
                     _ ->
                         tableau
@@ -1128,6 +1262,9 @@ prettify t =
 
                     Refl tbl ->
                         Tableau (tableau.node |> prettifyNode) (Refl (prettify tbl))
+
+                    Leibnitz tbl ->
+                        Tableau (tableau.node |> prettifyNode) (Leibnitz (prettify tbl))
 
                     Open ->
                         Tableau (tableau.node |> prettifyNode) Open
