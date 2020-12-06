@@ -278,3 +278,9 @@ isNewVariableFunction variable =
 
         Fun _ _ ->
             False
+
+
+getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
+getReffedId extractRef z =
+    String.fromInt (Zipper.getReffed (extractRef z) z 
+    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)

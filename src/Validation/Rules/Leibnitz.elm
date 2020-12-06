@@ -77,8 +77,7 @@ replaceInTerm term var refTerm currentTerm z =
 differentStructureError : Zipper.Zipper -> List Problem
 differentStructureError z = 
     (semanticsProblem z ("The formulas ("
-    ++ String.fromInt (Zipper.getReffed (Zipper.zSecondRef z) z 
-    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0) ++ ")"
+    ++ (getReffedId Zipper.zSecondRef z) ++ ")"
     ++ " and (" ++ String.fromInt (z |> Zipper.zNode >> .id) ++ ")" 
     ++ " should not have different structure"))
 
@@ -196,8 +195,7 @@ applyFunToSigned function subst sf =
 mapNotSubstitutableError : String -> Zipper.Zipper -> List Problem
 mapNotSubstitutableError err z = 
     (semanticsProblem z 
-    (String.replace "[]"  ("[] in ("++(String.fromInt(Zipper.getReffed (Zipper.zSecondRef z) z 
-    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0))++ ")") err))
+    (String.replace "[]"  ("[] in ("++ (getReffedId Zipper.zSecondRef z) ++ ")") err))
 
 
 checkSubstitutable : Term.Substitution -> Result (List Problem) (Signed Formula) -> Zipper.Zipper
