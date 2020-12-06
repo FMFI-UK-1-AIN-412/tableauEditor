@@ -104,6 +104,14 @@ refl =
         (map Tableau.Refl (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
+leibnitz : Decoder Tableau.Tableau
+leibnitz = 
+    map2
+        Tableau.Tableau
+        (field "node" node)
+        (map Tableau.Leibnitz (field "child" (Json.Decode.lazy (\_ -> tableau))))
+
+
 tblTypeDecoder : String -> Decoder Tableau.Tableau
 tblTypeDecoder typ =
     case typ of
@@ -127,6 +135,9 @@ tblTypeDecoder typ =
 
         "refl" ->
             refl
+        
+        "leibnitz" ->
+            leibnitz
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")

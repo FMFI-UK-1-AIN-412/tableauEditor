@@ -78,6 +78,11 @@ jsonTblList tableau =
                 ++ jsonNodeList tableau.node
                 ++ [ ( "child", jsonTableau t ) ]
 
+        Leibnitz t ->
+            [ ( "type", string "leibnitz" ) ]
+                ++ jsonNodeList tableau.node
+                ++ [ ( "child", jsonTableau t ) ]
+
 
 jsonTableau : Tableau -> Value
 jsonTableau t =
