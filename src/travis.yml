@@ -1,0 +1,3 @@
+language: elm
+elm-test: 0.19.1-rev4
+elm-format: 0.8.4

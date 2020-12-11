@@ -10,7 +10,7 @@ import Term exposing (Term(..))
 import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
-import Validate
+import Validation
 import Validation.Common
 import Validation.Rules.Leibnitz
 import Zipper exposing (..)
@@ -48,7 +48,7 @@ tableauExample =
 
 
 zipperExample =
-    ( tableauExample, [] )
+    zipper tableauExample
 
 
 tableauWithAlpha =

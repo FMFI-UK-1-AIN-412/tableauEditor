@@ -39,26 +39,18 @@ validateBeta this other =
 
         -- This is a hack, but defining an ordering on formulas...
         reffed =
-            if List.length (Zipper.zNode this).references /= 1 then
-                Err (semanticsProblem this "Each β must have one reference")
-            else
-                this
-                    |> Zipper.getReffed (Zipper.zFirstRef this)
-                    |> Result.fromMaybe (semanticsProblem this "Invalid reference")
-                    |> Result.andThen validateReffedFormula
-                    |> Result.map (always this)
-                    |> Result.andThen
-                        (checkIsPointingOnSelf
-                            (isPointingOnSelf Zipper.zFirstRef)
-                            (semanticsProblem this "β can not be pointing on itself")
-                        )
-                    |> Result.andThen (\z -> getReffedSignedFormula Zipper.zFirstRef z)
-                    |> Result.andThen
-                        (checkPredicate Formula.Signed.isBeta
-                            (semanticsProblem this "Referenced formula is not β")
-                        )
-                    |> Result.map Formula.Signed.subformulas
-                    |> Result.map (List.sortBy Formula.Signed.toString)
+            this
+                |> checkPredicate (hasNumberOfRefs 1)
+                    (semanticsProblem this "Each β must have 1 reference")
+                |> Result.andThen (checkReffedFormula "" (Zipper.zFirstRef this))
+                |> Result.map (always this)
+                |> Result.andThen (\z -> getReffedSignedFormula Zipper.zFirstRef z)
+                |> Result.andThen
+                    (checkPredicate Formula.Signed.isBeta
+                        (semanticsProblem this "Referenced formula is not β")
+                    )
+                |> Result.map Formula.Signed.subformulas
+                |> Result.map (List.sortBy Formula.Signed.toString)
     in
     Errors.merge2 (==) children reffed
         |> Result.andThen (resultFromBool this (semanticsProblem this "Wrong β subformulas."))
