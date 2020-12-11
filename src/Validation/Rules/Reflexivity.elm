@@ -7,8 +7,8 @@ import Tableau exposing (..)
 import Zipper
 import Validation.Common exposing(..)
 
-checkIsRefl : Zipper.Zipper -> Bool
-checkIsRefl z = 
+isRefl : Zipper.Zipper -> Bool
+isRefl z = 
     case (Zipper.zNode z).formula of
         Ok (T (EqAtom lt rt)) ->
             if lt == rt then
@@ -25,7 +25,7 @@ validate z =
     z |> (checkPredicate (\a -> List.length (Zipper.zNode z).references == 0) 
         (semanticsProblem z "Reflexivity must have no references"))
     |> Result.andThen
-        (checkPredicate checkIsRefl
+        (checkPredicate isRefl
             (semanticsProblem z "Formula is not reflexivity")
         )
     |> Result.map (always z)

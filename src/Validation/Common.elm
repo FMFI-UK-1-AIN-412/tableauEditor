@@ -109,16 +109,6 @@ isPointingOnSelf extractRef this =
             False
 
 
-checkIsPointingOnSelf : (Zipper.Zipper -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
-checkIsPointingOnSelf pred x z =
-    case pred z of
-        True ->
-            Err x
-
-        False ->
-            Ok z
-
-
 validateReffedFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
 validateReffedFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (\e -> semanticsProblem z "Referenced formula is invalid")
@@ -284,3 +274,8 @@ getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
 getReffedId extractRef z =
     String.fromInt (Zipper.getReffed (extractRef z) z 
     |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+
+
+hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
+hasNumberOfRefs n z = 
+    List.length (Zipper.zNode z).references == n

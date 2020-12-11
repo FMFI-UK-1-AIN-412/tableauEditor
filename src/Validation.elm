@@ -1,4 +1,4 @@
-module Validate exposing (..)
+module Validation exposing (..)
 
 import Dict
 import Errors
@@ -110,10 +110,14 @@ areValidCloseRefs z =
             Ok z
 
 
-isValidRef : String -> { a | up : Maybe b } -> c -> Result (List { msg : String, typ : ProblemType, zip : c }) c
+isValidRef : String -> Ref -> c -> Result (List { msg : String, typ : ProblemType, zip : c }) c
 isValidRef str r z =
     r.up
         |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
+        |> Result.andThen 
+            (checkPredicate (\up -> up /= 0)
+            (semanticsProblem z (str ++ " reference is pointing on this formula"))
+            )
         |> Result.map (always z)
 
 
