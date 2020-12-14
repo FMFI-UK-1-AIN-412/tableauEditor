@@ -3,21 +3,22 @@ module Validation exposing (..)
 import Dict
 import Errors
 import Formula exposing (Formula(..))
-import Formula.Signed exposing (Signed(..))
 import Formula.Parser
-import Term exposing (Term(..))
+import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
 import Set
 import Tableau exposing (..)
-import Zipper
-import Validation.Common exposing(..)
+import Term exposing (Term(..))
+import Validation.Common exposing (..)
 import Validation.Rules.Alpha
 import Validation.Rules.Beta
-import Validation.Rules.Reflexivity
-import Validation.Rules.Gamma
 import Validation.Rules.Delta
+import Validation.Rules.Gamma
 import Validation.Rules.Leibnitz
+import Validation.Rules.Reflexivity
+import Zipper
+
 
 
 -- error : x -> Result x a -> x
@@ -25,16 +26,11 @@ import Validation.Rules.Leibnitz
 --     case r of
 --         Err x ->
 --             x
-
 --         Ok _ ->
 --             def
-
-
 -- (<++) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> List Problem) -> ( List Problem, Zipper.Zipper )
 -- (<++) ( lp, z ) f =
 --     ( lp ++ f z, z )
-
-
 -- (<++?) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> Result (List Problem) a) -> ( List Problem, Zipper.Zipper )
 -- (<++?) ( lp, z ) f =
 --     ( lp ++ error [] (f z), z )
@@ -88,14 +84,17 @@ isValidNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
             Ok z
+
         1 ->
             isValidRef "The" (Zipper.zFirstRef z) z
+
         2 ->
             Errors.merge2 (always2 z)
                 (isValidRef "The first" (Zipper.zFirstRef z) z)
                 (isValidRef "The second" (Zipper.zSecondRef z) z)
-        _ -> 
-            Err (syntaxProblem z ("There are too many references."))
+
+        _ ->
+            Err (syntaxProblem z "There are too many references.")
 
 
 areValidCloseRefs : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -110,13 +109,13 @@ areValidCloseRefs z =
             Ok z
 
 
-isValidRef : String -> Ref -> c -> Result (List { msg : String, typ : ProblemType, zip : c }) c
+isValidRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidRef str r z =
     r.up
         |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
-        |> Result.andThen 
+        |> Result.andThen
             (checkPredicate (\up -> up /= 0)
-            (semanticsProblem z (str ++ " reference is pointing on this formula"))
+                (semanticsProblem z (str ++ " reference is pointing on this formula"))
             )
         |> Result.map (always z)
 
@@ -143,7 +142,7 @@ validateFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z)
 
 
-validateRef : b -> { c | up : Maybe a } -> d -> List { msg : b, typ : ProblemType, zip : d }
+validateRef : String -> Ref -> Zipper.Zipper -> List Problem
 validateRef str r z =
     case r.up of
         Nothing ->
@@ -158,12 +157,15 @@ validateNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
             []
+
         1 ->
             validateRef "Invalid reference" (Zipper.zFirstRef z) z
+
         2 ->
-            (validateRef "Invalid first reference" (Zipper.zFirstRef z) z)
-            ++ (validateRef "Invalid second reference" (Zipper.zSecondRef z) z)
-        _ -> 
+            validateRef "Invalid first reference" (Zipper.zFirstRef z) z
+                ++ validateRef "Invalid second reference" (Zipper.zSecondRef z) z
+
+        _ ->
             syntaxProblem z "There are too many references."
 
 
@@ -213,6 +215,7 @@ isCorrectRule (( t, bs ) as z) =
 
         [] ->
             Ok z
-        
+
+
 
 {- vim: set sw=2 ts=2 sts=2 et :s -}

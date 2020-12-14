@@ -7,9 +7,8 @@ import Formula.Signed exposing (Signed(..))
 import Term exposing (Term(..))
 import Tableau exposing (..)
 import Test exposing (..)
-import Validation
-import Validation.Common exposing (syntaxProblem, semanticsProblem)
-import Validation.Rules.Leibnitz
+import Validation.Common exposing (semanticsProblem)
+import Validation.Rules.Leibnitz exposing (commonTemplate, checkSubsts, validate)
 import Zipper exposing (..)
 
 
@@ -35,7 +34,7 @@ suiteCommonTemplate =
         [ test "replace in eq atom" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (EqAtom (Var "b") (Var "a")))
                         (T (EqAtom (Var "b") (Var "c")))
                     ) 
@@ -44,7 +43,7 @@ suiteCommonTemplate =
         , test "replace in predicate atom" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (PredAtom "p" [Fun "f"[Var "b"]] ))
                         (T (PredAtom "p" [Fun "f"[Var "b", Var "x"]] ))
                     ) 
@@ -53,7 +52,7 @@ suiteCommonTemplate =
         , test "replace function with variable in predicate atom 2"
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (PredAtom "p" [Fun "f"[Fun "f"[Var "b"], Var "b"]] ))
                         (T (PredAtom "p" [Fun "f"[Var "b", Var "b"]] ))
                     ) 
@@ -62,7 +61,7 @@ suiteCommonTemplate =
         , test "no change" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
                         (T (Conj (EqAtom (Fun "f"[Var "b"]) (Var "x")) (EqAtom (Fun "f"[Var "b"]) (Var "b")) ) )
                     ) 
@@ -71,7 +70,7 @@ suiteCommonTemplate =
         , test "replace in conjunction" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (Conj (EqAtom (Fun "f"[Var "b", Var "c"]) (Var "x")) (EqAtom (Fun "f"[Var "c"]) (Var "b")) ) )
                         (T (Conj (EqAtom (Fun "f"[Var "b", Var "x"]) (Var "x")) (EqAtom (Fun "f"[Var "x"]) (Var "x")) ) )
                     ) 
@@ -80,7 +79,7 @@ suiteCommonTemplate =
         , test "replace in for all" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "a", Var "b", Var "c"], Fun "g"[Var "a"] ]))))
                        (T (ForAll "x" (Disj (EqAtom (Fun "f"[Var "x", Var "a"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "o", Var "o", Var "o"], Fun "h"[Var "a"] ]))))
                     ) 
@@ -89,7 +88,7 @@ suiteCommonTemplate =
         , test "replace in exists" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.commonTemplate
+                    (commonTemplate
                         (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "c", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "g"[Var "a"] ]))))
                        (T (Exists "x" (Conj (EqAtom (Fun "f"[Var "x", Var "z"]) (Var "y")) (PredAtom "p" [Fun "f"[Var "c", Var "z"], Fun "h"[Var "a"] ]))))
                     ) 
@@ -200,7 +199,7 @@ suiteCheckSubsts =
         [ test "not substitutable 1" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Fun "f" [Var "a"]) (Var "x")))
                         (T (ForAll "x" (Conj (PredAtom "p" [Var "c"]) (EqAtom (Fun "f" [Var "a"]) (Var "c")))))
                         zipper1
@@ -210,7 +209,7 @@ suiteCheckSubsts =
         , test "not substitutable 2" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "y") (Var "c")))
                         (T (ForAll "x" (Disj (PredAtom "p" [Fun "f" [Var "x"]]) (ForAll "c" (EqAtom (Var "y") (Var "c"))))))
                         zipper2
@@ -220,7 +219,7 @@ suiteCheckSubsts =
         , test "not substitutable 3" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "y") (Var "x")))
                         (F (Exists "x" (Exists "y" (Disj (ForAll "z" (PredAtom "p" [Var "z"])) (ForAll "z" (Conj (PredAtom "r" [Var "z"]) (Neg(EqAtom (Fun "f" [Var "z", Var "y"]) (Var "y")))))))))
                         zipper3
@@ -230,7 +229,7 @@ suiteCheckSubsts =
         , test "not substitutable 4" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "a") (Var "x")))
                         (F (Exists "x" (Exists "y" (Disj (ForAll "z" (PredAtom "p" [Var "z"])) (ForAll "z" (Conj (PredAtom "r" [Var "z"]) (Neg(EqAtom (Fun "f" [Var "z", Var "a"]) (Var "y")))))))))
                         zipper3
@@ -240,7 +239,7 @@ suiteCheckSubsts =
         , test "different sign" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Fun "f" [Var "a"]) (Var "x")))
                         (F (ForAll "x" (Conj (PredAtom "p" [Var "c"]) (EqAtom (Fun "f" [Var "a"]) (Var "c")))))
                         zipper1
@@ -250,7 +249,7 @@ suiteCheckSubsts =
         , test "different structure 1" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Fun "f" [Var "a"]) (Var "x")))
                         (T (ForAll "x" (Disj(PredAtom "p" [Var "c"]) (EqAtom (Fun "f" [Var "a"]) (Var "c")))))
                         zipper1
@@ -260,7 +259,7 @@ suiteCheckSubsts =
         , test "different structure 2" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "y") (Var "c")))
                         (T (ForAll "x" (Disj (PredAtom "p" [Fun "f" [Var "x"]]) (ForAll "c" (PredAtom "a" [Var "y"])))))
                         zipper2
@@ -270,7 +269,7 @@ suiteCheckSubsts =
         , test "different structure 3" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "y") (Var "x")))
                         (F (Exists "x" (Exists "y" (Disj (ForAll "z" (PredAtom "p" [Var "z"])) (Exists "z" (Conj (PredAtom "r" [Var "z"]) (Neg(EqAtom (Fun "f" [Var "z", Var "y"]) (Var "y")))))))))
                         zipper3
@@ -280,7 +279,7 @@ suiteCheckSubsts =
         , test "invalid substitution 1" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "c") (Var "a")))
                         (T (Exists "x" (Conj (PredAtom "p" [Var "c"]) (PredAtom "r" [Var "x"]))))
                         zipper4
@@ -290,7 +289,7 @@ suiteCheckSubsts =
         , test "invalid substitution 2" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "x") (Var "z")))
                         (T (Disj (PredAtom "p" [Fun "f" [Fun "f" [Var "x"]]]) (ForAll "c" (PredAtom "r" [Var "c"]))))
                         zipper5
@@ -300,7 +299,7 @@ suiteCheckSubsts =
         , test "invalid substitution 3" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "z") (Var "b")))
                         (T (Exists "x" (Exists "y" (Disj (Conj (PredAtom "r" [Var "z"]) (EqAtom (Var "c") (Fun "f" [Var "z", Var "x"]))) (PredAtom "p" [Var "z"])))))
                         zipper6
@@ -310,7 +309,7 @@ suiteCheckSubsts =
         , test "ok 1" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "c") (Var "b")))
                         (T (Exists "x" (Conj (PredAtom "p" [Var "c"]) (PredAtom "r" [Var "x"]))))
                         zipper4
@@ -320,7 +319,7 @@ suiteCheckSubsts =
         , test "ok 2" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "x") (Var "a")))
                         (T (Disj (PredAtom "p" [Fun "f" [Fun "f" [Var "x"]]]) (ForAll "c" (PredAtom "r" [Var "c"]))))
                         zipper5
@@ -330,7 +329,7 @@ suiteCheckSubsts =
         , test "ok 3" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.checkSubsts
+                    (checkSubsts
                         (T (EqAtom (Var "z") (Var "a")))
                         (T (Exists "x" (Exists "y" (Disj (Conj (PredAtom "r" [Var "z"]) (EqAtom (Var "c") (Fun "f" [Var "z", Var "x"]))) (PredAtom "p" [Var "z"])))))
                         zipper6
@@ -374,7 +373,7 @@ suiteValidate =
         [ test "validate" 
             (\() ->
                 Expect.equal
-                    (Validation.Rules.Leibnitz.validate
+                    (validate
                         zipperWithEqsAndLeibnitz
                     ) 
                     (Ok zipperWithEqsAndLeibnitz)

@@ -4,10 +4,11 @@ import Dict
 import Errors
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Term exposing (Term(..))
 import Tableau exposing (..)
+import Term exposing (Term(..))
+import Validation.Common exposing (..)
 import Zipper
-import Validation.Common exposing(..)
+
 
 validateLeft : Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateLeft z =

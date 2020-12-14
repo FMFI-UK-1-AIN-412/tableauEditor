@@ -2,30 +2,33 @@ module Validation.Rules.Reflexivity exposing (..)
 
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Term exposing (Term(..))
 import Tableau exposing (..)
+import Term exposing (Term(..))
+import Validation.Common exposing (..)
 import Zipper
-import Validation.Common exposing(..)
+
 
 isRefl : Zipper.Zipper -> Bool
-isRefl z = 
+isRefl z =
     case (Zipper.zNode z).formula of
         Ok (T (EqAtom lt rt)) ->
             if lt == rt then
-             True
+                True
+
             else
-             False
+                False
 
         _ ->
-            False       
+            False
 
 
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    z |> (checkPredicate (\a -> List.length (Zipper.zNode z).references == 0) 
-        (semanticsProblem z "Reflexivity must have no references"))
-    |> Result.andThen
-        (checkPredicate isRefl
-            (semanticsProblem z "Formula is not reflexivity")
-        )
-    |> Result.map (always z)
+    z
+        |> checkPredicate (\a -> List.length (Zipper.zNode z).references == 0)
+            (semanticsProblem z "Reflexivity rule must have no references")
+        |> Result.andThen
+            (checkPredicate isRefl
+                (semanticsProblem z "Formula is not reflexivity")
+            )
+        |> Result.map (always z)

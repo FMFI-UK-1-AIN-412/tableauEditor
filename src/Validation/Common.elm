@@ -1,15 +1,15 @@
-module Validation.Common exposing(..)
+module Validation.Common exposing (..)
 
 import Dict
 import Errors
 import Formula exposing (Formula(..))
-import Formula.Signed exposing (Signed(..))
 import Formula.Parser
-import Term exposing (Term(..))
+import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
 import Set
 import Tableau exposing (..)
+import Term exposing (Term(..))
 import Zipper
 
 
@@ -25,12 +25,12 @@ type alias Problem =
     }
 
 
-syntaxProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
+syntaxProblem : Zipper.Zipper -> String -> List Problem
 syntaxProblem z s =
     [ { typ = Syntax, msg = s, zip = z } ]
 
 
-semanticsProblem : a -> b -> List { msg : b, typ : ProblemType, zip : a }
+semanticsProblem : Zipper.Zipper -> String -> List Problem
 semanticsProblem z s =
     [ { typ = Semantics, msg = s, zip = z } ]
 
@@ -69,7 +69,7 @@ getReffedSignedFormula extractRef z =
             Err (semanticsProblem z "no reffed formula")
 
 
-makeSemantic : List { b | typ : ProblemType } -> List { b | typ : ProblemType }
+makeSemantic : List Problem -> List Problem
 makeSemantic =
     List.map (\p -> { p | typ = Semantics })
 
@@ -272,10 +272,13 @@ isNewVariableFunction variable =
 
 getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
 getReffedId extractRef z =
-    String.fromInt (Zipper.getReffed (extractRef z) z 
-    |> Maybe.map (Zipper.zNode >> .id) |> Maybe.withDefault 0)
+    String.fromInt
+        (Zipper.getReffed (extractRef z) z
+            |> Maybe.map (Zipper.zNode >> .id)
+            |> Maybe.withDefault 0
+        )
 
 
 hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
-hasNumberOfRefs n z = 
+hasNumberOfRefs n z =
     List.length (Zipper.zNode z).references == n
