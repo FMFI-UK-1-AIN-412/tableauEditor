@@ -2,11 +2,10 @@ module Helpers.Exporting.Json.Decode exposing (decode, tableau)
 
 import Dict
 import Formula
-import Json.Decode exposing (..)
-import Tableau
-import Zipper
 import Formula.Parser
+import Json.Decode exposing (..)
 import Tableau exposing (Tableau)
+import Zipper
 
 
 
@@ -65,12 +64,25 @@ closed =
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
-alpha : Decoder Tableau.Tableau
-alpha =
+unaryRule : (Tableau.Tableau -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRule extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map Tableau.Alpha (field "child" (Json.Decode.lazy (\_ -> tableau))))
+        (map extType (field "child" (Json.Decode.lazy (\_ -> tableau))))
+
+
+unaryRuleWithSubst : (Tableau.Tableau -> Tableau.Substitution -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRuleWithSubst extType =
+    map2
+        Tableau.Tableau
+        (field "node" node)
+        (map2 extType (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
+
+
+alpha : Decoder Tableau.Tableau
+alpha =
+    unaryRule Tableau.Alpha
 
 
 beta : Decoder Tableau.Tableau
@@ -82,34 +94,22 @@ beta =
 
 delta : Decoder Tableau.Tableau
 delta =
-    map2
-        Tableau.Tableau
-        (field "node" node)
-        (map2 Tableau.Delta (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
+    unaryRuleWithSubst Tableau.Delta
 
 
 gamma : Decoder Tableau.Tableau
 gamma =
-    map2
-        Tableau.Tableau
-        (field "node" node)
-        (map2 Tableau.Gamma (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
+    unaryRuleWithSubst Tableau.Gamma
 
 
 refl : Decoder Tableau.Tableau
-refl = 
-    map2
-        Tableau.Tableau
-        (field "node" node)
-        (map Tableau.Refl (field "child" (Json.Decode.lazy (\_ -> tableau))))
+refl =
+    unaryRule Tableau.Refl
 
 
 leibnitz : Decoder Tableau.Tableau
-leibnitz = 
-    map2
-        Tableau.Tableau
-        (field "node" node)
-        (map Tableau.Leibnitz (field "child" (Json.Decode.lazy (\_ -> tableau))))
+leibnitz =
+    unaryRule Tableau.Leibnitz
 
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
@@ -135,7 +135,7 @@ tblTypeDecoder typ =
 
         "refl" ->
             refl
-        
+
         "leibnitz" ->
             leibnitz
 

@@ -1,9 +1,9 @@
 module Tableau exposing (..)
 
 import Formula exposing (Formula)
-import Parser
-import Formula.Signed exposing (Signed)
 import Formula.Parser
+import Formula.Signed exposing (Signed)
+import Parser
 
 
 type alias Tableau =
@@ -42,7 +42,7 @@ type Extension
     | Beta Tableau Tableau
     | Gamma Tableau Substitution
     | Delta Tableau Substitution
-    | Refl Tableau 
+    | Refl Tableau
     | Leibnitz Tableau
 
 
@@ -67,17 +67,21 @@ defNode =
 
 
 strRefsToList : String -> List String
-strRefsToList str = 
-    let lst = 
+strRefsToList str =
+    let
+        lst =
             List.filter (\a -> a /= "") (String.split "," (String.replace " " "" str))
     in
     if String.right 1 str == "," then
-        List.append lst [""]
+        List.append lst [ "" ]
+
     else if String.left 1 str == "," then
         "" :: lst
+
     else
         lst
 
+
 refsToString : List Ref -> String
-refsToString lst = 
+refsToString lst =
     String.join "," (List.map (\r -> r.str) lst)

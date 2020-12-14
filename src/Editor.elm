@@ -1,28 +1,29 @@
 port module Editor exposing (main, top, topRenumbered)
+
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
 import Errors
 import File exposing (File)
-import File.Select as Select
 import File.Download as Download
-import FontAwesome exposing (icon, ellipsisHorizontal, exchangeAlt)
+import File.Select as Select
+import FontAwesome exposing (ellipsisHorizontal, exchangeAlt, icon)
 import Formula exposing (Formula(..))
-import Formula.Signed exposing (Signed(..))
 import Formula.Parser
-import Helpers.Helper as Helper
-import Json.Decode
+import Formula.Signed exposing (Signed(..))
 import Helpers.Exporting.Json.Decode
 import Helpers.Exporting.Json.Encode
+import Helpers.Helper as Helper
+import Helpers.Rules as Rules exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Helpers.Rules as Rules exposing (..)
+import Json.Decode
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
 import Validation
-import Validation.Common
+import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
 
 
@@ -45,7 +46,7 @@ type JsonImport
 type alias Model =
     UndoList
         { tableau : Tableau
-        , jsonImport: JsonImport
+        , jsonImport : JsonImport
         }
 
 
@@ -56,7 +57,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , references = [{ str = "1", up = Just 0 }]
+                , references = [ { str = "1", up = Just 0 } ]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -65,7 +66,9 @@ init mts =
 
         initT =
             case mts of
-                Nothing -> emptyT
+                Nothing ->
+                    emptyT
+
                 Just ts ->
                     case Helpers.Exporting.Json.Decode.decode ts of
                         Ok t ->
@@ -74,12 +77,12 @@ init mts =
                         Err _ ->
                             emptyT
     in
-        ( UndoList.fresh
-            { tableau = initT
-            , jsonImport = None
-            }
-        , Cmd.none
-        )
+    ( UndoList.fresh
+        { tableau = initT
+        , jsonImport = None
+        }
+    , Cmd.none
+    )
 
 
 subscriptions : Model -> Sub Msg
@@ -150,9 +153,9 @@ update msg ({ present } as model) =
             ( { model
                 | present =
                     { present
-                    | jsonImport = InProgress (File.name file)
+                        | jsonImport = InProgress (File.name file)
                     }
-                }
+              }
             , Task.perform JsonRead (File.toString file)
             )
 
@@ -169,10 +172,10 @@ update msg ({ present } as model) =
                     ( { model
                         | present =
                             { present
-                            | jsonImport =
-                                ImportErr (Json.Decode.errorToString e)
+                                | jsonImport =
+                                    ImportErr (Json.Decode.errorToString e)
                             }
-                        }
+                      }
                     , Cmd.none
                     )
 
@@ -181,7 +184,8 @@ update msg ({ present } as model) =
             , Download.string
                 "tableau.json"
                 "application/json"
-                <| Helpers.Exporting.Json.Encode.encode 2 present.tableau
+              <|
+                Helpers.Exporting.Json.Encode.encode 2 present.tableau
             )
 
         Undo ->
@@ -198,16 +202,19 @@ update msg ({ present } as model) =
 
         Cache ->
             ( model
-            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau) )
+            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau)
+            )
 
         _ ->
             let
-                presentSansImport = { present | jsonImport = None }
+                presentSansImport =
+                    { present | jsonImport = None }
             in
             ( UndoList.new
                 (simpleUpdate msg presentSansImport)
                 { model | present = presentSansImport }
-            , Cmd.none )
+            , Cmd.none
+            )
 
 
 simpleUpdate msg model =
@@ -229,10 +236,10 @@ simpleUpdate msg model =
                 { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ExpandRefl z ->
-                {model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+                { model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ExpandLeibnitz z ->
-                {model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+                { model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRefs new |> top }
@@ -323,7 +330,7 @@ view : Model -> Browser.Document Msg
 view ({ present } as model) =
     { title = "Tableau Editor"
     , body =
-        [   div [ class "tableau" ]
+        [ div [ class "tableau" ]
             [ div [ class "actions" ]
                 [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
                 , button [ class "button", onClick Print ] [ text "Print" ]
@@ -357,26 +364,27 @@ viewSubsNode : Zipper.Zipper -> Html Msg
 viewSubsNode z =
     div [ class "formula" ]
         [ viewNodeInputs
-            (\rest -> text "{"
-            :: autoSizeInput
-                (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
-                [ classList
-                    [ ( "textInput textInputVariable", True )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , onInput <| ChangeVariable z
-                ]
-            :: text "→"
-            :: autoSizeInput
-                (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
-                [ classList
-                    [ ( "textInput textInputTerm", True )
-                    , ( "semanticsProblem", Helper.hasReference z )
-                    ]
-                , onInput <| ChangeTerm z
-                ]
-            :: text "}"
-            :: rest
+            (\rest ->
+                text "{"
+                    :: autoSizeInput
+                        (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
+                        [ classList
+                            [ ( "textInput textInputVariable", True )
+                            , ( "semanticsProblem", Helper.hasReference z )
+                            ]
+                        , onInput <| ChangeVariable z
+                        ]
+                    :: text "→"
+                    :: autoSizeInput
+                        (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
+                        [ classList
+                            [ ( "textInput textInputTerm", True )
+                            , ( "semanticsProblem", Helper.hasReference z )
+                            ]
+                        , onInput <| ChangeTerm z
+                        ]
+                    :: text "}"
+                    :: rest
             )
             z
         , singleNodeProblems z
@@ -385,11 +393,13 @@ viewSubsNode z =
         ]
 
 
-viewNodeInputs : (List (Html Msg) -> List (Html Msg)) -> Zipper.Zipper
+viewNodeInputs :
+    (List (Html Msg) -> List (Html Msg))
+    -> Zipper.Zipper
     -> Html Msg
 viewNodeInputs additional z =
     div [ class "inputGroup" ]
-            ( text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
+        (text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
             :: autoSizeInput
                 (Zipper.zNode z).value
                 [ classList
@@ -421,19 +431,19 @@ viewNodeInputs additional z =
             :: text "]"
             :: additional
                 [ viewButtonsAppearanceControlls z ]
-            )
+        )
 
 
 autoSizeInput : String -> List (Attribute Msg) -> Html Msg
 autoSizeInput val attrs =
     input
-        ( type_ "text"
-        :: class "textInput"
-        :: value val
-        -- :: size (String.length val + 1)
-        :: size ((String.length val * 5 + 9) // 6)
-        :: onBlur Cache
-        :: attrs
+        (type_ "text"
+            :: class "textInput"
+            :: value val
+            -- :: size (String.length val + 1)
+            :: size ((String.length val * 5 + 9) // 6)
+            :: onBlur Cache
+            :: attrs
         )
         []
 
@@ -442,22 +452,30 @@ viewRuleType : Zipper.Zipper -> Html Msg
 viewRuleType z =
     if Helper.isPremise z then
         span [] [ var [] [ text "S" ], sup [] [ text "+" ] ]
+
     else
         case (Zipper.zTableau <| Zipper.up z).ext of
             Open ->
                 text "O"
+
             Closed _ _ ->
                 text "C"
+
             Alpha _ ->
                 text "α"
+
             Beta _ _ ->
                 text "β"
+
             Gamma _ _ ->
                 text "γ"
+
             Delta _ _ ->
                 text "δ"
+
             Refl _ ->
                 text "Reflexivity"
+
             Leibnitz _ ->
                 text "Leibnitz"
 
@@ -473,7 +491,8 @@ viewButtonsAppearanceControlls z =
                 [ class "button"
                 , classList
                     [ ( "active"
-                      , (Zipper.zTableau z).node.gui.controlsShown )
+                      , (Zipper.zTableau z).node.gui.controlsShown
+                      )
                     ]
                 , onClick (ChangeButtonsAppearance z)
                 , title "Toggle node tools"
@@ -553,7 +572,7 @@ viewClosed z =
 
 
 viewControls : Zipper.Zipper -> Html Msg
-viewControls ( ( t, _ )  as z ) =
+viewControls (( t, _ ) as z) =
     div [ class "expandControls" ]
         (case t.ext of
             Tableau.Closed r1 r2 ->
@@ -573,7 +592,7 @@ viewControls ( ( t, _ )  as z ) =
                     , placeholder "Ref"
                     , onInput <| SetClosed 0 z
                     ]
-                , text " "
+                , text "\u{00A0}"
                 , autoSizeInput r2.str
                     [ class ("closed " ++ ref2Cls)
                     , placeholder "Ref"
@@ -602,6 +621,7 @@ viewControls ( ( t, _ )  as z ) =
 
                                 _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+
                         else
                             case t.ext of
                                 Alpha _ ->
@@ -642,6 +662,7 @@ viewControls ( ( t, _ )  as z ) =
                     , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
                     , switchBetasButton
                     ]
+
                 else
                     []
         )
@@ -680,12 +701,12 @@ problems t =
             ]
 
 
-problemList : List Validation.Common.Problem -> Html Msg
+problemList : List Problem -> Html Msg
 problemList pl =
     ul [ class "problemList" ] (List.map problemItem pl)
 
 
-problemItem : Validation.Common.Problem -> Html Msg
+problemItem : Problem -> Html Msg
 problemItem pi =
     li [ class (problemClass pi) ]
         [ text "("
@@ -695,12 +716,12 @@ problemItem pi =
         ]
 
 
-errorsClass : Result (List Validation.Common.Problem) a -> String
+errorsClass : Result (List Problem) a -> String
 errorsClass =
     Errors.errors >> problemsClass
 
 
-problemsClass : List Validation.Common.Problem -> String
+problemsClass : List Problem -> String
 problemsClass pl =
     case pl of
         [] ->
@@ -710,13 +731,13 @@ problemsClass pl =
             problemClass p
 
 
-problemClass : { a | typ : Validation.Common.ProblemType } -> String
+problemClass : Problem -> String
 problemClass { typ } =
     case typ of
-        Validation.Common.Syntax ->
+        Syntax ->
             "syntaxProblem"
 
-        Validation.Common.Semantics ->
+        Semantics ->
             "semanticsProblem"
 
 

@@ -1,11 +1,11 @@
 module Zipper exposing (..)
 
 import Debug exposing (log)
-import Formula 
+import Formula
 import Formula.Parser
-import Tableau exposing (..)
-import Formula.Signed 
+import Formula.Signed
 import Html exposing (table)
+import Tableau exposing (..)
 
 
 
@@ -61,10 +61,10 @@ children z =
             [ down z ]
 
         Refl _ ->
-            [down z]
+            [ down z ]
 
         Leibnitz _ ->
-            [down z]
+            [ down z ]
 
 
 down : Zipper -> Zipper
@@ -247,7 +247,7 @@ getFixedRef ref z =
 fixNodeRef : Zipper -> Zipper
 fixNodeRef z =
     modifyNode
-        (\({node} as tableau) ->
+        (\({ node } as tableau) ->
             { tableau | node = { node | references = List.map (\ref -> getFixedRef ref z) node.references } }
         )
         z
@@ -374,8 +374,8 @@ renumber2 tableau num =
 modifyRef : List Ref -> Zipper -> Zipper
 modifyRef refs z =
     modifyNode
-        (\({node} as tableau) ->
-            { tableau | node = {node | references = refs } }
+        (\({ node } as tableau) ->
+            { tableau | node = { node | references = refs } }
         )
         z
 
@@ -415,7 +415,7 @@ getReffed r z =
 
 
 zFirstRef : Zipper -> Ref
-zFirstRef z = 
+zFirstRef z =
     case z |> zNode |> .references of
         x :: xs ->
             x
@@ -425,7 +425,7 @@ zFirstRef z =
 
 
 zSecondRef : Zipper -> Ref
-zSecondRef z = 
+zSecondRef z =
     case z |> zNode |> .references of
         x0 :: x1 :: xs ->
             x1
@@ -538,12 +538,14 @@ renumberJustInRefWhenExpanding ref lengthOfPathFromFather =
 renumberJust : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJust t f lengthOfPathFromFather =
     let
-        func ref = 
+        func ref =
             case ref.up of
                 Just 0 ->
                     ref
+
                 Just x ->
                     f ref lengthOfPathFromFather
+
                 Nothing ->
                     ref
     in
@@ -575,7 +577,7 @@ closeControls oldNode =
 setFormula : String -> Zipper -> Zipper
 setFormula text =
     modifyNode
-        (\({node} as tableau) ->
+        (\({ node } as tableau) ->
             { tableau | node = { node | value = text, formula = Formula.Parser.parseSigned text } }
         )
 
@@ -585,36 +587,73 @@ setRefs new z =
     z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
 
 
-extendAlpha : Zipper -> Zipper
-extendAlpha z =
+extendUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
+extendUnaryRule extType z =
     z
         |> modifyNode
             (\tableau ->
                 case tableau.ext of
                     Open ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode Open))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode Open))
 
                     Alpha t ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Alpha t)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Alpha t)))
 
                     Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Beta lt rt)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Beta lt rt)))
 
                     Gamma t s ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Gamma t s)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Gamma t s)))
 
                     Delta t s ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Delta t s)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Delta t s)))
 
                     Refl t ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Refl t)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Refl t)))
 
                     Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Leibnitz t)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Leibnitz t)))
 
                     Closed r1 r2 ->
-                        Tableau (closeControls tableau.node) (Alpha (Tableau defNode (Closed r1 r2)))
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Closed r1 r2)))
             )
+
+
+extendUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
+extendUnaryRuleWithSubst extType z =
+    z
+        |> modifyNode
+            (\tableau ->
+                case tableau.ext of
+                    Open ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode Open) defSubstitution)
+
+                    Alpha t ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Alpha t)) defSubstitution)
+
+                    Beta lt rt ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Beta lt rt)) defSubstitution)
+
+                    Gamma t s ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Gamma t s)) defSubstitution)
+
+                    Delta t s ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Delta t s)) defSubstitution)
+
+                    Refl t ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Refl t)) defSubstitution)
+
+                    Leibnitz t ->
+                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Leibnitz t)) defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+
+
+extendAlpha : Zipper -> Zipper
+extendAlpha z =
+    extendUnaryRule Tableau.Alpha z
 
 
 extendBeta : Zipper -> Zipper
@@ -651,129 +690,22 @@ extendBeta z =
 
 extendGamma : Zipper -> Zipper
 extendGamma z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode Open) defSubstitution)
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Alpha t)) defSubstitution)
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Beta lt rt)) defSubstitution)
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Gamma t s)) defSubstitution)
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Delta t s)) defSubstitution)
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Refl t)) defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Gamma (Tableau defNode (Leibnitz t)) defSubstitution)
-
-                    _ ->
-                        tableau
-            )
+    extendUnaryRuleWithSubst Tableau.Gamma z
 
 
 extendDelta : Zipper -> Zipper
 extendDelta z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode Open) defSubstitution)
+    extendUnaryRuleWithSubst Tableau.Delta z
 
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Alpha t)) defSubstitution)
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Beta lt rt)) defSubstitution)
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Gamma t s)) defSubstitution)
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Delta t s)) defSubstitution)
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Refl t)) defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Delta (Tableau defNode (Leibnitz t)) defSubstitution)
-
-                    _ ->
-                        tableau
-            )
 
 extendRefl : Zipper -> Zipper
 extendRefl z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode Open))
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Alpha t)))
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Beta lt rt)))
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Gamma t s)))
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Delta t s)))
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Refl t)))
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Refl (Tableau defNode (Leibnitz t)))
-
-                    _ ->
-                        tableau
-            )
+    extendUnaryRule Tableau.Refl z
 
 
 extendLeibnitz : Zipper -> Zipper
 extendLeibnitz z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode Open))
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Alpha t)))
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Beta lt rt)))
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Gamma t s)))
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Delta t s)))
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Refl t)))
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Leibnitz t)))
-
-                    Closed r1 r2 ->
-                        Tableau (closeControls tableau.node) (Leibnitz (Tableau defNode (Closed r1 r2)))
-            )
+    extendUnaryRule Tableau.Leibnitz z
 
 
 delete : Zipper -> Zipper
@@ -1004,8 +936,8 @@ changeButtonAppearance z =
         z
 
 
-changeToAlpha : Zipper -> Zipper
-changeToAlpha z =
+changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
+changeToUnaryRule extType z =
     if (z |> up) == z then
         z
 
@@ -1014,32 +946,78 @@ changeToAlpha z =
             (\tableau ->
                 -- pozor na koren
                 case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (extType t)
+
                     Beta lt rt ->
                         if lt.node.value == "" then
-                            Tableau tableau.node (Alpha rt)
+                            Tableau tableau.node (extType rt)
 
                         else if rt.node.value == "" then
-                            Tableau tableau.node (Alpha lt)
+                            Tableau tableau.node (extType lt)
 
                         else
                             Tableau tableau.node (Beta lt rt)
 
                     Gamma t s ->
-                        Tableau tableau.node (Alpha t)
+                        Tableau tableau.node (extType t)
 
                     Delta t s ->
-                        Tableau tableau.node (Alpha t)
+                        Tableau tableau.node (extType t)
 
                     Refl t ->
-                        Tableau tableau.node (Alpha t)
+                        Tableau tableau.node (extType t)
 
                     Leibnitz t ->
-                        Tableau tableau.node (Alpha t)
+                        Tableau tableau.node (extType t)
 
                     _ ->
                         tableau
             )
             (z |> up)
+
+
+changeToUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
+changeToUnaryRuleWithSubst extType z =
+    if (z |> up) == z then
+        z
+
+    else
+        modifyNode
+            (\tableau ->
+                -- pozor na koren
+                case tableau.ext of
+                    Alpha t ->
+                        Tableau tableau.node (extType t defSubstitution)
+
+                    Beta lt rt ->
+                        if lt.node.value == "" then
+                            Tableau tableau.node (extType rt defSubstitution)
+
+                        else if rt.node.value == "" then
+                            Tableau tableau.node (extType lt defSubstitution)
+
+                        else
+                            Tableau tableau.node (Beta lt rt)
+
+                    Delta t s ->
+                        Tableau tableau.node (extType t s)
+
+                    Refl t ->
+                        Tableau tableau.node (extType t defSubstitution)
+
+                    Leibnitz t ->
+                        Tableau tableau.node (extType t defSubstitution)
+
+                    _ ->
+                        tableau
+            )
+            (z |> up)
+
+
+changeToAlpha : Zipper -> Zipper
+changeToAlpha z =
+    changeToUnaryRule Tableau.Alpha z
 
 
 changeToBeta : Zipper -> Zipper
@@ -1075,154 +1053,22 @@ changeToBeta z =
 
 changeToGamma : Zipper -> Zipper
 changeToGamma z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (Gamma t defSubstitution)
-
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (Gamma rt defSubstitution)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (Gamma lt defSubstitution)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Delta t s ->
-                        Tableau tableau.node (Gamma t s)
-
-                    Refl t ->
-                        Tableau tableau.node (Gamma t defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau tableau.node (Gamma t defSubstitution)
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeToUnaryRuleWithSubst Tableau.Gamma z
 
 
 changeToDelta : Zipper -> Zipper
 changeToDelta z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (Delta t defSubstitution)
-
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (Delta rt defSubstitution)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (Delta lt defSubstitution)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Gamma t s ->
-                        Tableau tableau.node (Delta t s)
-
-                    Refl t ->
-                        Tableau tableau.node (Delta t defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau tableau.node (Delta t defSubstitution)
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeToUnaryRuleWithSubst Tableau.Delta z
 
 
 changeToRefl : Zipper -> Zipper
 changeToRefl z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (Refl t)
-
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (Refl rt)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (Refl lt)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Gamma t s ->
-                        Tableau tableau.node (Refl t)
-
-                    Delta t s ->
-                        Tableau tableau.node (Refl t)
-
-                    Leibnitz t ->
-                        Tableau tableau.node (Refl t)
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeToUnaryRule Tableau.Refl z
 
 
 changeToLeibnitz : Zipper -> Zipper
 changeToLeibnitz z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (Leibnitz t)
-
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (Leibnitz rt)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (Leibnitz lt)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Gamma t s ->
-                        Tableau tableau.node (Leibnitz t)
-
-                    Delta t s ->
-                        Tableau tableau.node (Leibnitz t)
-
-                    Refl t ->
-                        Tableau tableau.node (Leibnitz t)
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeToUnaryRule Tableau.Leibnitz z
 
 
 prettify : Tableau -> Tableau
