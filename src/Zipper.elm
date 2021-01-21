@@ -587,125 +587,48 @@ setRefs new z =
     z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
 
 
-extendUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
-extendUnaryRule extType z =
+extendWithRule : (Tableau -> Extension) -> Zipper -> Zipper
+extendWithRule extType z =
     z
         |> modifyNode
             (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode Open))
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Alpha t)))
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Beta lt rt)))
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Gamma t s)))
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Delta t s)))
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Refl t)))
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Leibnitz t)))
-
-                    Closed r1 r2 ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Closed r1 r2)))
+                Tableau (closeControls tableau.node) (extType (Tableau defNode tableau.ext))
             )
 
 
-extendUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
-extendUnaryRuleWithSubst extType z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode Open) defSubstitution)
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Alpha t)) defSubstitution)
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Beta lt rt)) defSubstitution)
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Gamma t s)) defSubstitution)
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Delta t s)) defSubstitution)
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Refl t)) defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (extType (Tableau defNode (Leibnitz t)) defSubstitution)
-
-                    _ ->
-                        tableau
-            )
+extendRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
+extendRuleWithSubst extType z =
+    extendWithRule (\t -> extType t defSubstitution) z
 
 
 extendAlpha : Zipper -> Zipper
 extendAlpha z =
-    extendUnaryRule Tableau.Alpha z
+    extendWithRule Tableau.Alpha z
 
 
 extendBeta : Zipper -> Zipper
 extendBeta z =
-    z
-        |> modifyNode
-            (\tableau ->
-                case tableau.ext of
-                    Open ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode Open) (Tableau defNode Open))
-
-                    Alpha t ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Alpha t)) (Tableau defNode Open))
-
-                    Beta lt rt ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Beta lt rt)) (Tableau defNode Open))
-
-                    Gamma t s ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Gamma t s)) (Tableau defNode Open))
-
-                    Delta t s ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Delta t s)) (Tableau defNode Open))
-
-                    Refl t ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Refl t)) (Tableau defNode Open))
-
-                    Leibnitz t ->
-                        Tableau (closeControls tableau.node) (Beta (Tableau defNode (Leibnitz t)) (Tableau defNode Open))
-
-                    _ ->
-                        tableau
-            )
+    extendWithRule (\t -> Beta t (Tableau defNode Open)) z
 
 
 extendGamma : Zipper -> Zipper
 extendGamma z =
-    extendUnaryRuleWithSubst Tableau.Gamma z
+    extendRuleWithSubst Tableau.Gamma z
 
 
 extendDelta : Zipper -> Zipper
 extendDelta z =
-    extendUnaryRuleWithSubst Tableau.Delta z
+    extendRuleWithSubst Tableau.Delta z
 
 
 extendRefl : Zipper -> Zipper
 extendRefl z =
-    extendUnaryRule Tableau.Refl z
+    extendWithRule Tableau.Refl z
 
 
 extendLeibnitz : Zipper -> Zipper
 extendLeibnitz z =
-    extendUnaryRule Tableau.Leibnitz z
+    extendWithRule Tableau.Leibnitz z
 
 
 delete : Zipper -> Zipper
@@ -729,9 +652,6 @@ deleteMe (( t, fatherbs ) as zip) =
                     Closed r1 r2 ->
                         Tableau defNode Open
 
-                    Alpha st ->
-                        st
-
                     Beta lt rt ->
                         -- mozem zmazat iba ked jedna z biet sa moze stat alfou
                         if lt.node.value == "" then
@@ -743,17 +663,8 @@ deleteMe (( t, fatherbs ) as zip) =
                         else
                             tableau
 
-                    Gamma st s ->
-                        st
-
-                    Delta st s ->
-                        st
-
-                    Refl st ->
-                        st
-
-                    Leibnitz st ->
-                        st
+                    _ ->
+                        leftSubtree tableau.ext
             )
             zip
 
@@ -802,23 +713,11 @@ deleteMe (( t, fatherbs ) as zip) =
                             Closed r1 r2 ->
                                 Tableau tableau.node Open
 
-                            Alpha st ->
-                                Tableau tableau.node st.ext
-
-                            Gamma st s ->
-                                Tableau tableau.node st.ext
-
-                            Delta st s ->
-                                Tableau tableau.node st.ext
-
-                            Refl st ->
-                                Tableau tableau.node st.ext
-
-                            Leibnitz st ->
-                                Tableau tableau.node st.ext
+                            Beta _ _ ->
+                                tableau
 
                             _ ->
-                                tableau
+                                Tableau tableau.node (leftSubtree tableau.ext).ext
                     )
                     (zip |> up)
 
@@ -936,8 +835,51 @@ changeButtonAppearance z =
         z
 
 
-changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
-changeToUnaryRule extType z =
+isEmpty : Tableau -> Bool
+isEmpty t =
+    t.node.value == "" && t.ext == Open
+
+
+leftSubtree : Extension -> Tableau
+leftSubtree ext =
+    case ext of
+        Open ->
+            Tableau defNode Open
+
+        Closed _ _ ->
+            Tableau defNode Open
+
+        Alpha t ->
+            t
+
+        Beta lt _ ->
+            lt
+
+        Gamma t _ ->
+            t
+
+        Delta t _ ->
+            t
+
+        Refl t ->
+            t
+
+        Leibnitz t ->
+            t
+
+
+rightSubtree : Extension -> Tableau
+rightSubtree ext =
+    case ext of
+        Beta _ rt ->
+            rt
+
+        _ ->
+            Tableau defNode Open
+
+
+changeRule : (Tableau -> Tableau -> Maybe Extension) -> Zipper -> Zipper
+changeRule extType z =
     if (z |> up) == z then
         z
 
@@ -946,73 +888,42 @@ changeToUnaryRule extType z =
             (\tableau ->
                 -- pozor na koren
                 case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (extType t)
+                    Open ->
+                        tableau
 
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (extType rt)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (extType lt)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Gamma t s ->
-                        Tableau tableau.node (extType t)
-
-                    Delta t s ->
-                        Tableau tableau.node (extType t)
-
-                    Refl t ->
-                        Tableau tableau.node (extType t)
-
-                    Leibnitz t ->
-                        Tableau tableau.node (extType t)
+                    Closed _ _ ->
+                        tableau
 
                     _ ->
-                        tableau
+                        case extType (leftSubtree tableau.ext) (rightSubtree tableau.ext) of
+                            Nothing ->
+                                tableau
+
+                            Just extension ->
+                                Tableau tableau.node extension
             )
             (z |> up)
+
+
+changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
+changeToUnaryRule extType z =
+    changeRule
+        (\lt rt ->
+            if isEmpty lt then
+                Just (extType rt)
+
+            else if isEmpty rt then
+                Just (extType lt)
+
+            else
+                Nothing
+        )
+        z
 
 
 changeToUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
 changeToUnaryRuleWithSubst extType z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (extType t defSubstitution)
-
-                    Beta lt rt ->
-                        if lt.node.value == "" then
-                            Tableau tableau.node (extType rt defSubstitution)
-
-                        else if rt.node.value == "" then
-                            Tableau tableau.node (extType lt defSubstitution)
-
-                        else
-                            Tableau tableau.node (Beta lt rt)
-
-                    Delta t s ->
-                        Tableau tableau.node (extType t s)
-
-                    Refl t ->
-                        Tableau tableau.node (extType t defSubstitution)
-
-                    Leibnitz t ->
-                        Tableau tableau.node (extType t defSubstitution)
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeToUnaryRule (\t -> extType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
 
 
 changeToAlpha : Zipper -> Zipper
@@ -1022,33 +933,7 @@ changeToAlpha z =
 
 changeToBeta : Zipper -> Zipper
 changeToBeta z =
-    if (z |> up) == z then
-        z
-
-    else
-        modifyNode
-            (\tableau ->
-                -- pozor na koren
-                case tableau.ext of
-                    Alpha t ->
-                        Tableau tableau.node (Beta t (Tableau defNode Open))
-
-                    Gamma t s ->
-                        Tableau tableau.node (Beta t (Tableau defNode Open))
-
-                    Delta t s ->
-                        Tableau tableau.node (Beta t (Tableau defNode Open))
-
-                    Refl t ->
-                        Tableau tableau.node (Beta t (Tableau defNode Open))
-
-                    Leibnitz t ->
-                        Tableau tableau.node (Beta t (Tableau defNode Open))
-
-                    _ ->
-                        tableau
-            )
-            (z |> up)
+    changeRule (\t1 t2 -> Just (Tableau.Beta t1 t2)) z
 
 
 changeToGamma : Zipper -> Zipper

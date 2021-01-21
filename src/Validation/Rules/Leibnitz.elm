@@ -1,4 +1,4 @@
-module Validation.Rules.Leibnitz exposing (checkSubsts, commonTemplate, validate)
+module Validation.Rules.Leibnitz exposing (checkSubsts, commonSignedTemplate, validate)
 
 import Dict
 import Formula exposing (Formula(..))
@@ -52,8 +52,8 @@ rightEqTerm f =
             Fun "default" []
 
 
-replaceInTerms : List Term -> List Term -> List Term
-replaceInTerms refTerms currentTerms =
+commonTermsTemplate : List Term -> List Term -> List Term
+commonTermsTemplate refTerms currentTerms =
     case refTerms of
         [] ->
             case currentTerms of
@@ -69,12 +69,12 @@ replaceInTerms refTerms currentTerms =
                     List.map (always templateVar) refTerms
 
                 currentTerm :: cts ->
-                    replaceInTerm refTerm currentTerm
-                        :: replaceInTerms rts cts
+                    commonTermTemplate refTerm currentTerm
+                        :: commonTermsTemplate rts cts
 
 
-replaceInTerm : Term -> Term -> Term
-replaceInTerm refTerm currentTerm =
+commonTermTemplate : Term -> Term -> Term
+commonTermTemplate refTerm currentTerm =
     case refTerm of
         Var refStr ->
             case currentTerm of
@@ -95,21 +95,21 @@ replaceInTerm refTerm currentTerm =
                         templateVar
 
                     else
-                        Fun refStr (replaceInTerms refTerms currentTerms)
+                        Fun refStr (commonTermsTemplate refTerms currentTerms)
 
                 Var _ ->
                     templateVar
 
 
-replaceInFormula : Formula -> Formula -> Result String Formula
-replaceInFormula refF currentF =
+commonFormulaTemplate : Formula -> Formula -> Result String Formula
+commonFormulaTemplate refF currentF =
     case refF of
         PredAtom refStr refTerms ->
             case currentF of
                 PredAtom currentStr currentTerms ->
                     Ok
                         (PredAtom refStr
-                            (replaceInTerms refTerms currentTerms)
+                            (commonTermsTemplate refTerms currentTerms)
                         )
 
                 _ ->
@@ -120,8 +120,8 @@ replaceInFormula refF currentF =
                 EqAtom currentLt currentRt ->
                     Ok
                         (EqAtom
-                            (replaceInTerm refLt currentLt)
-                            (replaceInTerm refRt currentRt)
+                            (commonTermTemplate refLt currentLt)
+                            (commonTermTemplate refRt currentRt)
                         )
 
                 _ ->
@@ -131,7 +131,7 @@ replaceInFormula refF currentF =
             case currentF of
                 Neg currentSf ->
                     Result.map (\f -> Neg f)
-                        (replaceInFormula refSf currentSf)
+                        (commonFormulaTemplate refSf currentSf)
 
                 _ ->
                     differentStructureError
@@ -140,8 +140,8 @@ replaceInFormula refF currentF =
             case currentF of
                 Conj currentSf1 currentSf2 ->
                     Result.map2 (\f1 f2 -> Conj f1 f2)
-                        (replaceInFormula refSf1 currentSf1)
-                        (replaceInFormula refSf2 currentSf2)
+                        (commonFormulaTemplate refSf1 currentSf1)
+                        (commonFormulaTemplate refSf2 currentSf2)
 
                 _ ->
                     differentStructureError
@@ -150,8 +150,8 @@ replaceInFormula refF currentF =
             case currentF of
                 Disj currentSf1 currentSf2 ->
                     Result.map2 (\f1 f2 -> Disj f1 f2)
-                        (replaceInFormula refSf1 currentSf1)
-                        (replaceInFormula refSf2 currentSf2)
+                        (commonFormulaTemplate refSf1 currentSf1)
+                        (commonFormulaTemplate refSf2 currentSf2)
 
                 _ ->
                     differentStructureError
@@ -160,8 +160,8 @@ replaceInFormula refF currentF =
             case currentF of
                 Impl currentSf1 currentSf2 ->
                     Result.map2 (\f1 f2 -> Impl f1 f2)
-                        (replaceInFormula refSf1 currentSf1)
-                        (replaceInFormula refSf2 currentSf2)
+                        (commonFormulaTemplate refSf1 currentSf1)
+                        (commonFormulaTemplate refSf2 currentSf2)
 
                 _ ->
                     differentStructureError
@@ -170,7 +170,7 @@ replaceInFormula refF currentF =
             case currentF of
                 ForAll currentX currentSf ->
                     Result.map (\f -> ForAll refX f)
-                        (replaceInFormula refSf currentSf)
+                        (commonFormulaTemplate refSf currentSf)
 
                 _ ->
                     differentStructureError
@@ -179,7 +179,7 @@ replaceInFormula refF currentF =
             case currentF of
                 Exists currentX currentSf ->
                     Result.map (\f -> Exists refX f)
-                        (replaceInFormula refSf currentSf)
+                        (commonFormulaTemplate refSf currentSf)
 
                 _ ->
                     differentStructureError
@@ -188,8 +188,8 @@ replaceInFormula refF currentF =
             Err "wrong formula type"
 
 
-commonTemplate : Signed Formula -> Signed Formula -> Result String (Signed Formula)
-commonTemplate refF currentF =
+commonSignedTemplate : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+commonSignedTemplate refF currentF =
     case refF of
         T f ->
             case currentF of
@@ -197,13 +197,13 @@ commonTemplate refF currentF =
                     differentSignError
 
                 T f1 ->
-                    replaceInFormula f (Formula.Signed.getFormula currentF)
+                    commonFormulaTemplate f (Formula.Signed.getFormula currentF)
                         |> Result.map (\a -> T a)
 
         F f ->
             case currentF of
                 F f1 ->
-                    replaceInFormula f (Formula.Signed.getFormula currentF)
+                    commonFormulaTemplate f (Formula.Signed.getFormula currentF)
                         |> Result.map (\a -> F a)
 
                 T f1 ->
@@ -264,7 +264,7 @@ checkSubsts refEq refF z =
             (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
 
         replaced =
-            commonTemplate refF currentF |> Result.mapError (\err -> semanticsProblem z err)
+            commonSignedTemplate refF currentF |> Result.mapError (\err -> semanticsProblem z err)
 
         σ1 =
             Dict.fromList [ ( "[]", lt ) ]

@@ -45,9 +45,7 @@ encodeUnaryRule tableau extType subTableau =
 
 encodeUnaryRuleWithSubst : Tableau -> String -> Tableau -> Tableau.Substitution -> List ( String, Value )
 encodeUnaryRuleWithSubst tableau extType subTableau subst =
-    [ ( "type", string extType ) ]
-        ++ jsonNodeList tableau.node
-        ++ [ ( "child", jsonTableau subTableau ) ]
+    encodeUnaryRule tableau extType subTableau
         ++ encodeSubstitution subst
 
 
