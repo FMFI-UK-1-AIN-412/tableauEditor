@@ -99,21 +99,6 @@ checkPredicate pred x a =
         Err x
 
 
-isPointingOnSelf : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> Bool
-isPointingOnSelf extractRef this =
-    case this |> extractRef |> .up of
-        Just 0 ->
-            True
-
-        _ ->
-            False
-
-
-validateReffedFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
-validateReffedFormula z =
-    z |> Zipper.zNode |> .formula |> Result.mapError (\e -> semanticsProblem z "Referenced formula is invalid")
-
-
 second : a1 -> a2 -> a2
 second =
     \a b -> Tuple.second ( a, b )
