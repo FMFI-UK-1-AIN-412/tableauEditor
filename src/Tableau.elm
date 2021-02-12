@@ -66,6 +66,49 @@ defNode =
     { id = 1, value = "", references = [], formula = Formula.Parser.parseSigned "", gui = defGUI }
 
 
+isEmpty : Tableau -> Bool
+isEmpty t =
+    t.node.value == "" && t.ext == Open
+
+
+leftSubtree : Tableau -> Tableau
+leftSubtree t =
+    case t.ext of
+        Open ->
+            Tableau defNode Open
+
+        Closed _ _ ->
+            Tableau defNode Open
+
+        Alpha subT ->
+            subT
+
+        Beta leftSubT _ ->
+            leftSubT
+
+        Gamma subT _ ->
+            subT
+
+        Delta subT _ ->
+            subT
+
+        Refl subT ->
+            subT
+
+        Leibnitz subT ->
+            subT
+
+
+rightSubtree : Tableau -> Tableau
+rightSubtree t =
+    case t.ext of
+        Beta _ rt ->
+            rt
+
+        _ ->
+            Tableau defNode Open
+
+
 strRefsToList : String -> List String
 strRefsToList str =
     let

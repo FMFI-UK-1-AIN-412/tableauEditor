@@ -170,7 +170,7 @@ notesTable =
             , Html.tr []
                 [ Html.td []
                     [ Markdown.toHtml [ class "symbols" ]
-                        "Make each premise/assumption and conclusion/goal reference itself. Sign premises with `T` and sign conclusions with\u{00A0}`F`."
+                        "Write each premise/assumption and conclusion/goal with no references. Sign premises with `T` and sign conclusions with\u{00A0}`F`."
                     ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ]

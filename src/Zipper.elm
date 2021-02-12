@@ -664,7 +664,7 @@ deleteMe (( t, fatherbs ) as zip) =
                             tableau
 
                     _ ->
-                        leftSubtree tableau.ext
+                        Tableau.leftSubtree tableau
             )
             zip
 
@@ -717,7 +717,7 @@ deleteMe (( t, fatherbs ) as zip) =
                                 tableau
 
                             _ ->
-                                Tableau tableau.node (leftSubtree tableau.ext).ext
+                                Tableau tableau.node (Tableau.leftSubtree tableau).ext
                     )
                     (zip |> up)
 
@@ -835,49 +835,6 @@ changeButtonAppearance z =
         z
 
 
-isEmpty : Tableau -> Bool
-isEmpty t =
-    t.node.value == "" && t.ext == Open
-
-
-leftSubtree : Extension -> Tableau
-leftSubtree ext =
-    case ext of
-        Open ->
-            Tableau defNode Open
-
-        Closed _ _ ->
-            Tableau defNode Open
-
-        Alpha t ->
-            t
-
-        Beta lt _ ->
-            lt
-
-        Gamma t _ ->
-            t
-
-        Delta t _ ->
-            t
-
-        Refl t ->
-            t
-
-        Leibnitz t ->
-            t
-
-
-rightSubtree : Extension -> Tableau
-rightSubtree ext =
-    case ext of
-        Beta _ rt ->
-            rt
-
-        _ ->
-            Tableau defNode Open
-
-
 changeRule : (Tableau -> Tableau -> Maybe Extension) -> Zipper -> Zipper
 changeRule extType z =
     if (z |> up) == z then
@@ -895,7 +852,7 @@ changeRule extType z =
                         tableau
 
                     _ ->
-                        case extType (leftSubtree tableau.ext) (rightSubtree tableau.ext) of
+                        case extType (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau) of
                             Nothing ->
                                 tableau
 
@@ -909,10 +866,10 @@ changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
 changeToUnaryRule extType z =
     changeRule
         (\lt rt ->
-            if isEmpty lt then
+            if Tableau.isEmpty lt then
                 Just (extType rt)
 
-            else if isEmpty rt then
+            else if Tableau.isEmpty rt then
                 Just (extType lt)
 
             else
