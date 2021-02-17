@@ -25,6 +25,17 @@ type alias Problem =
     }
 
 
+type RuleErrorType = 
+    RefFormulasErr
+    | CurrentFormulaErr
+
+
+type alias RuleError = 
+    { typ : RuleErrorType
+    , msg : String
+    }   
+
+
 syntaxProblem : Zipper.Zipper -> String -> List Problem
 syntaxProblem z s =
     [ { typ = Syntax, msg = s, zip = z } ]
@@ -267,3 +278,80 @@ getReffedId extractRef z =
 hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
 hasNumberOfRefs n z =
     List.length (Zipper.zNode z).references == n
+
+
+{- If one of the errors is CurrentFormulaErr, it will be returned. Returns the first error otherwise -}
+ruleErrorToShow: RuleError -> RuleError -> RuleError
+ruleErrorToShow e1 e2 = 
+    case e1.typ of 
+        CurrentFormulaErr ->
+            e1
+
+        RefFormulasErr ->
+            case e2.typ of
+                CurrentFormulaErr ->
+                    e2
+                _ ->
+                    e1
+
+
+{- Returns the first Ok Result. If both are Err, returns the one with CurrentFormulaErr -}
+betterOutcome : Result RuleError value -> Result RuleError value -> Result RuleError value
+betterOutcome r1 r2 = 
+        case r1 of
+            Ok val1 ->
+               Ok val1
+            Err err1 ->
+                case r2 of
+                    Ok val2 ->
+                        Ok val2
+                    Err err2 ->
+                        Err (ruleErrorToShow err1 err2)
+
+
+validate2RefUnaryRule : String -> (Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper) -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate2RefUnaryRule ruleName check z =
+    z
+        |> checkPredicate (hasNumberOfRefs 2)
+            (semanticsProblem z (ruleName ++ " rule must have 2 references"))
+        |> Result.andThen (checkReffedFormula "first" (Zipper.zFirstRef z))
+        |> Result.andThen (\_ -> checkReffedFormula "second" (Zipper.zSecondRef z) z)
+        |> Result.andThen
+            (\_ ->
+                check
+                    (getReffedSignedFormula Zipper.zFirstRef z
+                        |> Result.withDefault (T (PredAtom "default" []))
+                    )
+                    (getReffedSignedFormula Zipper.zSecondRef z
+                        |> Result.withDefault (T (PredAtom "default" []))
+                    )
+                    z
+            )
+        |> Result.map (always z) 
+
+
+tryBothFormulaOrders: (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> Signed Formula -> Signed Formula ->  Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+tryBothFormulaOrders checkFormulaOrder sf1 sf2 z = 
+    let
+        currentF = (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
+    in
+        betterOutcome (checkFormulaOrder sf1 sf2 currentF) (checkFormulaOrder sf2 sf1 currentF)
+        |> Result.mapError (\err -> (semanticsProblem z err.msg))
+        |> Result.map (always z)
+
+
+tryBothOrdersAndStructures : (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+tryBothOrdersAndStructures struct1 struct2 sf1 sf2 z =
+    let
+        currentF =
+            (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
+
+        firstOption =
+            betterOutcome (struct1 sf1 sf2 currentF) (struct1 sf2 sf1 currentF)
+
+        secondOption =
+            betterOutcome (struct2 sf1 sf2 currentF) (struct2 sf2 sf1 currentF)
+    in
+    betterOutcome firstOption secondOption
+        |> Result.mapError (\err -> semanticsProblem z err.msg)
+        |> Result.map (always z)
