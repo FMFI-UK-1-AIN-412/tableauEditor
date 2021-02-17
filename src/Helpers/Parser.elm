@@ -1,16 +1,15 @@
 module Helpers.Parser exposing (deadEndsToString, deadEndsToStrings)
 
-
 import Dict exposing (Dict)
 import Parser
 import Set
 
 
 type alias Problems =
-    { expecting: List String
-    , expectingKeyword: List String
-    , expectingSymbol: List String
-    , other: List String
+    { expecting : List String
+    , expectingKeyword : List String
+    , expectingSymbol : List String
+    , other : List String
     }
 
 
@@ -48,7 +47,8 @@ deadEndsToProblemsMatrix =
                 col
                 (Just
                     << addProblemToProblems problem
-                    << Maybe.withDefault noProblems)
+                    << Maybe.withDefault noProblems
+                )
         )
         Dict.empty
 
@@ -64,9 +64,11 @@ matrixToStrings =
         (\r row pstrs ->
             List.foldr
                 (\s psts1 ->
-                    ("Row " ++ String.fromInt r ++ ", " ++ s) :: psts1)
+                    ("Row " ++ String.fromInt r ++ ", " ++ s) :: psts1
+                )
                 pstrs
-                (rowToStrings row))
+                (rowToStrings row)
+        )
         []
 
 
@@ -74,39 +76,50 @@ rowToStrings : Dict Int String -> List String
 rowToStrings =
     Dict.foldr
         (\c ps pstrs ->
-            ("column " ++ String.fromInt c ++ ": " ++ ps) :: pstrs)
+            ("column " ++ String.fromInt c ++ ": " ++ ps) :: pstrs
+        )
         []
 
 
 updateMatrix :
-    comparable -> comparable -> (Maybe a -> Maybe a) ->
-    Matrix comparable comparable a -> Matrix comparable comparable a
+    comparable
+    -> comparable
+    -> (Maybe a -> Maybe a)
+    -> Matrix comparable comparable a
+    -> Matrix comparable comparable a
 updateMatrix r c update =
     Dict.update
         r
         (Just
             << Dict.update c update
-            << Maybe.withDefault Dict.empty)
+            << Maybe.withDefault Dict.empty
+        )
+
 
 problemsToString : Problems -> String
 problemsToString ps =
     let
         expectations =
-            revAlternativesToMaybeString
-                <| List.reverse ps.expecting
+            revAlternativesToMaybeString <|
+                List.reverse ps.expecting
                     ++ expectingKindToString "keyword" ps.expectingKeyword
                     ++ expectingKindToString "symbol" ps.expectingSymbol
     in
-        String.join "; "
-            <| ((Maybe.withDefault []
-                    <| Maybe.map (\s -> ["expecting " ++ s]) expectations)
-                ++ List.reverse ps.other)
+    String.join "; " <|
+        ((Maybe.withDefault [] <|
+            Maybe.map (\s -> [ "expecting " ++ s ]) expectations
+         )
+            ++ List.reverse ps.other
+        )
 
 
 expectingKindToString : String -> List String -> List String
 expectingKindToString kind syms =
-    case List.map (\sym -> "‘" ++ sym ++ "’")
-            <| Set.toList <| Set.fromList syms of
+    case
+        List.map (\sym -> "‘" ++ sym ++ "’") <|
+            Set.toList <|
+                Set.fromList syms
+    of
         [] ->
             []
 
@@ -114,7 +127,9 @@ expectingKindToString kind syms =
             [ kind ++ " " ++ qsym ]
 
         qsyms ->
-            [ "one of " ++ kind ++ "s "
+            [ "one of "
+                ++ kind
+                ++ "s "
                 ++ Maybe.withDefault "" (revAlternativesToMaybeString qsyms)
             ]
 
@@ -132,8 +147,11 @@ revAlternativesToMaybeString alts =
             Just (alt2 ++ " or " ++ alt1)
 
         alt1 :: morealts ->
-            Just ((String.join ", " <| List.reverse <| morealts)
-                    ++ ", or " ++ alt1)
+            Just
+                ((String.join ", " <| List.reverse <| morealts)
+                    ++ ", or "
+                    ++ alt1
+                )
 
 
 addProblemToProblems : Parser.Problem -> Problems -> Problems
@@ -141,29 +159,42 @@ addProblemToProblems p ps =
     case p of
         Parser.Expecting exp ->
             { ps | expecting = exp :: ps.expecting }
+
         Parser.ExpectingInt ->
             { ps | expecting = "an integer" :: ps.expecting }
+
         Parser.ExpectingHex ->
             { ps | expecting = "a hexadecimal number" :: ps.expecting }
+
         Parser.ExpectingOctal ->
             { ps | expecting = "an octal number" :: ps.expecting }
+
         Parser.ExpectingBinary ->
             { ps | expecting = "a binary number" :: ps.expecting }
+
         Parser.ExpectingFloat ->
             { ps | expecting = "a floating point number" :: ps.expecting }
+
         Parser.ExpectingNumber ->
             { ps | expecting = "a number" :: ps.expecting }
+
         Parser.ExpectingVariable ->
             { ps | expecting = "an identifier" :: ps.expecting }
+
         Parser.ExpectingSymbol sym ->
             { ps | expectingSymbol = sym :: ps.expectingSymbol }
+
         Parser.ExpectingKeyword kw ->
             { ps | expectingKeyword = kw :: ps.expectingKeyword }
+
         Parser.ExpectingEnd ->
             { ps | expecting = "end of input" :: ps.expecting }
+
         Parser.UnexpectedChar ->
             { ps | other = "unexpected character" :: ps.other }
+
         Parser.Problem prob ->
             { ps | other = prob :: ps.other }
+
         Parser.BadRepeat ->
             { ps | other = "bad repeat" :: ps.other }

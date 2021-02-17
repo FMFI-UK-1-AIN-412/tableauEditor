@@ -1,9 +1,9 @@
 module Tableau exposing (..)
 
 import Formula exposing (Formula)
-import Parser
-import Formula.Signed exposing (Signed)
 import Formula.Parser
+import Formula.Signed exposing (Signed)
+import Parser
 
 
 type alias Tableau =
@@ -42,7 +42,8 @@ type Extension
     | Beta Tableau Tableau
     | Gamma Tableau Substitution
     | Delta Tableau Substitution
-    | Refl Tableau 
+    | Refl Tableau
+    | Leibnitz Tableau
 
 
 defSubstitution : Substitution
@@ -65,18 +66,65 @@ defNode =
     { id = 1, value = "", references = [], formula = Formula.Parser.parseSigned "", gui = defGUI }
 
 
+isEmpty : Tableau -> Bool
+isEmpty t =
+    t.node.value == "" && t.ext == Open
+
+
+leftSubtree : Tableau -> Tableau
+leftSubtree t =
+    case t.ext of
+        Open ->
+            Tableau defNode Open
+
+        Closed _ _ ->
+            Tableau defNode Open
+
+        Alpha subT ->
+            subT
+
+        Beta leftSubT _ ->
+            leftSubT
+
+        Gamma subT _ ->
+            subT
+
+        Delta subT _ ->
+            subT
+
+        Refl subT ->
+            subT
+
+        Leibnitz subT ->
+            subT
+
+
+rightSubtree : Tableau -> Tableau
+rightSubtree t =
+    case t.ext of
+        Beta _ rt ->
+            rt
+
+        _ ->
+            Tableau defNode Open
+
+
 strRefsToList : String -> List String
-strRefsToList str = 
-    let lst = 
+strRefsToList str =
+    let
+        lst =
             List.filter (\a -> a /= "") (String.split "," (String.replace " " "" str))
     in
     if String.right 1 str == "," then
-        List.append lst [""]
+        List.append lst [ "" ]
+
     else if String.left 1 str == "," then
         "" :: lst
+
     else
         lst
 
+
 refsToString : List Ref -> String
-refsToString lst = 
+refsToString lst =
     String.join "," (List.map (\r -> r.str) lst)

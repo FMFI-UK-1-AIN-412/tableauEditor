@@ -3,10 +3,10 @@ module Helpers.Rules exposing (..)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Term exposing (Term(..))
 import Html exposing (Attribute, Html, div, h2, h3, p, table, td, text, tr)
 import Html.Attributes exposing (..)
 import Markdown
+import Term exposing (Term(..))
 
 
 fA =
@@ -51,46 +51,49 @@ gammas =
 
 renderAlpha : Signed Formula -> Html msg
 renderAlpha a =
-    table [ class "rule" ]
-        <| tr [] [ td [] [ text <| Formula.Signed.toString a ] ]
+    table [ class "rule" ] <|
+        tr [] [ td [] [ text <| Formula.Signed.toString a ] ]
             :: List.map
-                (\f -> tr [] [ td []  [ text <| Formula.Signed.toString f ] ])
+                (\f -> tr [] [ td [] [ text <| Formula.Signed.toString f ] ])
                 (Formula.Signed.subformulas a)
 
 
 renderBeta b =
     let
-        subfs = Formula.Signed.subformulas b
+        subfs =
+            Formula.Signed.subformulas b
     in
-        table [ class "rule" ]
-            [ tr [] [ td [ colspan (List.length subfs)] [ text <| Formula.Signed.toString b ] ]
-            , tr []
-                <| List.map
-                    (\f ->  td []  [ text <| Formula.Signed.toString f ])
-                    subfs
-            ]
+    table [ class "rule" ]
+        [ tr [] [ td [ colspan (List.length subfs) ] [ text <| Formula.Signed.toString b ] ]
+        , tr [] <|
+            List.map
+                (\f -> td [] [ text <| Formula.Signed.toString f ])
+                subfs
+        ]
 
 
 renderGamma g =
-    table [ class "rule" ]
-        <| tr [] [ td [] [ text <| Formula.Signed.toString g ] ]
+    table [ class "rule" ] <|
+        tr [] [ td [] [ text <| Formula.Signed.toString g ] ]
             :: List.map
-                (\f -> tr []
-                    [ td []
-                        [ text <| Formula.Signed.toString <| demoSubst "x" "t" f ]
-                    ]
+                (\f ->
+                    tr []
+                        [ td []
+                            [ text <| Formula.Signed.toString <| demoSubst "x" "t" f ]
+                        ]
                 )
                 (Formula.Signed.subformulas g)
 
 
 renderDelta d =
-    table [ class "rule" ]
-        <| tr [] [ td [] [ text <| Formula.Signed.toString d ] ]
+    table [ class "rule" ] <|
+        tr [] [ td [] [ text <| Formula.Signed.toString d ] ]
             :: List.map
-                (\f -> tr []
-                    [ td []
-                        [ text <| Formula.Signed.toString <| demoSubst "x" "y" f ]
-                    ]
+                (\f ->
+                    tr []
+                        [ td []
+                            [ text <| Formula.Signed.toString <| demoSubst "x" "y" f ]
+                        ]
                 )
                 (Formula.Signed.subformulas d)
 
@@ -99,7 +102,9 @@ demoSubst : String -> String -> Signed Formula -> Signed Formula
 demoSubst x y =
     signedMap
         (Result.withDefault FF
-            << Formula.substitute (Dict.singleton x (Var y)))
+            << Formula.substitute (Dict.singleton x (Var y))
+        )
+
 
 signedMap : (a -> a) -> Signed a -> Signed a
 signedMap f sx =
@@ -109,6 +114,7 @@ signedMap f sx =
 
         F x ->
             F (f x)
+
 
 symbolsTable =
     div [ class "half" ]
@@ -132,10 +138,10 @@ symbolsTable =
                 ]
             , Html.tr []
                 [ Html.td [] [ text "unary" ]
-                , Html.td [colspan 3]
+                , Html.td [ colspan 3 ]
                     [ text "strictly binary, must be parenthesized" ]
-                , Html.td [colspan 2]
-                    [ text "takes a variable and a formula" ]
+                , Html.td [ colspan 2 ]
+                    [ text "takes a\u{00A0}variable and a formula" ]
                 ]
             ]
         ]
@@ -150,8 +156,10 @@ notesTable =
                 , Html.th [] [ text "Example" ]
                 ]
             , Html.tr []
-                [ Html.td [] [ Markdown.toHtml [ class "symbols" ]
-                    "Each node contains a signed formula, i.e. it must be prefixed by `T` or `F`. " ]
+                [ Html.td []
+                    [ Markdown.toHtml [ class "symbols" ]
+                        "Each node contains a signed formula, i.e. it must be prefixed by `T` or `F`. "
+                    ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ]
                         "**T** \\forall x P(x)"
@@ -160,8 +168,10 @@ notesTable =
                     ]
                 ]
             , Html.tr []
-                [ Html.td [] [ Markdown.toHtml [ class "symbols" ]
-                    "Make each premise/assumption and conclusion/goal reference itself. Sign premises with `T` and sign conclusions with `F`." ]
+                [ Html.td []
+                    [ Markdown.toHtml [ class "symbols" ]
+                        "Write each premise/assumption and conclusion/goal with no references. Sign premises with `T` and sign conclusions with\u{00A0}`F`."
+                    ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ]
                         "(**1**) **T** (A → B) [**1**]"
@@ -170,16 +180,18 @@ notesTable =
                     ]
                 ]
             , Html.tr []
-                [ Html.td [] [ Markdown.toHtml [ class "symbols" ]
-                    "When substituting a variable _x_ with a term _t_, _t_ must not contain any variable which is bound at any occurrence of _x_." ]
+                [ Html.td []
+                    [ Markdown.toHtml [ class "symbols" ]
+                        "When substituting a\u{00A0}variable\u{00A0}_x_ with a term\u{00A0}_t_, _t_\u{00A0}must not contain any variable which is bound at any occurrence of\u{00A0}_x_."
+                    ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ] "**Incorrect** example: "
                     , Markdown.toHtml [ class "symbols" ] "(1) T ∀x ∃**y** P(**x**,y) [1]"
-                    , Markdown.toHtml [ class "symbols" ] "(2) T ∃y P(f(y),y) {x→**f(y)**} [1]"
+                    , Markdown.toHtml [ class "symbols" ] "(2) T ∃y P(f(y),y) {x→**f(y)**}\u{00A0}[1]"
                     ]
                 ]
             , Html.tr []
-                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "When applying a δ rule, substitute the bound variable with **a new** constant/variable, i.e., one which is not free (or, even better, does not occur at all) in any node above the current one." ]
+                [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "When applying a\u{00A0}δ\u{00A0}rule, substitute the bound variable with **a new** constant/variable, i.e., one which is not free (or, even better, does not occur at all) in any node above the current one." ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ] "**Incorrect** example: "
                     , Markdown.toHtml [ class "symbols" ] "(1) T L(**p**) [1]"

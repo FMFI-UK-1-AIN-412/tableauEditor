@@ -36,6 +36,19 @@ encodeSubstitution s =
     [ ( "substitution", jsonSubstitution s ) ]
 
 
+encodeUnaryRule : Tableau -> String -> Tableau -> List ( String, Value )
+encodeUnaryRule tableau extType subTableau =
+    [ ( "type", string extType ) ]
+        ++ jsonNodeList tableau.node
+        ++ [ ( "child", jsonTableau subTableau ) ]
+
+
+encodeUnaryRuleWithSubst : Tableau -> String -> Tableau -> Tableau.Substitution -> List ( String, Value )
+encodeUnaryRuleWithSubst tableau extType subTableau subst =
+    encodeUnaryRule tableau extType subTableau
+        ++ encodeSubstitution subst
+
+
 jsonTblList : Tableau -> List ( String, Value )
 jsonTblList tableau =
     case tableau.ext of
@@ -47,14 +60,12 @@ jsonTblList tableau =
             [ ( "type", string "closed" ) ]
                 ++ jsonNodeList tableau.node
                 ++ [ ( "closed"
-                     , list jsonRef [r1, r2]
+                     , list jsonRef [ r1, r2 ]
                      )
                    ]
 
         Alpha t ->
-            [ ( "type", string "alpha" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "child", jsonTableau t ) ]
+            encodeUnaryRule tableau "alpha" t
 
         Beta lt rt ->
             [ ( "type", string "beta" ) ]
@@ -62,21 +73,16 @@ jsonTblList tableau =
                 ++ [ ( "leftChild", jsonTableau lt ), ( "rightChild", jsonTableau rt ) ]
 
         Gamma t s ->
-            [ ( "type", string "gamma" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "child", jsonTableau t ) ]
-                ++ encodeSubstitution s
+            encodeUnaryRuleWithSubst tableau "gamma" t s
 
         Delta t s ->
-            [ ( "type", string "delta" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "child", jsonTableau t ) ]
-                ++ encodeSubstitution s
+            encodeUnaryRuleWithSubst tableau "delta" t s
 
         Refl t ->
-            [ ( "type", string "refl" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "child", jsonTableau t ) ]
+            encodeUnaryRule tableau "refl" t
+
+        Leibnitz t ->
+            encodeUnaryRule tableau "leibnitz" t
 
 
 jsonTableau : Tableau -> Value
