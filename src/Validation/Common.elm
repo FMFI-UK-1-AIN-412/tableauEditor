@@ -338,3 +338,20 @@ tryBothFormulaOrders checkFormulaOrder sf1 sf2 z =
         betterOutcome (checkFormulaOrder sf1 sf2 currentF) (checkFormulaOrder sf2 sf1 currentF)
         |> Result.mapError (\err -> (semanticsProblem z err.msg))
         |> Result.map (always z)
+
+
+tryBothOrdersAndStructures : (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+tryBothOrdersAndStructures struct1 struct2 sf1 sf2 z =
+    let
+        currentF =
+            (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
+
+        firstOption =
+            betterOutcome (struct1 sf1 sf2 currentF) (struct1 sf2 sf1 currentF)
+
+        secondOption =
+            betterOutcome (struct2 sf1 sf2 currentF) (struct2 sf2 sf1 currentF)
+    in
+    betterOutcome firstOption secondOption
+        |> Result.mapError (\err -> semanticsProblem z err.msg)
+        |> Result.map (always z)
