@@ -44,6 +44,12 @@ type Extension
     | Delta Tableau Substitution
     | Refl Tableau
     | Leibnitz Tableau
+    | MP Tableau
+    | MT Tableau
+    | Cut Tableau Tableau
+    | HS Tableau
+    | DS Tableau
+    | NCS Tableau
 
 
 defSubstitution : Substitution
@@ -98,11 +104,32 @@ leftSubtree t =
         Leibnitz subT ->
             subT
 
+        MP subT ->
+            subT
+        
+        MT subT ->
+            subT
+        
+        Cut leftSubT _ ->
+            leftSubT
+
+        HS subT ->
+            subT
+
+        DS subT ->
+            subT
+
+        NCS subT ->
+            subT
+
 
 rightSubtree : Tableau -> Tableau
 rightSubtree t =
     case t.ext of
         Beta _ rt ->
+            rt
+
+        Cut _ rt ->
             rt
 
         _ ->

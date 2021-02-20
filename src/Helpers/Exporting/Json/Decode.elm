@@ -6,6 +6,7 @@ import Formula.Parser
 import Json.Decode exposing (..)
 import Tableau exposing (Tableau)
 import Zipper
+import Tableau
 
 
 
@@ -80,6 +81,13 @@ unaryRuleWithSubst extType =
         (map2 extType (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
+binaryRule : (Tableau.Tableau -> Tableau.Tableau -> Tableau.Extension) -> Decoder Tableau.Tableau
+binaryRule extType =
+    map2 Tableau.Tableau
+        (field "node" node)
+        (map2 extType (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
+
+
 alpha : Decoder Tableau.Tableau
 alpha =
     unaryRule Tableau.Alpha
@@ -87,9 +95,7 @@ alpha =
 
 beta : Decoder Tableau.Tableau
 beta =
-    map2 Tableau.Tableau
-        (field "node" node)
-        (map2 Tableau.Beta (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
+    binaryRule Tableau.Beta
 
 
 delta : Decoder Tableau.Tableau
@@ -110,6 +116,36 @@ refl =
 leibnitz : Decoder Tableau.Tableau
 leibnitz =
     unaryRule Tableau.Leibnitz
+    
+
+mp : Decoder Tableau.Tableau
+mp =
+    unaryRule Tableau.MP
+    
+
+mt : Decoder Tableau.Tableau
+mt =
+    unaryRule Tableau.MT
+    
+
+cut : Decoder Tableau.Tableau
+cut =
+    binaryRule Tableau.Cut
+    
+
+hs : Decoder Tableau.Tableau
+hs =
+    unaryRule Tableau.HS
+    
+
+ds : Decoder Tableau.Tableau
+ds =
+    unaryRule Tableau.DS
+    
+
+ncs : Decoder Tableau.Tableau
+ncs =
+    unaryRule Tableau.NCS
 
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
@@ -138,6 +174,24 @@ tblTypeDecoder typ =
 
         "leibnitz" ->
             leibnitz
+
+        "mp" ->
+            mp
+
+        "mt" ->
+            mt
+
+        "cut" ->
+            cut
+
+        "hs" ->
+            hs
+
+        "ds" ->
+            ds
+
+        "ncs" ->
+            ncs
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")

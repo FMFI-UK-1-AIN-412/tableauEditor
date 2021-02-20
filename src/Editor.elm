@@ -25,6 +25,9 @@ import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
+import Zipper
+import Zipper
+import Zipper
 
 
 main : Program (Maybe String) Model Msg
@@ -104,6 +107,12 @@ type Msg
     | ExpandDelta Zipper.Zipper
     | ExpandRefl Zipper.Zipper
     | ExpandLeibnitz Zipper.Zipper
+    | ExpandMP Zipper.Zipper
+    | ExpandMT Zipper.Zipper
+    | ExpandCut Zipper.Zipper
+    | ExpandHS Zipper.Zipper
+    | ExpandDS Zipper.Zipper
+    | ExpandNCS Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
@@ -113,6 +122,12 @@ type Msg
     | ChangeToDelta Zipper.Zipper
     | ChangeToRefl Zipper.Zipper
     | ChangeToLeibnitz Zipper.Zipper
+    | ChangeToMP Zipper.Zipper
+    | ChangeToMT Zipper.Zipper
+    | ChangeToCut Zipper.Zipper
+    | ChangeToHS Zipper.Zipper
+    | ChangeToDS Zipper.Zipper
+    | ChangeToNCS Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -241,6 +256,24 @@ simpleUpdate msg model =
             ExpandLeibnitz z ->
                 { model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
+            ExpandMP z ->
+                { model | tableau = z |> Zipper.extendMP |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
+            ExpandMT z ->
+                { model | tableau = z |> Zipper.extendMT |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
+            ExpandCut z ->
+                { model | tableau = z |> Zipper.extendCut |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
+            ExpandHS z ->
+                { model | tableau = z |> Zipper.extendHS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
+            ExpandDS z ->
+                { model | tableau = z |> Zipper.extendDS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
+            ExpandNCS z ->
+                { model | tableau = z |> Zipper.extendNCS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRefs new |> top }
 
@@ -293,6 +326,24 @@ simpleUpdate msg model =
 
             ChangeToLeibnitz z ->
                 { model | tableau = z |> Zipper.changeToLeibnitz |> topRenumbered }
+
+            ChangeToMP z ->
+                { model | tableau = z |> Zipper.changeToMP |> topRenumbered }
+
+            ChangeToMT z ->
+                { model | tableau = z |> Zipper.changeToMT |> topRenumbered }
+
+            ChangeToCut z ->
+                { model | tableau = z |> Zipper.changeToCut |> topRenumbered }
+
+            ChangeToHS z ->
+                { model | tableau = z |> Zipper.changeToHS |> topRenumbered }
+
+            ChangeToDS z ->
+                { model | tableau = z |> Zipper.changeToDS |> topRenumbered }
+
+            ChangeToNCS z ->
+                { model | tableau = z |> Zipper.changeToNCS |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -419,6 +470,12 @@ viewNodeInputs additional z =
                     , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
                     , li [] [ button [ onClick (ChangeToRefl z) ] [ text "Change to Reflexivity" ] ]
                     , li [] [ button [ onClick (ChangeToLeibnitz z) ] [ text "Change to Leibnitz" ] ]
+                    , li [] [ button [ onClick (ChangeToMP z) ] [ text "Change to MP" ] ]
+                    , li [] [ button [ onClick (ChangeToMT z) ] [ text "Change to MT" ] ]
+                    , li [] [ button [ onClick (ChangeToCut z) ] [ text "Change to Cut" ] ]
+                    , li [] [ button [ onClick (ChangeToHS z) ] [ text "Change to HS" ] ]
+                    , li [] [ button [ onClick (ChangeToDS z) ] [ text "Change to DS" ] ]
+                    , li [] [ button [ onClick (ChangeToNCS z) ] [ text "Change to NCS" ] ]
                     ]
                 ]
             :: text "["
@@ -479,6 +536,24 @@ viewRuleType z =
             Leibnitz _ ->
                 text "Leibnitz"
 
+            MP _ ->
+                text "MP"
+
+            MT _ ->
+                text "MT"
+
+            Cut _ _ ->
+                text "Cut"
+
+            HS _ ->
+                text "HS"
+
+            DS _ ->
+                text "DS"
+
+            NCS _ ->
+                text "NCS"
+
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
 viewButtonsAppearanceControlls z =
@@ -527,6 +602,24 @@ viewChildren z =
         Tableau.Leibnitz t ->
             viewLeibnitz z
 
+        Tableau.MP t ->
+            viewMP z
+
+        Tableau.MT t ->
+            viewMT z
+
+        Tableau.Cut lt rt ->
+            viewCut z
+
+        Tableau.HS t ->
+            viewHS z
+
+        Tableau.DS t ->
+            viewDS z
+
+        Tableau.NCS t ->
+            viewNCS z
+
 
 viewAlpha : Zipper.Zipper -> Html Msg
 viewAlpha z =
@@ -558,6 +651,39 @@ viewRefl z =
 
 viewLeibnitz : Zipper.Zipper -> Html Msg
 viewLeibnitz z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewMP : Zipper.Zipper -> Html Msg
+viewMP z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewMT : Zipper.Zipper -> Html Msg
+viewMT z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewCut : Zipper.Zipper -> Html Msg
+viewCut z =
+    div [ class "beta" ]
+        [ viewNode (Zipper.left z)
+        , viewNode (Zipper.right z)
+        ]
+
+
+viewHS : Zipper.Zipper -> Html Msg
+viewHS z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewDS : Zipper.Zipper -> Html Msg
+viewDS z =
+    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+
+
+viewNCS : Zipper.Zipper -> Html Msg
+viewNCS z =
     div [ class "alpha" ] [ viewNode (Zipper.down z) ]
 
 
@@ -605,19 +731,26 @@ viewControls (( t, _ ) as z) =
                 let
                     deleteMeButton =
                         if (z |> Zipper.up) /= z then
+                            let
+                                showIfEmptyAndOpen = 
+                                    case t.node.value of
+                                            "" ->
+                                                case t.ext of
+                                                    Open ->
+                                                        button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+
+                                                    _ ->
+                                                        div [] []
+
+                                            _ ->
+                                                div [] []
+                            in 
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
                                 Beta _ _ ->
-                                    case t.node.value of
-                                        "" ->
-                                            case t.ext of
-                                                Open ->
-                                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                    showIfEmptyAndOpen
 
-                                                _ ->
-                                                    div [] []
-
-                                        _ ->
-                                            div [] []
+                                Cut _ _ ->
+                                    showIfEmptyAndOpen
 
                                 _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
@@ -649,8 +782,14 @@ viewControls (( t, _ ) as z) =
                             , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
                             , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
                             , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
-                            , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexiviy" ] ]
+                            , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexivity" ] ]
                             , li [] [ button [ onClick (ExpandLeibnitz z) ] [ text "Add Leibnitz" ] ]
+                            , li [] [ button [ onClick (ExpandMP z) ] [ text "Add MP" ] ]
+                            , li [] [ button [ onClick (ExpandMT z) ] [ text "Add MT" ] ]
+                            , li [] [ button [ onClick (ExpandCut z) ] [ text "Add Cut" ] ]
+                            , li [] [ button [ onClick (ExpandHS z) ] [ text "Add HS" ] ]
+                            , li [] [ button [ onClick (ExpandDS z) ] [ text "Add DS" ] ]
+                            , li [] [ button [ onClick (ExpandNCS z) ] [ text "Add NCS" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]

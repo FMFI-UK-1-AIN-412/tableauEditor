@@ -18,6 +18,12 @@ import Validation.Rules.Gamma
 import Validation.Rules.Leibnitz
 import Validation.Rules.Reflexivity
 import Zipper
+import Validation.Rules.ModusPonens
+import Validation.Rules.ModusTolens
+import Validation.Rules.Cut
+import Validation.Rules.HS
+import Validation.Rules.DS
+import Validation.Rules.NCS
 
 
 
@@ -212,6 +218,27 @@ isCorrectRule (( t, bs ) as z) =
 
         (Zipper.LeibnitzCrumb _) :: _ ->
             Validation.Rules.Leibnitz.validate z
+            
+        (Zipper.MPCrumb _) :: _ ->
+            Validation.Rules.ModusPonens.validate z
+            
+        (Zipper.MTCrumb _) :: _ ->
+            Validation.Rules.ModusTolens.validate z
+            
+        (Zipper.CutLeftCrumb _ _) :: _ ->
+            Validation.Rules.Cut.validateLeft z
+
+        (Zipper.CutRightCrumb _ _) :: _ ->
+            Validation.Rules.Cut.validateRight z
+            
+        (Zipper.HSCrumb _) :: _ ->
+            Validation.Rules.HS.validate z
+            
+        (Zipper.DSCrumb _) :: _ ->
+            Validation.Rules.DS.validate z
+            
+        (Zipper.NCSCrumb _) :: _ ->
+            Validation.Rules.NCS.validate z
 
         [] ->
             Ok z

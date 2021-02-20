@@ -70,37 +70,55 @@ second =
 
 isClosed : Zipper.Zipper -> Result (List Problem) Bool
 isClosed z =
-    case (Zipper.zTableau z).ext of
-        Tableau.Alpha t ->
+    let
+        checkUnary = 
             merge2 second
                 (Validation.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
-        Tableau.Beta lt rt ->
+        checkBinary = 
             merge3 (\_ b c -> b && c)
                 (Validation.isCorrectNode z)
                 (isClosed (Zipper.left z))
                 (isClosed (Zipper.right z))
+    in
+    
+    case (Zipper.zTableau z).ext of
+        Tableau.Alpha t ->
+            checkUnary
+
+        Tableau.Beta lt rt ->
+            checkBinary
 
         Tableau.Gamma t s ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+            checkUnary
 
         Tableau.Delta t s ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+            checkUnary
 
         Tableau.Refl t ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+            checkUnary
 
         Tableau.Leibnitz t ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+            checkUnary
+            
+        Tableau.MP t ->
+            checkUnary
+            
+        Tableau.MT t ->
+            checkUnary
+            
+        Tableau.Cut lt rt ->
+            checkBinary
+            
+        Tableau.HS t ->
+            checkUnary
+            
+        Tableau.DS t ->
+            checkUnary
+            
+        Tableau.NCS t ->
+            checkUnary
 
         Tableau.Open ->
             Validation.isCorrectNode z |> Result.map (always False)

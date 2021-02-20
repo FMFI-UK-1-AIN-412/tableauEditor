@@ -20,6 +20,13 @@ type Crumb
     | DeltaCrumb Node Tableau.Substitution
     | ReflCrumb Node
     | LeibnitzCrumb Node
+    | MPCrumb Node
+    | MTCrumb Node
+    | CutLeftCrumb Node Tableau
+    | CutRightCrumb Node Tableau
+    | HSCrumb Node
+    | DSCrumb Node
+    | NCSCrumb Node
 
 
 type alias BreadCrumbs =
@@ -66,6 +73,24 @@ children z =
         Leibnitz _ ->
             [ down z ]
 
+        MP _ ->
+            [ down z ]
+
+        MT _ ->
+            [ down z ]
+            
+        Cut _ _ ->
+            [ left z, right z ]
+            
+        HS _ ->
+            [ down z ]
+            
+        DS _ ->
+            [ down z ]
+            
+        NCS _ ->
+            [ down z ]
+
 
 down : Zipper -> Zipper
 down ( t, bs ) =
@@ -84,6 +109,21 @@ down ( t, bs ) =
 
         Leibnitz subt ->
             ( subt, LeibnitzCrumb t.node :: bs )
+        
+        MP subt ->
+            ( subt, MPCrumb t.node :: bs )
+        
+        MT subt ->
+            ( subt, MTCrumb t.node :: bs )
+        
+        HS subt ->
+            ( subt, HSCrumb t.node :: bs )
+        
+        DS subt ->
+            ( subt, DSCrumb t.node :: bs )
+        
+        NCS subt ->
+            ( subt, NCSCrumb t.node :: bs )
 
         _ ->
             ( t, bs )
@@ -94,6 +134,9 @@ right ( t, bs ) =
     case t.ext of
         Beta tl tr ->
             ( tr, BetaRightCrumb t.node tl :: bs )
+
+        Cut tl tr ->
+            ( tr, CutRightCrumb t.node tl :: bs )
 
         _ ->
             ( t, bs )
@@ -108,6 +151,9 @@ left ( t, bs ) =
     case t.ext of
         Beta tl tr ->
             ( tl, BetaLeftCrumb t.node tr :: bs )
+
+        Cut tl tr ->
+            ( tl, CutLeftCrumb t.node tr :: bs )
 
         _ ->
             ( t, bs )
@@ -136,6 +182,27 @@ up ( t, bs ) =
 
         (LeibnitzCrumb n) :: bss ->
             ( Tableau n (Leibnitz t), bss )
+
+        (MPCrumb n) :: bss ->
+            ( Tableau n (MP t), bss )
+
+        (MTCrumb n) :: bss ->
+            ( Tableau n (MT t), bss )
+
+        (CutLeftCrumb n tr) :: bss ->
+            ( Tableau n (Cut t tr), bss )
+
+        (CutRightCrumb n tl) :: bss ->
+            ( Tableau n (Cut tl t), bss )
+
+        (HSCrumb n) :: bss ->
+            ( Tableau n (HS t), bss )
+
+        (DSCrumb n) :: bss ->
+            ( Tableau n (DS t), bss )
+
+        (NCSCrumb n) :: bss ->
+            ( Tableau n (NCS t), bss )
 
         [] ->
             ( t, bs )
@@ -206,22 +273,13 @@ zWalkPost f (( t, bs ) as z) =
         Closed _ _ ->
             f z
 
-        Alpha _ ->
-            z |> down |> zWalkPost f |> up |> f
-
         Beta tl tr ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
-
-        Gamma _ subst ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Delta _ subst ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Refl _ ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Leibnitz _ ->
+        
+        Cut tl tr ->
+            z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
+        
+        _ ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -286,6 +344,31 @@ renumber tableau =
 
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 tableau num =
+    let
+        renumberUnary ext = 
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 (Tableau.leftSubtree tableau) (num + 1)
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (ext new_tableau), num1 ) 
+
+        renumberBinary ext =
+            let
+                ( new_left, num1 ) =
+                    renumber2 (Tableau.leftSubtree tableau) (num + 1)
+
+                ( new_right, num2 ) =
+                    renumber2 (Tableau.rightSubtree tableau) num1
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (ext new_left new_right), num2 )   
+    in
+    
     case tableau.ext of
         Open ->
             let
@@ -297,68 +380,47 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-        Alpha t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
+        Alpha _ ->
+            renumberUnary Alpha
 
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Alpha new_tableau), num1 )
+        Beta _ _ ->
+            renumberBinary Beta
 
-        Beta lt rt ->
-            let
-                ( new_left, num1 ) =
-                    renumber2 lt (num + 1)
+        Gamma _ subst ->
+            renumberUnary (\t -> Gamma t subst)
 
-                ( new_right, num2 ) =
-                    renumber2 rt num1
+        Delta _ subst ->
+            renumberUnary (\t -> Delta t subst)
 
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Beta new_left new_right), num2 )
+        Refl _ ->
+            renumberUnary Refl
 
-        Gamma t subst ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
+        Leibnitz _ ->
+            renumberUnary Leibnitz
 
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Gamma new_tableau subst), num1 )
+        
+        MP _ ->
+            renumberUnary MP
 
-        Delta t subst ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
+        
+        MT _ ->
+            renumberUnary MT
 
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
+        
+        Cut _ _ ->
+            renumberBinary Cut
 
-        Refl t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
+        
+        HS _ ->
+            renumberUnary HS
 
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Refl new_tableau), num1 )
+        
+        DS _ ->
+            renumberUnary DS
 
-        Leibnitz t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Leibnitz new_tableau), num1 )
+        
+        NCS _ ->
+            renumberUnary NCS
 
         Closed r1 r2 ->
             let
@@ -455,39 +517,57 @@ renumberJustInReferences f z =
 
 renumberJusts : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJusts tableau f lengthOfPathFromFather =
-    case tableau.ext of
-        Alpha t ->
+    let
+        renumberJustsUnary ext =
             Tableau
                 tableau.node
-                (Alpha (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+                (ext (renumberJusts (renumberJust (Tableau.leftSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
-        Beta lt rt ->
+        renumberJustsBinary ext =
             Tableau
                 tableau.node
-                (Beta
-                    (renumberJusts (renumberJust lt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
-                    (renumberJusts (renumberJust rt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
+                (ext
+                    (renumberJusts (renumberJust (Tableau.leftSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust (Tableau.rightSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                 )
+    in
+    
+    case tableau.ext of
+        Alpha _ ->
+            renumberJustsUnary Alpha
 
-        Gamma t s ->
-            Tableau
-                tableau.node
-                (Gamma (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
+        Beta _ _ ->
+            renumberJustsBinary Beta
 
-        Delta t s ->
-            Tableau
-                tableau.node
-                (Delta (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
+        Gamma _ s ->
+            renumberJustsUnary (\t -> Gamma t s)
 
-        Refl t ->
-            Tableau
-                tableau.node
-                (Refl (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+        Delta _ s ->
+            renumberJustsUnary (\t -> Delta t s)
 
-        Leibnitz t ->
-            Tableau
-                tableau.node
-                (Leibnitz (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+        Refl _ ->
+            renumberJustsUnary Refl
+
+        Leibnitz _ ->
+            renumberJustsUnary Leibnitz
+
+        MP _ ->
+            renumberJustsUnary MP
+
+        MT _ ->
+            renumberJustsUnary MT
+     
+        Cut _ _ ->
+            renumberJustsBinary Cut
+        
+        HS _ ->
+            renumberJustsUnary HS
+        
+        DS _ ->
+            renumberJustsUnary DS
+
+        NCS _ ->
+            renumberJustsUnary NCS
 
         Open ->
             tableau
@@ -630,6 +710,30 @@ extendLeibnitz : Zipper -> Zipper
 extendLeibnitz z =
     extendWithRule Tableau.Leibnitz z
 
+extendMP : Zipper -> Zipper
+extendMP z =
+    extendWithRule Tableau.MP z
+
+extendMT : Zipper -> Zipper
+extendMT z =
+    extendWithRule Tableau.MT z
+
+extendCut : Zipper -> Zipper
+extendCut z =
+    extendWithRule (\t -> Cut t (Tableau defNode Open)) z
+
+extendHS : Zipper -> Zipper
+extendHS z =
+    extendWithRule Tableau.HS z
+
+extendDS : Zipper -> Zipper
+extendDS z =
+    extendWithRule Tableau.DS z
+
+extendNCS : Zipper -> Zipper
+extendNCS z =
+    extendWithRule Tableau.NCS z
+
 
 delete : Zipper -> Zipper
 delete z =
@@ -643,6 +747,18 @@ delete z =
 deleteMe : Zipper -> Zipper
 deleteMe (( t, fatherbs ) as zip) =
     if (zip |> up) == zip then
+        let
+            tableauToKeep currentT leftT rightT =
+                if leftT.node.value == "" then
+                    rightT
+
+                else if rightT.node.value == "" then
+                    leftT
+
+                else
+                    currentT
+        in
+        
         modifyNode
             (\tableau ->
                 case tableau.ext of
@@ -654,14 +770,10 @@ deleteMe (( t, fatherbs ) as zip) =
 
                     Beta lt rt ->
                         -- mozem zmazat iba ked jedna z biet sa moze stat alfou
-                        if lt.node.value == "" then
-                            rt
+                        tableauToKeep tableau lt rt
 
-                        else if rt.node.value == "" then
-                            lt
-
-                        else
-                            tableau
+                    Cut lt rt ->
+                        tableauToKeep tableau lt rt
 
                     _ ->
                         Tableau.leftSubtree tableau
@@ -669,38 +781,41 @@ deleteMe (( t, fatherbs ) as zip) =
             zip
 
     else
+        let
+            tryToKeepRightSubT currentT leftT rightT = 
+                if leftT.node.value == "" then
+                    Tableau currentT.node (Alpha rightT)
+
+                else
+                    currentT
+
+            tryToKeepLeftSubT currentT leftT rightT = 
+                if rightT.node.value == "" then
+                    Tableau currentT.node (Alpha leftT)
+
+                else
+                    currentT
+
+            chooseSubTableau childToKeep =
+                modifyNode
+                    (\tableau ->
+                        childToKeep tableau (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau)
+                    )
+                    (zip |> up)
+        in
+        
         case fatherbs of
             (BetaLeftCrumb fatherNode tr) :: bss ->
-                modifyNode
-                    (\tableau ->
-                        case tableau.ext of
-                            Beta lt rt ->
-                                if lt.node.value == "" then
-                                    Tableau tableau.node (Alpha rt)
-
-                                else
-                                    tableau
-
-                            _ ->
-                                tableau
-                    )
-                    (zip |> up)
+                chooseSubTableau tryToKeepRightSubT
 
             (BetaRightCrumb fatherNode tl) :: bss ->
-                modifyNode
-                    (\tableau ->
-                        case tableau.ext of
-                            Beta lt rt ->
-                                if rt.node.value == "" then
-                                    Tableau tableau.node (Alpha lt)
+                chooseSubTableau tryToKeepLeftSubT
 
-                                else
-                                    tableau
+            (CutLeftCrumb fatherNode tr) :: bss ->
+                chooseSubTableau tryToKeepRightSubT
 
-                            _ ->
-                                tableau
-                    )
-                    (zip |> up)
+            (CutRightCrumb fatherNode tl) :: bss ->
+                chooseSubTableau tryToKeepLeftSubT
 
             _ ->
                 modifyNode
@@ -714,6 +829,9 @@ deleteMe (( t, fatherbs ) as zip) =
                                 Tableau tableau.node Open
 
                             Beta _ _ ->
+                                tableau
+
+                            Cut _ _ ->
                                 tableau
 
                             _ ->
@@ -806,6 +924,9 @@ switchBetas z =
             case tableau.ext of
                 Beta lt rt ->
                     Tableau tableau.node (Beta rt lt)
+
+                Cut lt rt ->
+                    Tableau tableau.node (Cut rt lt)
 
                 _ ->
                     tableau
@@ -912,6 +1033,30 @@ changeToLeibnitz : Zipper -> Zipper
 changeToLeibnitz z =
     changeToUnaryRule Tableau.Leibnitz z
 
+changeToMP : Zipper -> Zipper
+changeToMP z =
+    changeToUnaryRule Tableau.MP z
+
+changeToMT : Zipper -> Zipper
+changeToMT z =
+    changeToUnaryRule Tableau.MT z
+
+changeToCut : Zipper -> Zipper
+changeToCut z =
+    changeRule (\t1 t2 -> Just (Tableau.Cut t1 t2)) z
+
+changeToHS : Zipper -> Zipper
+changeToHS z =
+    changeToUnaryRule Tableau.HS z
+
+changeToDS : Zipper -> Zipper
+changeToDS z =
+    changeToUnaryRule Tableau.DS z
+
+changeToNCS : Zipper -> Zipper
+changeToNCS z =
+    changeToUnaryRule Tableau.NCS z
+
 
 prettify : Tableau -> Tableau
 prettify t =
@@ -953,6 +1098,24 @@ prettify t =
 
                     Leibnitz tbl ->
                         Tableau (tableau.node |> prettifyNode) (Leibnitz (prettify tbl))
+
+                    MP tbl ->
+                        Tableau (tableau.node |> prettifyNode) (MP (prettify tbl))
+
+                    MT tbl ->
+                        Tableau (tableau.node |> prettifyNode) (MT (prettify tbl))
+
+                    Cut tl tr ->
+                        Tableau (tableau.node |> prettifyNode) (Cut (prettify tl) (prettify tr))
+
+                    HS tbl ->
+                        Tableau (tableau.node |> prettifyNode) (HS (prettify tbl))
+
+                    DS tbl ->
+                        Tableau (tableau.node |> prettifyNode) (DS (prettify tbl))
+
+                    NCS tbl ->
+                        Tableau (tableau.node |> prettifyNode) (NCS (prettify tbl))
 
                     Open ->
                         Tableau (tableau.node |> prettifyNode) Open

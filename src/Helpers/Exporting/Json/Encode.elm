@@ -49,6 +49,13 @@ encodeUnaryRuleWithSubst tableau extType subTableau subst =
         ++ encodeSubstitution subst
 
 
+encodeBinaryRule : Tableau -> String -> Tableau -> Tableau -> List ( String, Value )
+encodeBinaryRule tableau extType lt rt =
+    [ ( "type", string extType ) ]
+        ++ jsonNodeList tableau.node
+        ++ [ ( "leftChild", jsonTableau lt ), ( "rightChild", jsonTableau rt ) ]
+
+
 jsonTblList : Tableau -> List ( String, Value )
 jsonTblList tableau =
     case tableau.ext of
@@ -68,9 +75,7 @@ jsonTblList tableau =
             encodeUnaryRule tableau "alpha" t
 
         Beta lt rt ->
-            [ ( "type", string "beta" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "leftChild", jsonTableau lt ), ( "rightChild", jsonTableau rt ) ]
+            encodeBinaryRule tableau "beta" lt rt
 
         Gamma t s ->
             encodeUnaryRuleWithSubst tableau "gamma" t s
@@ -83,6 +88,24 @@ jsonTblList tableau =
 
         Leibnitz t ->
             encodeUnaryRule tableau "leibnitz" t
+
+        MP t ->
+            encodeUnaryRule tableau "mp" t
+        
+        MT t ->
+            encodeUnaryRule tableau "mt" t
+
+        Cut lt rt ->
+            encodeBinaryRule tableau "cut" lt rt
+
+        HS t ->
+            encodeUnaryRule tableau "hs" t
+
+        DS t ->
+            encodeUnaryRule tableau "ds" t
+
+        NCS t ->
+            encodeUnaryRule tableau "ncs" t
 
 
 jsonTableau : Tableau -> Value
