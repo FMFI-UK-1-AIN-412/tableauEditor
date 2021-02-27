@@ -218,7 +218,7 @@ zipperOnlyAlphaOfRightBetaRenumbered =
 
 
 zipperZWalkPostExample =
-    zipperExample |> extendAlpha |> down |> extendBeta |> left |> extendAlpha |> up |> right |> extendBeta |> left |> extendAlpha |> top |> topRenumbered |> zipper
+    zipperExample |> extendUnary Alpha |> down |> extendBinary Beta |> left |> extendUnary Alpha |> up |> right |> extendBinary Beta |> left |> extendUnary Alpha |> top |> topRenumbered |> zipper
 
 
 zipperZWalkPostResult =
@@ -733,34 +733,34 @@ suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
         [ test "compare simple zippers" (\() -> compareZippers (zipper tableauExample) zipperExample)
-        , test "compare extended alpha" (\() -> compareZippers (extendAlpha zipperExample) zipperWithAlpha)
-        , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendAlpha zipperExample)) zipperWithAplhaDown)
+        , test "compare extended alpha" (\() -> compareZippers (extendUnary Alpha zipperExample) zipperWithAlpha)
+        , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendUnary Alpha zipperExample)) zipperWithAplhaDown)
         , test "compare zippers: extend alpha, go down, extend beta"
-            (\() -> compareZippers (left (extendBeta (down (extendAlpha zipperExample)))) zipperWithAlphaDownBetaLeft)
+            (\() -> compareZippers (left (extendBinary Beta (down (extendUnary Alpha zipperExample)))) zipperWithAlphaDownBetaLeft)
         , test "compare zippers, extend beta, go right, extend alpha, go down"
             (\() ->
                 compareZippers
-                    (zipperExample |> extendBeta |> right |> extendAlpha |> down)
+                    (zipperExample |> extendBinary Beta |> right |> extendUnary Alpha |> down)
                     zipperOnlyAlphaOfRightBeta
             )
         , test
             "renumber"
             (\() ->
                 compareZippers
-                    (zipperExample |> extendBeta |> right |> extendAlpha |> down |> top |> topRenumbered |> zipper)
+                    (zipperExample |> extendBinary Beta |> right |> extendUnary Alpha |> down |> top |> topRenumbered |> zipper)
                     zipperOnlyAlphaOfRightBetaRenumbered
             )
         , test "renumber another" (\() -> compareZippers zipperZWalkPostExample zipperZWalkPostResult)
         , test "reference rewriting"
             (\() ->
                 compareZippers testReferenceRewritingResult
-                    (testReferenceRewriting |> Zipper.extendAlpha |> Editor.top |> Zipper.renumber |> zipper)
+                    (testReferenceRewriting |> Zipper.extendUnary Alpha |> Editor.top |> Zipper.renumber |> zipper)
             )
         , test "reference rewriting 2" (\() -> compareZippers (fixRefs fixRefsTest) fixRefsTestResult)
         , test "gamma term test"
             (\() ->
                 compareZippers gammaExampleResult
-                    (zipperExample |> Zipper.extendGamma |> Zipper.changeVariable "x")
+                    (zipperExample |> Zipper.extendUnaryWithSubst Gamma |> Zipper.changeVariable "x")
             )
         , test "substitute function in gamma "
             (\() ->
@@ -830,7 +830,7 @@ suiteZipper =
                 Expect.equal
                     validateRenumberingAddingResult
                     (validateRenumberingAdding
-                        |> Zipper.extendAlpha
+                        |> Zipper.extendUnary Alpha
                         |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding
                         |> topRenumbered
                         |> zipper

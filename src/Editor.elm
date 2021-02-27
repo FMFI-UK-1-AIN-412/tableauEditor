@@ -94,38 +94,20 @@ subscriptions _ =
 type Msg
     = ChangeText Zipper.Zipper String
     | ChangeRef Zipper.Zipper String
-    | ExpandAlpha Zipper.Zipper
-    | ExpandBeta Zipper.Zipper
     | Delete Zipper.Zipper
     | DeleteMe Zipper.Zipper
     | MakeClosed Zipper.Zipper
     | SetClosed Int Zipper.Zipper String
     | MakeOpen Zipper.Zipper
-    | ExpandGamma Zipper.Zipper
-    | ExpandDelta Zipper.Zipper
-    | ExpandRefl Zipper.Zipper
-    | ExpandLeibnitz Zipper.Zipper
-    | ExpandMP Zipper.Zipper
-    | ExpandMT Zipper.Zipper
-    | ExpandCut Zipper.Zipper
-    | ExpandHS Zipper.Zipper
-    | ExpandDS Zipper.Zipper
-    | ExpandNCS Zipper.Zipper
+    | ExpandUnary Tableau.ExtType Zipper.Zipper
+    | ExpandUnaryWithSubst Tableau.ExtType Zipper.Zipper
+    | ExpandBinary Tableau.ExtType Zipper.Zipper
     | ChangeVariable Zipper.Zipper String
     | ChangeTerm Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
-    | ChangeToAlpha Zipper.Zipper
-    | ChangeToBeta Zipper.Zipper
-    | ChangeToGamma Zipper.Zipper
-    | ChangeToDelta Zipper.Zipper
-    | ChangeToRefl Zipper.Zipper
-    | ChangeToLeibnitz Zipper.Zipper
-    | ChangeToMP Zipper.Zipper
-    | ChangeToMT Zipper.Zipper
-    | ChangeToCut Zipper.Zipper
-    | ChangeToHS Zipper.Zipper
-    | ChangeToDS Zipper.Zipper
-    | ChangeToNCS Zipper.Zipper
+    | ChangeToUnary Tableau.ExtType Zipper.Zipper
+    | ChangeToUnaryWithSubst Tableau.ExtType Zipper.Zipper
+    | ChangeToBinary Tableau.ExtType Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -236,41 +218,14 @@ simpleUpdate msg model =
             ChangeText z new ->
                 { model | tableau = z |> Zipper.setFormula new |> top }
 
-            ExpandAlpha z ->
-                { model | tableau = z |> Zipper.extendAlpha |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandUnary extType z ->
+                { model | tableau = z |> Zipper.extendUnary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandBeta z ->
-                { model | tableau = z |> Zipper.extendBeta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandUnaryWithSubst extType z ->
+                { model | tableau = z |> Zipper.extendUnaryWithSubst extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandGamma z ->
-                { model | tableau = z |> Zipper.extendGamma |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandDelta z ->
-                { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandRefl z ->
-                { model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandLeibnitz z ->
-                { model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandMP z ->
-                { model | tableau = z |> Zipper.extendMP |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandMT z ->
-                { model | tableau = z |> Zipper.extendMT |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandCut z ->
-                { model | tableau = z |> Zipper.extendCut |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandHS z ->
-                { model | tableau = z |> Zipper.extendHS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandDS z ->
-                { model | tableau = z |> Zipper.extendDS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandNCS z ->
-                { model | tableau = z |> Zipper.extendNCS |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandBinary extType z ->
+                { model | tableau = z |> Zipper.extendBinary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRefs new |> top }
@@ -307,41 +262,14 @@ simpleUpdate msg model =
             SwitchBetas z ->
                 { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
 
-            ChangeToAlpha z ->
-                { model | tableau = z |> Zipper.changeToAlpha |> topRenumbered }
+            ChangeToUnary extType z ->
+                { model | tableau = z |> Zipper.changeToUnaryRule extType |> topRenumbered }
 
-            ChangeToBeta z ->
-                { model | tableau = z |> Zipper.changeToBeta |> topRenumbered }
+            ChangeToUnaryWithSubst extType z ->
+                { model | tableau = z |> Zipper.changeToUnaryRuleWithSubst extType |> topRenumbered }
 
-            ChangeToGamma z ->
-                { model | tableau = z |> Zipper.changeToGamma |> topRenumbered }
-
-            ChangeToDelta z ->
-                { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
-
-            ChangeToRefl z ->
-                { model | tableau = z |> Zipper.changeToRefl |> topRenumbered }
-
-            ChangeToLeibnitz z ->
-                { model | tableau = z |> Zipper.changeToLeibnitz |> topRenumbered }
-
-            ChangeToMP z ->
-                { model | tableau = z |> Zipper.changeToMP |> topRenumbered }
-
-            ChangeToMT z ->
-                { model | tableau = z |> Zipper.changeToMT |> topRenumbered }
-
-            ChangeToCut z ->
-                { model | tableau = z |> Zipper.changeToCut |> topRenumbered }
-
-            ChangeToHS z ->
-                { model | tableau = z |> Zipper.changeToHS |> topRenumbered }
-
-            ChangeToDS z ->
-                { model | tableau = z |> Zipper.changeToDS |> topRenumbered }
-
-            ChangeToNCS z ->
-                { model | tableau = z |> Zipper.changeToNCS |> topRenumbered }
+            ChangeToBinary extType z ->
+                { model | tableau = z |> Zipper.changeToBinaryRule extType |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -462,18 +390,18 @@ viewNodeInputs additional z =
             :: viewRuleType z
             :: div [ class "onclick-menu change", tabindex 0 ]
                 [ ul [ class "onclick-menu-content" ]
-                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "Change to α" ] ]
-                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
-                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
-                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
-                    , li [] [ button [ onClick (ChangeToRefl z) ] [ text "Change to Reflexivity" ] ]
-                    , li [] [ button [ onClick (ChangeToLeibnitz z) ] [ text "Change to Leibnitz" ] ]
-                    , li [] [ button [ onClick (ChangeToMP z) ] [ text "Change to MP" ] ]
-                    , li [] [ button [ onClick (ChangeToMT z) ] [ text "Change to MT" ] ]
-                    , li [] [ button [ onClick (ChangeToCut z) ] [ text "Change to Cut" ] ]
-                    , li [] [ button [ onClick (ChangeToHS z) ] [ text "Change to HS" ] ]
-                    , li [] [ button [ onClick (ChangeToDS z) ] [ text "Change to DS" ] ]
-                    , li [] [ button [ onClick (ChangeToNCS z) ] [ text "Change to NCS" ] ]
+                    [ li [] [ button [ onClick (ChangeToUnary Alpha z) ] [ text "Change to α" ] ]
+                    , li [] [ button [ onClick (ChangeToBinary Beta z) ] [ text "Change to β" ] ]
+                    , li [] [ button [ onClick (ChangeToUnaryWithSubst Gamma z) ] [ text "Change to γ" ] ]
+                    , li [] [ button [ onClick (ChangeToUnaryWithSubst Delta z) ] [ text "Change to δ" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary Refl z) ] [ text "Change to Reflexivity" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary Leibnitz z) ] [ text "Change to Leibnitz" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary MP z) ] [ text "Change to MP" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary MT z) ] [ text "Change to MT" ] ]
+                    , li [] [ button [ onClick (ChangeToBinary Cut z) ] [ text "Change to Cut" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary HS z) ] [ text "Change to HS" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary DS z) ] [ text "Change to DS" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary NCS z) ] [ text "Change to NCS" ] ]
                     ]
                 ]
             :: text "["
@@ -776,21 +704,21 @@ viewControls (( t, _ ) as z) =
                                 div [] []
                 in
                 if t.node.gui.controlsShown then
-                    [ button [ class "button", onClick (ExpandAlpha z) ] [ text "Add α" ]
+                    [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
                     , div [ class "onclick-menu add", tabindex 0 ]
                         [ ul [ class "onclick-menu-content" ]
-                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "Add α" ] ]
-                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
-                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
-                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
-                            , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexivity" ] ]
-                            , li [] [ button [ onClick (ExpandLeibnitz z) ] [ text "Add Leibnitz" ] ]
-                            , li [] [ button [ onClick (ExpandMP z) ] [ text "Add MP" ] ]
-                            , li [] [ button [ onClick (ExpandMT z) ] [ text "Add MT" ] ]
-                            , li [] [ button [ onClick (ExpandCut z) ] [ text "Add Cut" ] ]
-                            , li [] [ button [ onClick (ExpandHS z) ] [ text "Add HS" ] ]
-                            , li [] [ button [ onClick (ExpandDS z) ] [ text "Add DS" ] ]
-                            , li [] [ button [ onClick (ExpandNCS z) ] [ text "Add NCS" ] ]
+                            [ li [] [ button [ onClick (ExpandUnary Alpha z) ] [ text "Add α" ] ]
+                            , li [] [ button [ onClick (ExpandBinary Beta z) ] [ text "Add β" ] ]
+                            , li [] [ button [ onClick (ExpandUnaryWithSubst Gamma z) ] [ text "Add γ" ] ]
+                            , li [] [ button [ onClick (ExpandUnaryWithSubst Delta z) ] [ text "Add δ" ] ]
+                            , li [] [ button [ onClick (ExpandUnary Refl z) ] [ text "Add Reflexivity" ] ]
+                            , li [] [ button [ onClick (ExpandUnary Leibnitz z) ] [ text "Add Leibnitz" ] ]
+                            , li [] [ button [ onClick (ExpandUnary MP z) ] [ text "Add MP" ] ]
+                            , li [] [ button [ onClick (ExpandUnary MT z) ] [ text "Add MT" ] ]
+                            , li [] [ button [ onClick (ExpandBinary Cut z) ] [ text "Add Cut" ] ]
+                            , li [] [ button [ onClick (ExpandUnary HS z) ] [ text "Add HS" ] ]
+                            , li [] [ button [ onClick (ExpandUnary DS z) ] [ text "Add DS" ] ]
+                            , li [] [ button [ onClick (ExpandUnary NCS z) ] [ text "Add NCS" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]

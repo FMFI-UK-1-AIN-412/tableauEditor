@@ -6,6 +6,8 @@ import Formula.Parser
 import Formula.Signed
 import Html exposing (table)
 import Tableau exposing (..)
+import Tableau
+import Tableau
 
 
 
@@ -509,63 +511,18 @@ extendWithRule extWithType z =
             )
 
 
-extendRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
-extendRuleWithSubst extWithType z =
-    extendWithRule (\t -> extWithType t defSubstitution) z
+extendUnary : Tableau.ExtType -> Zipper -> Zipper
+extendUnary extType z = 
+    extendWithRule (Unary extType) z
 
 
-extendAlpha : Zipper -> Zipper
-extendAlpha z =
-    extendWithRule (Unary Alpha) z
+extendUnaryWithSubst : Tableau.ExtType -> Zipper -> Zipper
+extendUnaryWithSubst extType z =
+    extendWithRule (\t -> (UnaryWithSubst extType) t defSubstitution) z
 
-
-extendBeta : Zipper -> Zipper
-extendBeta z =
-    extendWithRule (\t -> (Binary Beta) t (Tableau defNode Open)) z
-
-
-extendGamma : Zipper -> Zipper
-extendGamma z =
-    extendRuleWithSubst (UnaryWithSubst Gamma) z
-
-
-extendDelta : Zipper -> Zipper
-extendDelta z =
-    extendRuleWithSubst (UnaryWithSubst Delta) z
-
-
-extendRefl : Zipper -> Zipper
-extendRefl z =
-    extendWithRule (Unary Refl) z
-
-
-extendLeibnitz : Zipper -> Zipper
-extendLeibnitz z =
-    extendWithRule (Unary Leibnitz) z
-
-extendMP : Zipper -> Zipper
-extendMP z =
-    extendWithRule (Unary MP) z
-
-extendMT : Zipper -> Zipper
-extendMT z =
-    extendWithRule (Unary MT) z
-
-extendCut : Zipper -> Zipper
-extendCut z =
-    extendWithRule (\t -> (Binary Cut) t (Tableau defNode Open)) z
-
-extendHS : Zipper -> Zipper
-extendHS z =
-    extendWithRule (Unary HS) z
-
-extendDS : Zipper -> Zipper
-extendDS z =
-    extendWithRule (Unary DS) z
-
-extendNCS : Zipper -> Zipper
-extendNCS z =
-    extendWithRule (Unary NCS) z
+extendBinary : Tableau.ExtType -> Zipper -> Zipper
+extendBinary extType z = 
+    extendWithRule (\t -> (Binary extType) t (Tableau defNode Open)) z
 
 
 delete : Zipper -> Zipper
@@ -768,7 +725,7 @@ changeButtonAppearance z =
 
 
 changeRule : (Tableau -> Tableau -> Maybe Extension) -> Zipper -> Zipper
-changeRule extType z =
+changeRule extWithType z =
     if (z |> up) == z then
         z
 
@@ -784,7 +741,7 @@ changeRule extType z =
                         tableau
 
                     _ ->
-                        case extType (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau) of
+                        case extWithType (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau) of
                             Nothing ->
                                 tableau
 
@@ -794,8 +751,8 @@ changeRule extType z =
             (z |> up)
 
 
-changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
-changeToUnaryRule extWithType z =
+doChangeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
+doChangeToUnaryRule extWithType z =
     changeRule
         (\lt rt ->
             if Tableau.isEmpty lt then
@@ -810,63 +767,19 @@ changeToUnaryRule extWithType z =
         z
 
 
-changeToUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
-changeToUnaryRuleWithSubst extWithType z =
-    changeToUnaryRule (\t -> extWithType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
+changeToUnaryRule : ExtType -> Zipper -> Zipper
+changeToUnaryRule extType z =
+    doChangeToUnaryRule (Unary extType) z
 
 
-changeToAlpha : Zipper -> Zipper
-changeToAlpha z =
-    changeToUnaryRule (Unary Alpha) z 
+changeToUnaryRuleWithSubst : ExtType -> Zipper -> Zipper
+changeToUnaryRuleWithSubst extType z =
+    doChangeToUnaryRule (\t -> UnaryWithSubst extType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
 
 
-changeToBeta : Zipper -> Zipper
-changeToBeta z =
-    changeRule (\t1 t2 -> Just ((Binary Beta) t1 t2)) z 
-
-
-changeToGamma : Zipper -> Zipper
-changeToGamma z =
-    changeToUnaryRuleWithSubst (UnaryWithSubst Gamma) z
-
-
-changeToDelta : Zipper -> Zipper
-changeToDelta z =
-    changeToUnaryRuleWithSubst (UnaryWithSubst Delta) z
-
-
-changeToRefl : Zipper -> Zipper
-changeToRefl z =
-    changeToUnaryRule (Unary Refl) z
-
-
-changeToLeibnitz : Zipper -> Zipper
-changeToLeibnitz z =
-    changeToUnaryRule (Unary Leibnitz) z
-
-changeToMP : Zipper -> Zipper
-changeToMP z =
-    changeToUnaryRule (Unary MP) z
-
-changeToMT : Zipper -> Zipper
-changeToMT z =
-    changeToUnaryRule (Unary MT) z
-
-changeToCut : Zipper -> Zipper
-changeToCut z =
-    changeRule (\t1 t2 -> Just ((Binary Cut) t1 t2)) z
-
-changeToHS : Zipper -> Zipper
-changeToHS z =
-    changeToUnaryRule (Unary HS) z
-
-changeToDS : Zipper -> Zipper
-changeToDS z =
-    changeToUnaryRule (Unary DS) z
-
-changeToNCS : Zipper -> Zipper
-changeToNCS z =
-    changeToUnaryRule (Unary NCS) z
+changeToBinaryRule : ExtType -> Zipper -> Zipper
+changeToBinaryRule extType z = 
+    changeRule (\t1 t2 -> Just ((Binary extType) t1 t2)) z
 
 
 prettify : Tableau -> Tableau
