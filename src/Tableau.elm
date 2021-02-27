@@ -35,21 +35,27 @@ type alias Substitution =
     { term : String, var : String }
 
 
+type ExtType
+    = Alpha 
+    | Beta  
+    | Gamma  
+    | Delta  
+    | Refl 
+    | Leibnitz 
+    | MP 
+    | MT 
+    | Cut  
+    | HS 
+    | DS 
+    | NCS 
+
+
 type Extension
     = Open
     | Closed Ref Ref
-    | Alpha Tableau
-    | Beta Tableau Tableau
-    | Gamma Tableau Substitution
-    | Delta Tableau Substitution
-    | Refl Tableau
-    | Leibnitz Tableau
-    | MP Tableau
-    | MT Tableau
-    | Cut Tableau Tableau
-    | HS Tableau
-    | DS Tableau
-    | NCS Tableau
+    | Unary ExtType Tableau
+    | UnaryWithSubst ExtType Tableau Substitution
+    | Binary ExtType Tableau Tableau
 
 
 defSubstitution : Substitution
@@ -86,51 +92,21 @@ leftSubtree t =
         Closed _ _ ->
             Tableau defNode Open
 
-        Alpha subT ->
+        Unary _ subT  ->
             subT
 
-        Beta leftSubT _ ->
+        UnaryWithSubst _ subT _ ->
+            subT
+
+        Binary _ leftSubT _ ->
             leftSubT
-
-        Gamma subT _ ->
-            subT
-
-        Delta subT _ ->
-            subT
-
-        Refl subT ->
-            subT
-
-        Leibnitz subT ->
-            subT
-
-        MP subT ->
-            subT
-        
-        MT subT ->
-            subT
-        
-        Cut leftSubT _ ->
-            leftSubT
-
-        HS subT ->
-            subT
-
-        DS subT ->
-            subT
-
-        NCS subT ->
-            subT
 
 
 rightSubtree : Tableau -> Tableau
 rightSubtree t =
     case t.ext of
-        Beta _ rt ->
-            rt
-
-        Cut _ rt ->
-            rt
+        Binary _ _ rightSubT ->
+            rightSubT
 
         _ ->
             Tableau defNode Open

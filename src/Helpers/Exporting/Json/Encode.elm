@@ -1,7 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(..), GUI, Node, Tableau)
+import Tableau exposing (Extension(..), ExtType(..), GUI, Node, Tableau)
 
 
 jsonRef : { a | str : String } -> Value
@@ -71,41 +71,44 @@ jsonTblList tableau =
                      )
                    ]
 
-        Alpha t ->
+        Unary Alpha t ->
             encodeUnaryRule tableau "alpha" t
 
-        Beta lt rt ->
+        Binary Beta lt rt ->
             encodeBinaryRule tableau "beta" lt rt
 
-        Gamma t s ->
+        UnaryWithSubst Gamma t s ->
             encodeUnaryRuleWithSubst tableau "gamma" t s
 
-        Delta t s ->
+        UnaryWithSubst Delta t s ->
             encodeUnaryRuleWithSubst tableau "delta" t s
 
-        Refl t ->
+        Unary Refl t ->
             encodeUnaryRule tableau "refl" t
 
-        Leibnitz t ->
+        Unary Leibnitz t ->
             encodeUnaryRule tableau "leibnitz" t
 
-        MP t ->
+        Unary MP t ->
             encodeUnaryRule tableau "mp" t
         
-        MT t ->
+        Unary MT t ->
             encodeUnaryRule tableau "mt" t
 
-        Cut lt rt ->
+        Binary Cut lt rt ->
             encodeBinaryRule tableau "cut" lt rt
 
-        HS t ->
+        Unary HS t ->
             encodeUnaryRule tableau "hs" t
 
-        DS t ->
+        Unary DS t ->
             encodeUnaryRule tableau "ds" t
 
-        NCS t ->
+        Unary NCS t ->
             encodeUnaryRule tableau "ncs" t
+
+        _ ->
+            encodeUnaryRule tableau "unknown" tableau
 
 
 jsonTableau : Tableau -> Value

@@ -65,27 +65,27 @@ closed =
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
-unaryRule : (Tableau.Tableau -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRule : Tableau.ExtType -> Decoder Tableau.Tableau
 unaryRule extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map extType (field "child" (Json.Decode.lazy (\_ -> tableau))))
+        (map (Tableau.Unary extType) (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
-unaryRuleWithSubst : (Tableau.Tableau -> Tableau.Substitution -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRuleWithSubst : Tableau.ExtType -> Decoder Tableau.Tableau
 unaryRuleWithSubst extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map2 extType (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
+        (map2 (Tableau.UnaryWithSubst extType) (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
-binaryRule : (Tableau.Tableau -> Tableau.Tableau -> Tableau.Extension) -> Decoder Tableau.Tableau
+binaryRule : Tableau.ExtType -> Decoder Tableau.Tableau
 binaryRule extType =
     map2 Tableau.Tableau
         (field "node" node)
-        (map2 extType (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
+        (map2 (Tableau.Binary extType) (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
 
 
 alpha : Decoder Tableau.Tableau

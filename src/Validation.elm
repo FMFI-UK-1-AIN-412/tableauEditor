@@ -192,7 +192,7 @@ isCorrectRule :
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 isCorrectRule (( t, bs ) as z) =
     case bs of
-        (Zipper.AlphaCrumb _) :: _ ->
+        (Zipper.UnaryCrumb Alpha _) :: _ ->
             case t.node.references |> List.isEmpty of
                 True ->
                     -- This is a premise
@@ -201,46 +201,46 @@ isCorrectRule (( t, bs ) as z) =
                 False ->
                     Validation.Rules.Alpha.validate z
 
-        (Zipper.BetaLeftCrumb _ _) :: _ ->
+        (Zipper.BinaryLeftCrumb Beta _ _ ) :: _ ->
             Validation.Rules.Beta.validateLeft z
 
-        (Zipper.BetaRightCrumb _ _) :: _ ->
+        (Zipper.BinaryRightCrumb Beta _ _ ) :: _ ->
             Validation.Rules.Beta.validateRight z
 
-        (Zipper.GammaCrumb _ _) :: _ ->
+        (Zipper.UnaryCrumbWithSubst Gamma _ _  ) :: _ ->
             Validation.Rules.Gamma.validate z
 
-        (Zipper.DeltaCrumb _ _) :: _ ->
+        (Zipper.UnaryCrumbWithSubst Delta _ _ ) :: _ ->
             Validation.Rules.Delta.validate z
 
-        (Zipper.ReflCrumb _) :: _ ->
+        (Zipper.UnaryCrumb Refl _ ) :: _ ->
             Validation.Rules.Reflexivity.validate z
 
-        (Zipper.LeibnitzCrumb _) :: _ ->
+        (Zipper.UnaryCrumb Leibnitz _ ) :: _ ->
             Validation.Rules.Leibnitz.validate z
             
-        (Zipper.MPCrumb _) :: _ ->
+        (Zipper.UnaryCrumb MP _ ) :: _ ->
             Validation.Rules.ModusPonens.validate z
             
-        (Zipper.MTCrumb _) :: _ ->
+        (Zipper.UnaryCrumb MT _ ) :: _ ->
             Validation.Rules.ModusTolens.validate z
             
-        (Zipper.CutLeftCrumb _ _) :: _ ->
+        (Zipper.BinaryLeftCrumb Cut _ _) :: _ ->
             Validation.Rules.Cut.validateLeft z
 
-        (Zipper.CutRightCrumb _ _) :: _ ->
+        (Zipper.BinaryRightCrumb Cut _ _) :: _ ->
             Validation.Rules.Cut.validateRight z
             
-        (Zipper.HSCrumb _) :: _ ->
+        (Zipper.UnaryCrumb HS _) :: _ ->
             Validation.Rules.HS.validate z
             
-        (Zipper.DSCrumb _) :: _ ->
+        (Zipper.UnaryCrumb DS _) :: _ ->
             Validation.Rules.DS.validate z
             
-        (Zipper.NCSCrumb _) :: _ ->
+        (Zipper.UnaryCrumb NCS _) :: _ ->
             Validation.Rules.NCS.validate z
 
-        [] ->
+        _ ->    
             Ok z
 
 

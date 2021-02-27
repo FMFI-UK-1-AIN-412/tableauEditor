@@ -26,8 +26,6 @@ import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
 import Zipper
-import Zipper
-import Zipper
 
 
 main : Program (Maybe String) Model Msg
@@ -518,41 +516,44 @@ viewRuleType z =
             Closed _ _ ->
                 text "C"
 
-            Alpha _ ->
+            Unary Alpha _ ->
                 text "α"
 
-            Beta _ _ ->
+            Binary Beta _ _ ->
                 text "β"
 
-            Gamma _ _ ->
+            UnaryWithSubst Gamma _ _ ->
                 text "γ"
 
-            Delta _ _ ->
+            UnaryWithSubst Delta _ _ ->
                 text "δ"
 
-            Refl _ ->
+            Unary Refl _ ->
                 text "Reflexivity"
 
-            Leibnitz _ ->
+            Unary Leibnitz _ ->
                 text "Leibnitz"
 
-            MP _ ->
+            Unary MP _ ->
                 text "MP"
 
-            MT _ ->
+            Unary MT _ ->
                 text "MT"
 
-            Cut _ _ ->
+            Binary Cut _ _ ->
                 text "Cut"
 
-            HS _ ->
+            Unary HS _ ->
                 text "HS"
 
-            DS _ ->
+            Unary DS _ ->
                 text "DS"
 
-            NCS _ ->
+            Unary NCS _ ->
                 text "NCS"
+
+            _ ->
+                text "wrong extension type"
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -578,47 +579,50 @@ viewButtonsAppearanceControlls z =
 viewChildren : Zipper.Zipper -> Html Msg
 viewChildren z =
     case (Zipper.zTableau z).ext of
-        Tableau.Open ->
+        Open ->
             viewOpen z
 
-        Tableau.Closed r1 r2 ->
+        Closed r1 r2 ->
             viewClosed z
 
-        Tableau.Alpha t ->
-            viewAlpha z
+        Unary Alpha t ->
+            viewAlpha z 
 
-        Tableau.Beta lt rt ->
+        Binary Beta lt rt ->
             viewBeta z
 
-        Tableau.Gamma t subs ->
+        UnaryWithSubst Gamma t subs ->
             viewGamma z
 
-        Tableau.Delta t subs ->
+        UnaryWithSubst Delta t subs ->
             viewDelta z
 
-        Tableau.Refl t ->
+        Unary Refl t ->
             viewRefl z
 
-        Tableau.Leibnitz t ->
+        Unary Leibnitz t ->
             viewLeibnitz z
 
-        Tableau.MP t ->
+        Unary MP t ->
             viewMP z
 
-        Tableau.MT t ->
+        Unary MT t ->
             viewMT z
 
-        Tableau.Cut lt rt ->
+        Binary Cut lt rt ->
             viewCut z
 
-        Tableau.HS t ->
+        Unary HS t ->
             viewHS z
 
-        Tableau.DS t ->
+        Unary DS t ->
             viewDS z
 
-        Tableau.NCS t ->
+        Unary NCS t ->
             viewNCS z
+
+        _ ->
+            text "wrong extension type"
 
 
 viewAlpha : Zipper.Zipper -> Html Msg
@@ -746,10 +750,7 @@ viewControls (( t, _ ) as z) =
                                                 div [] []
                             in 
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
-                                Beta _ _ ->
-                                    showIfEmptyAndOpen
-
-                                Cut _ _ ->
+                                Binary _ _ _ ->
                                     showIfEmptyAndOpen
 
                                 _ ->
@@ -757,7 +758,7 @@ viewControls (( t, _ ) as z) =
 
                         else
                             case t.ext of
-                                Alpha _ ->
+                                Unary Alpha _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
                                 Open ->
@@ -768,7 +769,7 @@ viewControls (( t, _ ) as z) =
 
                     switchBetasButton =
                         case t.ext of
-                            Beta _ _ ->
+                            Binary _ _ _ ->
                                 button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
 
                             _ ->

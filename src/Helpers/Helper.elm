@@ -3,10 +3,11 @@ module Helpers.Helper exposing (..)
 import Formula exposing (Formula)
 import Formula.Signed exposing (Signed)
 import Result
-import Tableau
+import Tableau exposing (Extension(..), ExtType(..))
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper
+import Validation.Common exposing (semanticsProblem)
 
 
 hasReference : Zipper.Zipper -> Bool
@@ -17,7 +18,7 @@ hasReference z =
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
     case Zipper.up z |> Zipper.zTableau |> .ext of
-        Tableau.Alpha _ ->
+        Unary Alpha _ ->
             List.length (Zipper.zNode z).references == 0
 
         _ ->
@@ -84,46 +85,19 @@ isClosed z =
     in
     
     case (Zipper.zTableau z).ext of
-        Tableau.Alpha t ->
+        Unary _ _ ->
             checkUnary
 
-        Tableau.Beta lt rt ->
+        UnaryWithSubst _ _ _ ->
+            checkUnary
+
+        Binary _ _ _ ->
             checkBinary
 
-        Tableau.Gamma t s ->
-            checkUnary
-
-        Tableau.Delta t s ->
-            checkUnary
-
-        Tableau.Refl t ->
-            checkUnary
-
-        Tableau.Leibnitz t ->
-            checkUnary
-            
-        Tableau.MP t ->
-            checkUnary
-            
-        Tableau.MT t ->
-            checkUnary
-            
-        Tableau.Cut lt rt ->
-            checkBinary
-            
-        Tableau.HS t ->
-            checkUnary
-            
-        Tableau.DS t ->
-            checkUnary
-            
-        Tableau.NCS t ->
-            checkUnary
-
-        Tableau.Open ->
+        Open ->
             Validation.isCorrectNode z |> Result.map (always False)
 
-        Tableau.Closed r1 r2 ->
+        Closed r1 r2 ->
             Validation.isCorrectNode z |> Result.map (always True)
 
 

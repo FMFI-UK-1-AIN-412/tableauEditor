@@ -60,7 +60,7 @@ tableauWithAlpha =
         , gui = { controlsShown = False }
         }
     , ext =
-        Alpha
+        Unary Alpha
             { node =
                 { id = 1
                 , value = ""
@@ -87,7 +87,7 @@ zipperWithAplhaDown =
             }
       , ext = Open
       }
-    , [ AlphaCrumb
+    , [ UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -108,7 +108,7 @@ zipperWithAlphaDownBetaLeft =
             }
       , ext = Open
       }
-    , [ BetaLeftCrumb
+    , [ BinaryLeftCrumb Beta
             { id = 1
             , value = ""
             , references = []
@@ -124,7 +124,7 @@ zipperWithAlphaDownBetaLeft =
                 }
             , ext = Open
             }
-      , AlphaCrumb
+      , UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -145,14 +145,14 @@ zipperOnlyAlphaOfRightBeta =
             }
       , ext = Open
       }
-    , [ AlphaCrumb
+    , [ UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = []
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
-      , BetaRightCrumb
+      , BinaryRightCrumb Beta
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -181,7 +181,7 @@ onlyAlphaOfRightBetaRenumbered =
         , gui = { controlsShown = False }
         }
     , ext =
-        Beta
+        Binary Beta
             { node =
                 { id = 2
                 , value = ""
@@ -199,7 +199,7 @@ onlyAlphaOfRightBetaRenumbered =
                 , gui = { controlsShown = False }
                 }
             , ext =
-                Alpha
+                Unary Alpha
                     { node =
                         { id = 4
                         , value = ""
@@ -231,7 +231,7 @@ zipperZWalkPostResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -240,7 +240,7 @@ zipperZWalkPostResult =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Beta
+                    Binary Beta
                         { node =
                             { id = 3
                             , value = ""
@@ -249,7 +249,7 @@ zipperZWalkPostResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = ""
@@ -268,7 +268,7 @@ zipperZWalkPostResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 6
                                     , value = ""
@@ -277,7 +277,7 @@ zipperZWalkPostResult =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Alpha
+                                    Unary Alpha
                                         { node =
                                             { id = 7
                                             , value = ""
@@ -316,7 +316,7 @@ testReferenceRewritingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -339,7 +339,7 @@ fixRefsTest =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -362,7 +362,7 @@ fixRefsTestResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -385,7 +385,7 @@ gammaExampleResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Gamma
+            UnaryWithSubst Gamma
                 { node =
                     { id = 1
                     , value = ""
@@ -419,7 +419,7 @@ validateGammaSubstituteFunction =
             , gui = { controlsShown = False }
             }
         , ext =
-            Gamma
+            UnaryWithSubst Gamma
                 { node =
                     { id = 2
                     , value = "T P(f(Diana))"
@@ -443,7 +443,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
@@ -452,7 +452,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Gamma
+                    UnaryWithSubst Gamma
                         { node =
                             { id = 3
                             , value = "T \\exists p Z(p, f(k))"
@@ -477,7 +477,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
@@ -486,7 +486,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Gamma
+                    UnaryWithSubst Gamma
                         { node =
                             { id = 3
                             , value = "T P(z, k)"
@@ -511,7 +511,7 @@ validateRenumberingAdding =
             , gui = { controlsShown = True }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (a /\\ (b \\/ c))"
@@ -520,7 +520,7 @@ validateRenumberingAdding =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (b \\/ c)"
@@ -529,7 +529,7 @@ validateRenumberingAdding =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 4
                                     , value = "T a"
@@ -563,7 +563,7 @@ validateRenumberingAddingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -572,7 +572,7 @@ validateRenumberingAddingResult =
                     , gui = { controlsShown = True }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (a /\\ (b \\/ c))"
@@ -581,7 +581,7 @@ validateRenumberingAddingResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = "T (b \\/ c)"
@@ -590,7 +590,7 @@ validateRenumberingAddingResult =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Beta
+                                    Binary Beta
                                         { node =
                                             { id = 5
                                             , value = "T a"
@@ -625,7 +625,7 @@ validateRenumberingDeleting =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
@@ -634,7 +634,7 @@ validateRenumberingDeleting =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "Tb"
@@ -643,7 +643,7 @@ validateRenumberingDeleting =
                             , gui = { controlsShown = True }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = "T (c\\/a)"
@@ -652,7 +652,7 @@ validateRenumberingDeleting =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Beta
+                                    Binary Beta
                                         { node =
                                             { id = 5
                                             , value = "Tc"
@@ -687,7 +687,7 @@ validateRenumberingDeletingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
@@ -696,7 +696,7 @@ validateRenumberingDeletingResult =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (c\\/a)"
@@ -705,7 +705,7 @@ validateRenumberingDeletingResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 4
                                     , value = "Tc"
