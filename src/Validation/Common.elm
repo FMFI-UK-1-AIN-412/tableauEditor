@@ -355,3 +355,78 @@ tryBothOrdersAndStructures struct1 struct2 sf1 sf2 z =
     betterOutcome firstOption secondOption
         |> Result.mapError (\err -> semanticsProblem z err.msg)
         |> Result.map (always z)
+
+
+validateBinary :
+    String ->
+    (Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula))) ->
+    Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
+validateBinary ruleName getChildren this other =
+    let
+        ft =
+            this |> checkFormula "Formula"
+
+        fo =
+            other |> checkFormula ("The other " ++ ruleName ++ " subformula")
+
+        children =
+            ft
+                |> Result.map List.singleton
+                |> Result.map2 (::) fo
+                |> Result.map (List.sortBy Formula.Signed.toString)
+
+        -- This is a hack, but defining an ordering on formulas...
+        reffed =
+            this
+                |> checkPredicate (hasNumberOfRefs 1)
+                    (semanticsProblem this ("Each " ++ ruleName ++ " formula must have 1 reference"))
+                |> Result.andThen (checkReffedFormula "" (Zipper.zFirstRef this))
+                |> Result.map (always this)
+                |> Result.andThen (\z -> getReffedSignedFormula Zipper.zFirstRef z)
+                |> Result.andThen
+                    (\f -> getChildren f this)
+                |> Result.map (List.sortBy Formula.Signed.toString)
+    in
+    Errors.merge2 (==) children reffed
+        |> Result.andThen (resultFromBool this (semanticsProblem this ("Wrong " ++ ruleName ++ " subformulas.")))
+        |> Errors.merge2 (always2 this) (childrenHaveSameRef ruleName this other)
+
+
+childrenHaveSameRef :
+    String 
+    -> Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
+childrenHaveSameRef ruleName this other =
+    let
+        -- The invalid refs will be reported already
+        getRef =
+            Zipper.zFirstRef >> .up >> Result.fromMaybe []
+
+        rt =
+            getRef this
+
+        ro =
+            getRef other
+    in
+    Errors.merge2 (==) rt ro
+        |> Result.andThen
+            (resultFromBool this (semanticsProblem this (ruleName ++ " references are not the same")))
+
+
+validateLeft : (Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper) 
+    -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateLeft validate z =
+    validate z (z |> Zipper.up |> Zipper.right)
+
+
+validateRight : (Zipper.Zipper
+    -> Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper) 
+    -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateRight validate z =
+    validate z (z |> Zipper.up |> Zipper.left)

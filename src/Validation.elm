@@ -202,10 +202,10 @@ isCorrectRule (( t, bs ) as z) =
                     Validation.Rules.Alpha.validate z
 
         (Zipper.BinaryLeftCrumb Beta _ _ ) :: _ ->
-            Validation.Rules.Beta.validateLeft z
+            validateLeft Validation.Rules.Beta.validate z
 
         (Zipper.BinaryRightCrumb Beta _ _ ) :: _ ->
-            Validation.Rules.Beta.validateRight z
+            validateRight Validation.Rules.Beta.validate z
 
         (Zipper.UnaryCrumbWithSubst Gamma _ _  ) :: _ ->
             Validation.Rules.Gamma.validate z
@@ -226,10 +226,10 @@ isCorrectRule (( t, bs ) as z) =
             Validation.Rules.ModusTolens.validate z
             
         (Zipper.BinaryLeftCrumb Cut _ _) :: _ ->
-            Validation.Rules.Cut.validateLeft z
+            validateLeft Validation.Rules.Cut.validate z
 
         (Zipper.BinaryRightCrumb Cut _ _) :: _ ->
-            Validation.Rules.Cut.validateRight z
+            validateRight Validation.Rules.Cut.validate z
             
         (Zipper.UnaryCrumb HS _) :: _ ->
             Validation.Rules.HS.validate z

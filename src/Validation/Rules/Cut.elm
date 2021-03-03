@@ -8,16 +8,6 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-validateLeft : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validateLeft z =
-    validate z (z |> Zipper.up |> Zipper.right)
-
-
-validateRight : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validateRight z =
-    validate z (z |> Zipper.up |> Zipper.left)
-
-
 haveDifferentSign: (Signed Formula) -> (Signed Formula) -> Bool
 haveDifferentSign f1 f2 = 
     case ( f1, f2 ) of
