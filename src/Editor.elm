@@ -402,6 +402,12 @@ viewNodeInputs additional z =
                     , li [] [ button [ onClick (ChangeToUnary HS z) ] [ text "Change to HS" ] ]
                     , li [] [ button [ onClick (ChangeToUnary DS z) ] [ text "Change to DS" ] ]
                     , li [] [ button [ onClick (ChangeToUnary NCS z) ] [ text "Change to NCS" ] ]
+                    , li [] [ button [ onClick (ChangeToBinary ECDF z) ] [ text "Change to ECDF" ] ]
+                    , li [] [ button [ onClick (ChangeToBinary ECDT z) ] [ text "Change to ECDT" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary ESFF z) ] [ text "Change to ESFF" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary ESFT z) ] [ text "Change to ESFT" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary ESTF z) ] [ text "Change to ESTF" ] ]
+                    , li [] [ button [ onClick (ChangeToUnary ESTT z) ] [ text "Change to ESTT" ] ]
                     ]
                 ]
             :: text "["
@@ -480,6 +486,24 @@ viewRuleType z =
             Unary NCS _ ->
                 text "NCS"
 
+            Binary ECDF _ _ ->
+                text "ECDF"
+
+            Binary ECDT _ _ ->
+                text "ECDT"
+
+            Unary ESFF _ ->
+                text "ESFF"
+
+            Unary ESFT _ ->
+                text "ESFT"
+
+            Unary ESTF _ ->
+                text "ESTF"
+
+            Unary ESTT _ ->
+                text "ESTT"
+
             _ ->
                 text "wrong extension type"
 
@@ -513,110 +537,31 @@ viewChildren z =
         Closed r1 r2 ->
             viewClosed z
 
-        Unary Alpha t ->
-            viewAlpha z 
+        Unary _ _ ->
+            viewUnary z
 
-        Binary Beta lt rt ->
-            viewBeta z
+        UnaryWithSubst _ _ _ ->
+            viewUnaryWithSubst z
 
-        UnaryWithSubst Gamma t subs ->
-            viewGamma z
-
-        UnaryWithSubst Delta t subs ->
-            viewDelta z
-
-        Unary Refl t ->
-            viewRefl z
-
-        Unary Leibnitz t ->
-            viewLeibnitz z
-
-        Unary MP t ->
-            viewMP z
-
-        Unary MT t ->
-            viewMT z
-
-        Binary Cut lt rt ->
-            viewCut z
-
-        Unary HS t ->
-            viewHS z
-
-        Unary DS t ->
-            viewDS z
-
-        Unary NCS t ->
-            viewNCS z
-
-        _ ->
-            text "wrong extension type"
+        Binary _ _ _ ->
+            viewBinary z
 
 
-viewAlpha : Zipper.Zipper -> Html Msg
-viewAlpha z =
+viewUnary : Zipper.Zipper -> Html Msg
+viewUnary z =
     div [ class "alpha" ] [ viewNode (Zipper.down z) ]
 
+viewUnaryWithSubst : Zipper.Zipper -> Html Msg
+viewUnaryWithSubst z =
+    div [ class "alpha" ] [ viewSubsNode (Zipper.down z) ]
 
-viewBeta : Zipper.Zipper -> Html Msg
-viewBeta z =
+
+viewBinary : Zipper.Zipper -> Html Msg
+viewBinary z =
     div [ class "beta" ]
         [ viewNode (Zipper.left z)
         , viewNode (Zipper.right z)
         ]
-
-
-viewGamma : Zipper.Zipper -> Html Msg
-viewGamma z =
-    div [ class "gamma" ] [ viewSubsNode (Zipper.down z) ]
-
-
-viewDelta : Zipper.Zipper -> Html Msg
-viewDelta z =
-    div [ class "delta" ] [ viewSubsNode (Zipper.down z) ]
-
-
-viewRefl : Zipper.Zipper -> Html Msg
-viewRefl z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewLeibnitz : Zipper.Zipper -> Html Msg
-viewLeibnitz z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewMP : Zipper.Zipper -> Html Msg
-viewMP z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewMT : Zipper.Zipper -> Html Msg
-viewMT z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewCut : Zipper.Zipper -> Html Msg
-viewCut z =
-    div [ class "beta" ]
-        [ viewNode (Zipper.left z)
-        , viewNode (Zipper.right z)
-        ]
-
-
-viewHS : Zipper.Zipper -> Html Msg
-viewHS z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewDS : Zipper.Zipper -> Html Msg
-viewDS z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewNCS : Zipper.Zipper -> Html Msg
-viewNCS z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
 
 
 viewOpen : Zipper.Zipper -> Html Msg
@@ -663,8 +608,8 @@ viewControls (( t, _ ) as z) =
                 let
                     deleteMeButton =
                         if (z |> Zipper.up) /= z then
-                            let
-                                showIfEmptyAndOpen = 
+                            case z |> Zipper.up |> Zipper.zTableau |> .ext of
+                                Binary _ _ _ ->
                                     case t.node.value of
                                             "" ->
                                                 case t.ext of
@@ -676,10 +621,6 @@ viewControls (( t, _ ) as z) =
 
                                             _ ->
                                                 div [] []
-                            in 
-                            case z |> Zipper.up |> Zipper.zTableau |> .ext of
-                                Binary _ _ _ ->
-                                    showIfEmptyAndOpen
 
                                 _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
@@ -719,6 +660,12 @@ viewControls (( t, _ ) as z) =
                             , li [] [ button [ onClick (ExpandUnary HS z) ] [ text "Add HS" ] ]
                             , li [] [ button [ onClick (ExpandUnary DS z) ] [ text "Add DS" ] ]
                             , li [] [ button [ onClick (ExpandUnary NCS z) ] [ text "Add NCS" ] ]
+                            , li [] [ button [ onClick (ExpandBinary ECDF z) ] [ text "Add ECDF" ] ]
+                            , li [] [ button [ onClick (ExpandBinary ECDT z) ] [ text "Add ECDT" ] ]
+                            , li [] [ button [ onClick (ExpandUnary ESFF z) ] [ text "Add ESFF" ] ]
+                            , li [] [ button [ onClick (ExpandUnary ESFT z) ] [ text "Add ESFT" ] ]
+                            , li [] [ button [ onClick (ExpandUnary ESTF z) ] [ text "Add ESTF" ] ]
+                            , li [] [ button [ onClick (ExpandUnary ESTT z) ] [ text "Add ESTT" ] ]
                             ]
                         ]
                     , div [ class "onclick-menu del", tabindex 0 ]

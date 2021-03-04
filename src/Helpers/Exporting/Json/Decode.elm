@@ -88,66 +88,6 @@ binaryRule extType =
         (map2 (Tableau.Binary extType) (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
 
 
-alpha : Decoder Tableau.Tableau
-alpha =
-    unaryRule Tableau.Alpha
-
-
-beta : Decoder Tableau.Tableau
-beta =
-    binaryRule Tableau.Beta
-
-
-delta : Decoder Tableau.Tableau
-delta =
-    unaryRuleWithSubst Tableau.Delta
-
-
-gamma : Decoder Tableau.Tableau
-gamma =
-    unaryRuleWithSubst Tableau.Gamma
-
-
-refl : Decoder Tableau.Tableau
-refl =
-    unaryRule Tableau.Refl
-
-
-leibnitz : Decoder Tableau.Tableau
-leibnitz =
-    unaryRule Tableau.Leibnitz
-    
-
-mp : Decoder Tableau.Tableau
-mp =
-    unaryRule Tableau.MP
-    
-
-mt : Decoder Tableau.Tableau
-mt =
-    unaryRule Tableau.MT
-    
-
-cut : Decoder Tableau.Tableau
-cut =
-    binaryRule Tableau.Cut
-    
-
-hs : Decoder Tableau.Tableau
-hs =
-    unaryRule Tableau.HS
-    
-
-ds : Decoder Tableau.Tableau
-ds =
-    unaryRule Tableau.DS
-    
-
-ncs : Decoder Tableau.Tableau
-ncs =
-    unaryRule Tableau.NCS
-
-
 tblTypeDecoder : String -> Decoder Tableau.Tableau
 tblTypeDecoder typ =
     case typ of
@@ -158,40 +98,58 @@ tblTypeDecoder typ =
             closed
 
         "alpha" ->
-            alpha
+            unaryRule Tableau.Alpha
 
         "beta" ->
-            beta
+            binaryRule Tableau.Beta
 
         "gamma" ->
-            gamma
+            unaryRuleWithSubst Tableau.Gamma
 
         "delta" ->
-            delta
+            unaryRuleWithSubst Tableau.Delta
 
         "refl" ->
-            refl
+            unaryRule Tableau.Refl
 
         "leibnitz" ->
-            leibnitz
+            unaryRule Tableau.Leibnitz
 
         "mp" ->
-            mp
+            unaryRule Tableau.MP
 
         "mt" ->
-            mt
+            unaryRule Tableau.MT
 
         "cut" ->
-            cut
+            binaryRule Tableau.Cut
 
         "hs" ->
-            hs
+            unaryRule Tableau.HS
 
         "ds" ->
-            ds
+            unaryRule Tableau.DS
 
         "ncs" ->
-            ncs
+            unaryRule Tableau.NCS
+
+        "ecdf" ->
+            binaryRule Tableau.ECDF
+
+        "ecdt" ->
+            binaryRule Tableau.ECDT
+            
+        "esff" ->
+            unaryRule Tableau.ESFF
+            
+        "esft" ->
+            unaryRule Tableau.ESFT
+            
+        "estf" ->
+            unaryRule Tableau.ESTF
+            
+        "estt" ->
+            unaryRule Tableau.ESTT
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")

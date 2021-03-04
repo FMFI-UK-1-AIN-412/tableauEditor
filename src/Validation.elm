@@ -24,6 +24,12 @@ import Validation.Rules.Cut
 import Validation.Rules.HS
 import Validation.Rules.DS
 import Validation.Rules.NCS
+import Validation.Rules.ECDF
+import Validation.Rules.ECDT
+import Validation.Rules.ESFF
+import Validation.Rules.ESFT
+import Validation.Rules.ESTF
+import Validation.Rules.ESTT
 
 
 
@@ -239,6 +245,30 @@ isCorrectRule (( t, bs ) as z) =
             
         (Zipper.UnaryCrumb NCS _) :: _ ->
             Validation.Rules.NCS.validate z
+
+        (Zipper.BinaryLeftCrumb ECDF _ _) :: _ ->
+            validateLeft Validation.Rules.ECDF.validate z
+
+        (Zipper.BinaryRightCrumb ECDF _ _) :: _ ->
+            validateRight Validation.Rules.ECDF.validate z
+
+        (Zipper.BinaryLeftCrumb ECDT _ _) :: _ ->
+            validateLeft Validation.Rules.ECDT.validate z
+
+        (Zipper.BinaryRightCrumb ECDT _ _) :: _ ->
+            validateRight Validation.Rules.ECDT.validate z
+      
+        (Zipper.UnaryCrumb ESFF _) :: _ ->
+            Validation.Rules.ESFF.validate z
+                        
+        (Zipper.UnaryCrumb ESFT _) :: _ ->
+            Validation.Rules.ESFT.validate z
+                        
+        (Zipper.UnaryCrumb ESTF _) :: _ ->
+            Validation.Rules.ESTF.validate z
+                        
+        (Zipper.UnaryCrumb ESTT _) :: _ ->
+            Validation.Rules.ESTT.validate z
 
         _ ->    
             Ok z

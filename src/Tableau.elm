@@ -48,6 +48,12 @@ type ExtType
     | HS 
     | DS 
     | NCS 
+    | ECDF
+    | ECDT
+    | ESFF
+    | ESFT
+    | ESTF 
+    | ESTT
 
 
 type Extension

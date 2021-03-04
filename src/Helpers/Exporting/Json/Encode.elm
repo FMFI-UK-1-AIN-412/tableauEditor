@@ -107,6 +107,24 @@ jsonTblList tableau =
         Unary NCS t ->
             encodeUnaryRule tableau "ncs" t
 
+        Binary ECDF lt rt ->
+            encodeBinaryRule tableau "ecdf" lt rt
+
+        Binary ECDT lt rt ->
+            encodeBinaryRule tableau "ecdt" lt rt
+
+        Unary ESFF t ->
+            encodeUnaryRule tableau "esff" t
+            
+        Unary ESFT t ->
+            encodeUnaryRule tableau "esft" t
+            
+        Unary ESTF t ->
+            encodeUnaryRule tableau "estf" t
+            
+        Unary ESTT t ->
+            encodeUnaryRule tableau "estt" t
+
         _ ->
             encodeUnaryRule tableau "unknown" tableau
 
