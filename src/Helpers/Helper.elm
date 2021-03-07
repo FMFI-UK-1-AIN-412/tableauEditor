@@ -22,7 +22,7 @@ isPremise z =
             List.length (Zipper.zNode z).references == 0
 
         _ ->
-            False
+            Zipper.up z == z
 
 
 {-| Like `Result.map2` but merges errors (which must be lists).
@@ -71,28 +71,22 @@ second =
 
 isClosed : Zipper.Zipper -> Result (List Problem) Bool
 isClosed z =
-    let
-        checkUnary = 
+    case (Zipper.zTableau z).ext of
+        Unary _ _ ->
             merge2 second
                 (Validation.isCorrectNode z)
                 (isClosed (Zipper.down z))
 
-        checkBinary = 
+        UnaryWithSubst _ _ _ ->
+            merge2 second
+                (Validation.isCorrectNode z)
+                (isClosed (Zipper.down z))
+
+        Binary _ _ _ ->
             merge3 (\_ b c -> b && c)
                 (Validation.isCorrectNode z)
                 (isClosed (Zipper.left z))
                 (isClosed (Zipper.right z))
-    in
-    
-    case (Zipper.zTableau z).ext of
-        Unary _ _ ->
-            checkUnary
-
-        UnaryWithSubst _ _ _ ->
-            checkUnary
-
-        Binary _ _ _ ->
-            checkBinary
 
         Open ->
             Validation.isCorrectNode z |> Result.map (always False)

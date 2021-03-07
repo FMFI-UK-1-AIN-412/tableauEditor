@@ -2,6 +2,7 @@ module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
 import Tableau exposing (Extension(..), ExtType(..), GUI, Node, Tableau)
+import Tableau
 
 
 jsonRef : { a | str : String } -> Value
@@ -23,11 +24,10 @@ jsonNodeList n =
     [ ( "node", jsonNode n ) ]
 
 
-jsonSubstitution : { a | var : String, term : String } -> Value
-jsonSubstitution { term, var } =
+jsonSubstitution : Tableau.Substitution -> Value
+jsonSubstitution { str, parsedSubst } =
     object
-        [ ( "term", string term )
-        , ( "var", string var )
+        [ ( "str", string str )
         ]
 
 

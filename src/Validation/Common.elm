@@ -115,6 +115,11 @@ second =
     \a b -> Tuple.second ( a, b )
 
 
+always4 : a -> b -> c -> d -> e -> a
+always4 r _ _ _ _ =
+    r
+
+
 always3 : a -> b -> c -> d -> a
 always3 r _ _ _ =
     r
@@ -125,23 +130,23 @@ always2 r _ _ =
     r
 
 
-getTermFromResult : Result (List Parser.DeadEnd) Term -> Term
-getTermFromResult r =
-    case r of
-        Ok term ->
-            term
-
-        Err err ->
-            Fun "default" []
+getParsedSubst : Zipper.Zipper -> Term.Substitution
+getParsedSubst z =
+    z |> Zipper.zSubstitution 
+    |> Maybe.withDefault Tableau.defSubstitution
+    |> .parsedSubst 
+    |> Result.withDefault (Dict.fromList [])
 
 
-makeS : Tableau.Substitution -> Term.Substitution
-makeS subs =
-    let
-        newTerm =
-            subs.term |> Formula.Parser.parseTerm |> getTermFromResult
-    in
-    Dict.fromList [ ( subs.var, newTerm ) ]
+getTermsToString : Zipper.Zipper -> String
+getTermsToString z = 
+    z |> getParsedSubst |> Dict.values 
+    |> (\ts -> (String.join "," (List.map Term.toString ts)))
+
+
+getVarsToString : Zipper.Zipper -> String
+getVarsToString z = 
+    (z |> getParsedSubst |> Dict.keys |> String.join ",")
 
 
 substitutionIsValid : Term.Substitution -> Signed Formula -> Signed Formula -> Bool
@@ -216,54 +221,6 @@ isSubstituable substitution new original =
     removeSign substitution original
 
 
-isSimilarAbove : String -> Zipper.Zipper -> Bool
-isSimilarAbove variable z =
-    let
-        maybeParsed =
-            z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
-    in
-    case maybeParsed of
-        Ok parsed ->
-            Set.member variable (Formula.free (parsed |> Formula.Signed.getFormula))
-                || (if (z |> Zipper.up) == z then
-                        False
-
-                    else
-                        isSimilarAbove variable (z |> Zipper.up)
-                   )
-
-        Err _ ->
-            False
-
-
-isNewVariableValid : String -> Zipper.Zipper -> Bool
-isNewVariableValid variable z =
-    case getTermFromResult (Formula.Parser.parseTerm variable) of
-        Var s ->
-            not (isSimilarAbove variable (z |> Zipper.up))
-
-        Fun _ _ ->
-            False
-
-
-isNewVariableVariable : String -> Zipper.Zipper -> Bool
-isNewVariableVariable variable _ =
-    case getTermFromResult (Formula.Parser.parseTerm variable) of
-        Var s ->
-            True
-
-        Fun _ _ ->
-            False
-
-
-isNewVariableFunction : String -> Bool
-isNewVariableFunction variable =
-    case getTermFromResult (Formula.Parser.parseTerm variable) of
-        Var s ->
-            True
-
-        Fun _ _ ->
-            False
 
 
 getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
@@ -278,6 +235,19 @@ getReffedId extractRef z =
 hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
 hasNumberOfRefs n z =
     List.length (Zipper.zNode z).references == n
+    
+
+numberOfSubstPairs : Zipper.Zipper -> Int
+numberOfSubstPairs z = 
+    case Zipper.zSubstitution (Zipper.up z) of
+        Just subst ->
+            case subst.parsedSubst of 
+                Ok parsed ->
+                    Dict.size parsed
+                Err _ ->
+                    0
+        Nothing ->
+            0
 
 
 {- If one of the errors is CurrentFormulaErr, it will be returned. Returns the first error otherwise -}

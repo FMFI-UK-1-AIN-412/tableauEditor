@@ -4,6 +4,8 @@ import Formula exposing (Formula)
 import Formula.Parser
 import Formula.Signed exposing (Signed)
 import Parser
+import Term
+import Dict
 
 
 type alias Tableau =
@@ -32,7 +34,9 @@ type alias Ref =
 
 
 type alias Substitution =
-    { term : String, var : String }
+    { str : String
+    , parsedSubst : Result (List Parser.DeadEnd) Term.Substitution 
+    }
 
 
 type ExtType
@@ -66,7 +70,7 @@ type Extension
 
 defSubstitution : Substitution
 defSubstitution =
-    { term = "", var = "" }
+    { str = "", parsedSubst = Ok (Dict.fromList []) }
 
 
 defRef : { str : String, up : Maybe a }

@@ -240,28 +240,28 @@ renumber tableau =
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 tableau num =
     let
-        renumberUnary extWithType = 
+        renumberUnary extWithType subT = 
             let
                 ( new_tableau, num1 ) =
-                    renumber2 (Tableau.leftSubtree tableau) (num + 1)
+                    renumber2 subT (num + 1)
 
                 node =
                     tableau.node
             in
-            ( Tableau { node | id = num + 1 } (extWithType new_tableau), num1 ) 
+            ( Tableau { node | id = num + 1 } (extWithType new_tableau), num1 )
 
-        renumberBinary extWithType =
+        renumberBinary extWithType lt rt =
             let
                 ( new_left, num1 ) =
-                    renumber2 (Tableau.leftSubtree tableau) (num + 1)
+                    renumber2 lt (num + 1)
 
                 ( new_right, num2 ) =
-                    renumber2 (Tableau.rightSubtree tableau) num1
+                    renumber2 rt num1
 
                 node =
                     tableau.node
             in
-            ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )   
+            ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )  
     in
     
     case tableau.ext of
@@ -285,14 +285,14 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-        Unary extType _ ->
-            renumberUnary (Unary extType)
+        Unary extType subT ->
+            renumberUnary (Unary extType) subT
 
-        UnaryWithSubst extType _ subst ->
-            renumberUnary (\t -> (UnaryWithSubst extType) t subst) 
+        UnaryWithSubst extType subT subst ->
+            renumberUnary (\t -> (UnaryWithSubst extType) t subst) subT
 
-        Binary extType _ _ ->
-            renumberBinary (Binary extType)
+        Binary extType lt rt ->
+            renumberBinary (Binary extType) lt rt
 
 
 modifyRef : List Ref -> Zipper -> Zipper
@@ -380,29 +380,29 @@ renumberJustInReferences f z =
 renumberJusts : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJusts tableau f lengthOfPathFromFather =
     let
-        renumberJustsUnary extWithType =
+        renumberJustsUnary extWithType subT =
             Tableau
                 tableau.node
-                (extWithType (renumberJusts (renumberJust (Tableau.leftSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+                (extWithType (renumberJusts (renumberJust subT f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
-        renumberJustsBinary extWithType =
+        renumberJustsBinary extWithType lt rt =
             Tableau
                 tableau.node
                 (extWithType
-                    (renumberJusts (renumberJust (Tableau.leftSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
-                    (renumberJusts (renumberJust (Tableau.rightSubtree tableau) f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust lt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
+                    (renumberJusts (renumberJust rt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                 )
     in
     
     case tableau.ext of
-        Unary extType _ ->
-            renumberJustsUnary (Unary extType)
+        Unary extType subT ->
+            renumberJustsUnary (Unary extType) subT
 
-        UnaryWithSubst extType _ subst ->
-            renumberJustsUnary (\t -> UnaryWithSubst extType t subst)
+        UnaryWithSubst extType subT subst ->
+            renumberJustsUnary (\t -> UnaryWithSubst extType t subst) subT
 
-        Binary extType _ _ ->
-            renumberJustsBinary (Binary extType)
+        Binary extType lt rt ->
+            renumberJustsBinary (Binary extType) lt rt
 
         Open ->
             tableau
@@ -500,6 +500,20 @@ setFormula text =
 setRefs : String -> Zipper -> Zipper
 setRefs new z =
     z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
+
+
+setSubstitution : String -> Zipper -> Zipper
+setSubstitution text z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                UnaryWithSubst extType t subst ->
+                    Tableau tableau.node (UnaryWithSubst extType t { subst | str = text, parsedSubst = (Formula.Parser.parseSubstitution text)})
+
+                _ ->
+                    tableau
+        )
+        (z |> up)
 
 
 extendWithRule : (Tableau -> Extension) -> Zipper -> Zipper
@@ -658,34 +672,6 @@ makeOpen z =
                     tableau
         )
         z
-
-
-changeVariable : String -> Zipper -> Zipper
-changeVariable newVariable z =
-    modifyNode
-        (\tableau ->
-            case tableau.ext of
-                UnaryWithSubst extType t subst ->
-                    Tableau tableau.node (UnaryWithSubst extType t { subst | var = newVariable })
-
-                _ ->
-                    tableau
-        )
-        (z |> up)
-
-
-changeTerm : String -> Zipper -> Zipper
-changeTerm newTerm z =
-    modifyNode
-        (\tableau ->
-            case tableau.ext of
-                UnaryWithSubst extType t subst ->
-                    Tableau tableau.node (UnaryWithSubst extType t { subst | term = newTerm })
-
-                _ ->
-                    tableau
-        )
-        (z |> up)
 
 
 switchBetas : Zipper -> Zipper

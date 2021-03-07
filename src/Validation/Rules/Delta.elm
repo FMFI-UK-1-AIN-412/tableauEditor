@@ -11,14 +11,74 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-checkNewVariable : (String -> Bool) -> x -> Zipper.Zipper -> Result x Zipper.Zipper
-checkNewVariable pred x z =
-    case pred (z |> Zipper.up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "") of
-        True ->
-            Ok z
+notVarsErrStr lst = 
+    "The function" 
+    ++ (if List.length lst > 1 then "s '" else " '")
+    ++ (String.join "," (List.map Term.toString lst))
+    ++ (if List.length lst > 1 then "' are" else "' is")
+    ++ " supposed to be "
+    ++ (if List.length lst > 1 then "variables" else "a variable")
 
-        False ->
-            Err x
+
+similarAboveErrStr lst = 
+    "The variable"
+    ++ (if List.length lst > 1 then "s " else " ")
+    ++ "'" ++ (String.join "," lst) ++ "'"
+    ++ (if List.length lst > 1 then " were" else " was")
+    ++ " located above as free"
+
+
+isFunction : Term -> Bool
+isFunction term =
+    case term of
+        Var _ ->
+            False
+
+        Fun _ _ ->
+            True
+
+
+checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkNewVariables z = 
+    case (Zipper.up z) |> Zipper.zSubstitution of 
+        Just subst ->
+            case subst.parsedSubst of
+                Ok parsed ->
+                    let
+                        terms = Dict.values parsed
+                        termsToString = (List.map Term.toString terms)
+                    in
+                    case List.filter isFunction terms of
+                        [] ->
+                            case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
+                                [] ->
+                                    Ok z
+
+                                vars ->
+                                    Err (semanticsProblem z (similarAboveErrStr vars))
+
+                        functions ->
+                                Err (semanticsProblem z (notVarsErrStr functions))       
+                Err _ ->  
+                    Err (semanticsProblem z "substitution parsing failed")
+
+        Nothing ->
+            Err (semanticsProblem z "node contains no substitution")
+
+
+isSimilarAbove : String -> Zipper.Zipper -> Bool
+isSimilarAbove var z = 
+    let
+        parsedF =
+            z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
+    in
+    case parsedF of
+        Ok parsed ->
+            Set.member var (Formula.free (parsed |> Formula.Signed.getFormula))
+                || (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)
+
+        Err _ ->
+            (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)
 
 
 validate :
@@ -34,16 +94,11 @@ validate z =
                 (semanticsProblem z "Referenced formula is not δ")
             )
         |> Result.map (always z)
-        |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
-        |> Result.map (always z)
+        |> Result.andThen 
+            (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
+                (semanticsProblem z "δ rule must be used with at most 1 substitution pair"))
         |> Result.andThen
-            -- checking existing variable above + if new constant is variable or function
-            (checkNewVariable
-                isNewVariableFunction
-                (semanticsProblem z
-                    "Your new variable can't be empty or function."
-                )
-            )
+            checkNewVariables
         |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
@@ -53,9 +108,7 @@ validate z =
                     isSubstituable
                         (z
                             |> Zipper.up
-                            |> Zipper.zSubstitution
-                            |> Maybe.map makeS
-                            |> Maybe.withDefault (Dict.fromList [])
+                            |> getParsedSubst
                         )
                         a
                         b
@@ -64,17 +117,7 @@ validate z =
                     ("This is not substituable. Variable '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .term
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getTermsToString
                            )
                         ++ "' is bound in referrenced formula ("
                         ++ getReffedId Zipper.zFirstRef z
@@ -89,9 +132,7 @@ validate z =
                     substitutionIsValid
                         (z
                             |> Zipper.up
-                            |> Zipper.zSubstitution
-                            |> Maybe.map makeS
-                            |> Maybe.withDefault (Dict.fromList [])
+                            |> getParsedSubst
                         )
                         a
                         b
@@ -100,72 +141,16 @@ validate z =
                     ("This isn't valid δ-subformula created by substituting '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .term
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getTermsToString
                            )
                         ++ "' for '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .var
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getVarsToString
                            )
                         ++ "' from ("
                         ++ getReffedId Zipper.zFirstRef z
                         ++ ")."
-                    )
-                )
-            )
-        |> Result.map (always z)
-        |> Result.andThen
-            -- checking existing variable above + if new constant is variable or function
-            (checkPredicate
-                (isNewVariableValid
-                    (z
-                        |> Zipper.up
-                        |> Zipper.zSubstitution
-                        |> Maybe.map makeS
-                        |> Maybe.withDefault (Dict.fromList [])
-                        |> Dict.values
-                        |> List.head
-                        |> Maybe.withDefault (Var "default")
-                        |> Term.toString
-                    )
-                )
-                (semanticsProblem z
-                    ("Substituting variable '"
-                        ++ (z
-                                |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .term
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
-                           )
-                        ++ "' was located above as free. Please choose another, not used yet. "
                     )
                 )
             )

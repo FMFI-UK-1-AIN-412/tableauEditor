@@ -24,6 +24,9 @@ validate z =
                 (semanticsProblem z "Referenced formula is not γ")
             )
         |> Result.map (always z)
+        |> Result.andThen 
+            (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
+                (semanticsProblem z "γ rule must be used with at most 1 substitution pair"))
         |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen
@@ -33,9 +36,7 @@ validate z =
                     isSubstituable
                         (z
                             |> Zipper.up
-                            |> Zipper.zSubstitution
-                            |> Maybe.map makeS
-                            |> Maybe.withDefault (Dict.fromList [])
+                            |> getParsedSubst
                         )
                         a
                         b
@@ -44,17 +45,7 @@ validate z =
                     ("This is not substituable. Variable '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .term
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getTermsToString
                            )
                         ++ "' is bound in referrenced formula ("
                         ++ getReffedId Zipper.zFirstRef z
@@ -69,9 +60,7 @@ validate z =
                     substitutionIsValid
                         (z
                             |> Zipper.up
-                            |> Zipper.zSubstitution
-                            |> Maybe.map makeS
-                            |> Maybe.withDefault (Dict.fromList [])
+                            |> getParsedSubst
                         )
                         a
                         b
@@ -80,32 +69,12 @@ validate z =
                     ("This isn't valid γ-subformula created by substituting '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .term
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getTermsToString
                            )
                         ++ "' for '"
                         ++ (z
                                 |> Zipper.up
-                                |> Zipper.zSubstitution
-                                |> Maybe.map .var
-                                |> Maybe.map
-                                    (\s ->
-                                        if s == "" then
-                                            "_"
-
-                                        else
-                                            s
-                                    )
-                                |> Maybe.withDefault ""
+                                |> getVarsToString
                            )
                         ++ "' from ("
                         ++ getReffedId Zipper.zFirstRef z

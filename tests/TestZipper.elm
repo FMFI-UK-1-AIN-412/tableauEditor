@@ -13,6 +13,7 @@ import Test exposing (..)
 import Validation
 import Validation.Common
 import Validation.Rules.Leibnitz
+import Validation.Rules.Delta exposing (..)
 import Zipper exposing (..)
 
 
@@ -395,7 +396,7 @@ gammaExampleResult =
                     }
                 , ext = Open
                 }
-                { term = "", var = "x" }
+                {str = "x->y", parsedSubst = Ok (Dict.fromList [("x", Var "y")])}
         }
 
 
@@ -409,7 +410,7 @@ getValueFromResult r =
             Nothing
 
 
-validateGammaSubstituteFunction =
+funInsteadOfVarZipper =
     zipper
         { node =
             { id = 1
@@ -429,11 +430,11 @@ validateGammaSubstituteFunction =
                     }
                 , ext = Open
                 }
-                { term = "f(Diana)", var = "x" }
+                {str = "x -> f(Diana)", parsedSubst = Ok (Dict.fromList [("x", Fun "f" [Var "Diana"])])}
         }
 
 
-validateGammaNewVariableSimilarToExistingFreeAbove =
+newVariableSimilarToExistingFreeAboveZipper =
     zipper
         { node =
             { id = 1
@@ -462,12 +463,12 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                             }
                         , ext = Open
                         }
-                        { term = "k", var = "z" }
+                        {str = "z->k", parsedSubst = Ok (Dict.fromList [("z", Var "k")])}
                 }
         }
 
 
-validateGammaNewVariableSimilarToExistingBoundAbove =
+newVariableSimilarToExistingBoundAboveZipper =
     zipper
         { node =
             { id = 1
@@ -496,7 +497,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                             }
                         , ext = Open
                         }
-                        { term = "z", var = "x" }
+                        {str = "x->z", parsedSubst = Ok (Dict.fromList [("x", Var "z")])}
                 }
         }
 
@@ -760,70 +761,35 @@ suiteZipper =
         , test "gamma term test"
             (\() ->
                 compareZippers gammaExampleResult
-                    (zipperExample |> Zipper.extendUnaryWithSubst Gamma |> Zipper.changeVariable "x")
+                    (zipperExample |> Zipper.extendUnaryWithSubst Gamma |> Zipper.setSubstitution "x->y")
             )
-        , test "substitute function in gamma "
+        , test "function instead of variable "
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaSubstituteFunction
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Fun "f" [ Var "x" ])
-                            |> Term.toString
-                        )
-                        (validateGammaSubstituteFunction
+                Expect.err
+                    (checkNewVariables
+                        (funInsteadOfVarZipper
                             |> Zipper.down
                         )
                     )
-                    False
             )
-        , test "substitution in gamma - substitute for existing bound above"
+        , test "substitution in delta - substitute for existing bound above"
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaNewVariableSimilarToExistingBoundAbove
-                            |> Zipper.down
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Var "z")
-                            |> Term.toString
-                        )
-                        (validateGammaNewVariableSimilarToExistingBoundAbove
+                Expect.ok
+                    (checkNewVariables
+                        (newVariableSimilarToExistingBoundAboveZipper
                             |> Zipper.down
                             |> Zipper.down
                         )
                     )
-                    True
             )
-        , test "substitution in gamma - substitute for existing free above"
+        , test "substitution in delta - substitute for existing free above"
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaNewVariableSimilarToExistingFreeAbove
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Var "k")
-                            |> Term.toString
-                        )
-                        (validateGammaNewVariableSimilarToExistingFreeAbove
-                            |> Zipper.down
+                Expect.err
+                    (checkNewVariables
+                        (newVariableSimilarToExistingFreeAboveZipper
                             |> Zipper.down
                         )
                     )
-                    False
             )
         , test "renumbering justs when adding a node"
             (\() ->

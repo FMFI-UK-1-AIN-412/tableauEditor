@@ -1,15 +1,14 @@
 module Validation exposing (..)
 
-import Dict
 import Errors
 import Formula exposing (Formula(..))
 import Formula.Parser
 import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
-import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
+import Zipper
 import Validation.Common exposing (..)
 import Validation.Rules.Alpha
 import Validation.Rules.Beta
@@ -17,7 +16,6 @@ import Validation.Rules.Delta
 import Validation.Rules.Gamma
 import Validation.Rules.Leibnitz
 import Validation.Rules.Reflexivity
-import Zipper
 import Validation.Rules.ModusPonens
 import Validation.Rules.ModusTolens
 import Validation.Rules.Cut
@@ -30,6 +28,7 @@ import Validation.Rules.ESFF
 import Validation.Rules.ESFT
 import Validation.Rules.ESTF
 import Validation.Rules.ESTT
+import Zipper exposing (zSubstitution)
 
 
 
@@ -61,9 +60,10 @@ isCorrectTableau z =
 
 isValidNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidNode z =
-    Errors.merge3 (always3 z)
+    Errors.merge4 (always4 z)
         (isValidFormula z)
         (isValidNodeRef z)
+        (isValidSubstitution z)
         (areValidCloseRefs z)
 
 
@@ -91,6 +91,21 @@ isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
 
 
+isValidSubstitution : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidSubstitution z =
+    if (Zipper.up z) == z then
+        Ok z
+    else    
+        case Zipper.zSubstitution (Zipper.up z) of
+            Just subst ->
+                subst |> .parsedSubst 
+                |> Result.mapError (\_ -> syntaxProblem z "Wrong form of substitution") 
+                |> Result.map (always z)
+
+            Nothing ->
+                Ok z
+
+
 isValidNodeRef : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidNodeRef z =
     case List.length (Zipper.zNode z).references of
@@ -114,11 +129,18 @@ areValidCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
             Errors.merge2 (always2 z)
-                (isValidRef "First close" r1 z)
-                (isValidRef "Second close" r2 z)
+                (isValidCloseRef "First close" r1 z)
+                (isValidCloseRef "Second close" r2 z)
 
         _ ->
             Ok z
+
+
+isValidCloseRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidCloseRef str r z =
+    r.up
+        |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
+        |> Result.map (always z)
 
 
 isValidRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper

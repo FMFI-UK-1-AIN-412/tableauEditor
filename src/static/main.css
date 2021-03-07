@@ -85,7 +85,7 @@ body {
 	/* width: calc(100% - 11.25rem); */
 }
 
-.textInputVariable, .textInputTerm, .textInputReference {
+.textInputSubst, .textInputReference {
 	flex: none;
 	min-width: 1rem;
 }

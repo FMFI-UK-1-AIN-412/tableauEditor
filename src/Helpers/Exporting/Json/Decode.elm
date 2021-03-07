@@ -46,8 +46,8 @@ node =
 substitution : Decoder Tableau.Substitution
 substitution =
     map2 Tableau.Substitution
-        (field "term" string)
-        (field "var" string)
+        (field "str" string)
+        (map Formula.Parser.parseSubstitution (field "str" string))
 
 
 open : Decoder Tableau.Tableau

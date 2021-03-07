@@ -25,7 +25,7 @@ import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
-import Zipper
+import Json.Encode exposing (set)
 
 
 main : Program (Maybe String) Model Msg
@@ -58,7 +58,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , references = [ { str = "1", up = Just 0 } ]
+                , references = [ ]
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -102,8 +102,7 @@ type Msg
     | ExpandUnary Tableau.ExtType Zipper.Zipper
     | ExpandUnaryWithSubst Tableau.ExtType Zipper.Zipper
     | ExpandBinary Tableau.ExtType Zipper.Zipper
-    | ChangeVariable Zipper.Zipper String
-    | ChangeTerm Zipper.Zipper String
+    | ChangeSubst Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
     | ChangeToUnary Tableau.ExtType Zipper.Zipper
     | ChangeToUnaryWithSubst Tableau.ExtType Zipper.Zipper
@@ -253,11 +252,8 @@ simpleUpdate msg model =
             MakeOpen z ->
                 { model | tableau = z |> Zipper.makeOpen |> top }
 
-            ChangeVariable z newVariable ->
-                { model | tableau = z |> Zipper.changeVariable newVariable |> top }
-
-            ChangeTerm z newTerm ->
-                { model | tableau = z |> Zipper.changeTerm newTerm |> top }
+            ChangeSubst z newSubst ->
+                { model | tableau = z |> Zipper.setSubstitution newSubst |> top }
 
             SwitchBetas z ->
                 { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
@@ -344,21 +340,13 @@ viewSubsNode z =
             (\rest ->
                 text "{"
                     :: autoSizeInput
-                        (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
+                        (z |> up |> Zipper.zSubstitution |> Maybe.map .str |> Maybe.withDefault "")
                         [ classList
-                            [ ( "textInput textInputVariable", True )
+                            [ ( "textInput textInputSubst", True )
                             , ( "semanticsProblem", Helper.hasReference z )
                             ]
-                        , onInput <| ChangeVariable z
-                        ]
-                    :: text "→"
-                    :: autoSizeInput
-                        (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
-                        [ classList
-                            [ ( "textInput textInputTerm", True )
-                            , ( "semanticsProblem", Helper.hasReference z )
-                            ]
-                        , onInput <| ChangeTerm z
+                        , onInput <| ChangeSubst z
+                        , placeholder "a↦b,.." 
                         ]
                     :: text "}"
                     :: rest

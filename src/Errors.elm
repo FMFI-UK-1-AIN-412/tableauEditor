@@ -32,6 +32,16 @@ merge3 func ra rb rc =
             Err (errors ra ++ errors rb ++ errors rc)
 
 
+merge4 : (a -> b -> c -> d -> value) -> Result (List x) a -> Result (List x) b -> Result (List x) c -> Result (List x) d -> Result (List x) value
+merge4 func ra rb rc rd =
+    case Result.map4 func ra rb rc rd of
+        Ok val ->
+            Ok val
+        _ ->
+            Err (errors ra ++ errors rb ++ errors rc ++ errors rd)
+        
+
+
 errors : Result (List x) a -> List x
 errors r =
     case r of
