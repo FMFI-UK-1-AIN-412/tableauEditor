@@ -9,41 +9,32 @@ import Zipper
 
 
 refStructureErr =
-    RuleError RefFormulasErr "HS rule can't be used on referenced formulas"
+    "HS rule can't be used on referenced formulas"
 
 
 currentFormulaErr =
-    RuleError CurrentFormulaErr "formula was not created using the HS rule"
+    "Formula was not created using the HS rule"
 
 
-checkFormulaOrder : Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-checkFormulaOrder sf1 sf2 currentF =
-    case sf1 of
-        T (Impl a b) ->
-            case sf2 of
-                T (Impl c d) ->
-                    if b == c then
-                        case currentF of
-                            T (Impl x y) ->
-                                if x == a && y == d then
-                                    Ok "ok"
+getNewFormula : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+getNewFormula f1 f2 =
+    case ( f1, f2 ) of
+        ( T (Impl a b), T (Impl c d) ) ->
+            if b == c then
+                Ok (T (Impl a d))
 
-                                else
-                                    Err currentFormulaErr
-
-                            _ ->
-                                Err currentFormulaErr
-
-                    else
-                        Err refStructureErr
-
-                _ ->
-                    Err refStructureErr
+            else
+                Err refStructureErr
 
         _ ->
             Err refStructureErr
 
 
+check : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+check f1 f2 z =
+    checkFormulas currentFormulaErr f1 f2 getNewFormula z
+
+
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "HS" (tryBothFormulaOrders checkFormulaOrder) z
+    validate2RefUnaryRule "HS" check z

@@ -8,9 +8,8 @@ import Term exposing (Term(..))
 import Tableau exposing (..)
 import Test exposing (..)
 import Validation.Common exposing (..)
-import Validation.Rules.ModusPonens exposing (checkFormulaOrder)
+import Validation.Rules.ModusPonens exposing (check)
 import Zipper exposing (..)
-import FontAwesome exposing (check)
 
 
 zipperWithFormula f = 
@@ -35,11 +34,11 @@ z3 = zipperWithFormula "T (p(x) -> r(x))"
 
 suitetryBothFormulaOrders : Test
 suitetryBothFormulaOrders =
-    describe "the tryBothFormulaOrders function"
+    describe "the check function in MP"
         [ test "simple impl" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (PredAtom "a" [])(PredAtom "b" [])))
                         (T (PredAtom "a" []))
                         z1
@@ -49,7 +48,7 @@ suitetryBothFormulaOrders =
         , test "impl with quant" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Exists "x" (PredAtom "p" [Var "x"])))
                         (T (Impl (Exists "x" (PredAtom "p" [Var "x"]))(ForAll "c" (PredAtom "r" [Var "c"]))))
                         z2
@@ -59,7 +58,7 @@ suitetryBothFormulaOrders =
         , test "impl of impls" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))(Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))))
                         (T (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))))
                         z3
@@ -69,7 +68,7 @@ suitetryBothFormulaOrders =
         , test "wrong ref formulas1" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (PredAtom "a" [])(PredAtom "b" [])))
                         (F (PredAtom "a" []))
                         z1
@@ -79,7 +78,7 @@ suitetryBothFormulaOrders =
         , test "wrong ref formulas2" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Exists "x" (PredAtom "p" [Var "x"])))
                         (T (Impl (Exists "x" (PredAtom "p" [Var "z"]))(ForAll "c" (PredAtom "r" [Var "c"]))))
                         z2
@@ -89,7 +88,7 @@ suitetryBothFormulaOrders =
         , test "wrong ref formulas3" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))(Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))))
                         (T (Conj ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))))
                         z3
@@ -99,32 +98,32 @@ suitetryBothFormulaOrders =
         , test "wrong new formula1" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (PredAtom "b" [])(PredAtom "a" [])))
                         (T (PredAtom "b" []))
                         z1
                     ) 
-                    (Err (semanticsProblem z1 "formula was not created using the MP rule")) 
+                    (Err (semanticsProblem z1 "Formula was not created using the MP rule")) 
             )
         , test "wrong new formula2" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (ForAll "c" (PredAtom "r" [Var "c"])))
                         (T (Impl (ForAll "c" (PredAtom "r" [Var "c"])) (Exists "x" (PredAtom "p" [Var "x"]))))
                         z2
                     ) 
-                    (Err (semanticsProblem z2 "formula was not created using the MP rule")) 
+                    (Err (semanticsProblem z2 "Formula was not created using the MP rule")) 
             )
         , test "wrong new formula3" 
             (\() ->
                 Expect.equal
-                    (tryBothFormulaOrders checkFormulaOrder
+                    (check
                         (T (Impl (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))(Impl ((EqAtom (Var "x") (Var "p")))((PredAtom "r" [Var "x"])))))
                         (T (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))))
                         z3
                     ) 
-                    (Err (semanticsProblem z3 "formula was not created using the MP rule")) 
+                    (Err (semanticsProblem z3 "Formula was not created using the MP rule")) 
             )
         ]
 

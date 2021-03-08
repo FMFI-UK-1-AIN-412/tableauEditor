@@ -8,57 +8,46 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-refStructureErr = RuleError RefFormulasErr "ESTT rule can't be used on referenced formulas"
+refStructureErr =
+    "ESTT rule can't be used on referenced formulas"
 
-currentFormulaErr = RuleError CurrentFormulaErr "formula was not created using the ESTT rule"
+
+currentFormulaErr =
+    "Formula was not created using the ESTT rule"
 
 
-structureOne: Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-structureOne sf1 sf2 currentF = 
-        case sf1 of
-            T (Equiv a b) -> 
-                case sf2 of
-                    T f2 ->
-                        if a == f2 then
-                            case currentF of
-                                T cf ->
-                                    if cf == b then
-                                        Ok "ok"
-                                    else 
-                                        Err currentFormulaErr
-                                _ ->
-                                    Err currentFormulaErr
-                        else
-                            Err refStructureErr
-                    _ ->
-                        Err refStructureErr
-            _ ->
+getNewFormula : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+getNewFormula f1 f2 =
+    case ( f1, f2 ) of
+        ( T (Equiv a b), T c ) ->
+            if c == a then
+                Ok (T b)
+
+            else if c == b then
+                Ok (T a)
+
+            else
                 Err refStructureErr
 
+        ( T c, T (Equiv a b) ) ->
+            if c == a then
+                Ok (T b)
 
-structureTwo: Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-structureTwo sf1 sf2 currentF = 
-        case sf1 of
-            T (Equiv a b) -> 
-                case sf2 of
-                    T f2 ->
-                        if b == f2 then
-                            case currentF of
-                                T cf ->
-                                    if cf == a then
-                                        Ok "ok"
-                                    else 
-                                        Err currentFormulaErr
-                                _ ->
-                                    Err currentFormulaErr
-                        else
-                            Err refStructureErr
-                    _ ->
-                        Err refStructureErr
-            _ ->
+            else if c == b then
+                Ok (T a)
+
+            else
                 Err refStructureErr
+
+        _ ->
+            Err refStructureErr
+
+
+check : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+check f1 f2 z =
+    checkFormulas currentFormulaErr f1 f2 getNewFormula z
 
 
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "ESTT" (tryBothOrdersAndStructures structureOne structureTwo) z
+    validate2RefUnaryRule "ESTT" check z

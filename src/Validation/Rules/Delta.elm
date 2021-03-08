@@ -11,21 +11,48 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-notVarsErrStr lst = 
-    "The function" 
-    ++ (if List.length lst > 1 then "s '" else " '")
-    ++ (String.join "," (List.map Term.toString lst))
-    ++ (if List.length lst > 1 then "' are" else "' is")
-    ++ " supposed to be "
-    ++ (if List.length lst > 1 then "variables" else "a variable")
+notVarsErrStr lst =
+    "The function"
+        ++ (if List.length lst > 1 then
+                "s '"
+
+            else
+                " '"
+           )
+        ++ String.join "," (List.map Term.toString lst)
+        ++ (if List.length lst > 1 then
+                "' are"
+
+            else
+                "' is"
+           )
+        ++ " supposed to be "
+        ++ (if List.length lst > 1 then
+                "variables"
+
+            else
+                "a variable"
+           )
 
 
-similarAboveErrStr lst = 
+similarAboveErrStr lst =
     "The variable"
-    ++ (if List.length lst > 1 then "s " else " ")
-    ++ "'" ++ (String.join "," lst) ++ "'"
-    ++ (if List.length lst > 1 then " were" else " was")
-    ++ " located above as free"
+        ++ (if List.length lst > 1 then
+                "s "
+
+            else
+                " "
+           )
+        ++ "'"
+        ++ String.join "," lst
+        ++ "'"
+        ++ (if List.length lst > 1 then
+                " were"
+
+            else
+                " was"
+           )
+        ++ " located above as free"
 
 
 isFunction : Term -> Bool
@@ -39,14 +66,17 @@ isFunction term =
 
 
 checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-checkNewVariables z = 
-    case (Zipper.up z) |> Zipper.zSubstitution of 
+checkNewVariables z =
+    case Zipper.up z |> Zipper.zSubstitution of
         Just subst ->
             case subst.parsedSubst of
                 Ok parsed ->
                     let
-                        terms = Dict.values parsed
-                        termsToString = (List.map Term.toString terms)
+                        terms =
+                            Dict.values parsed
+
+                        termsToString =
+                            List.map Term.toString terms
                     in
                     case List.filter isFunction terms of
                         [] ->
@@ -58,8 +88,9 @@ checkNewVariables z =
                                     Err (semanticsProblem z (similarAboveErrStr vars))
 
                         functions ->
-                                Err (semanticsProblem z (notVarsErrStr functions))       
-                Err _ ->  
+                            Err (semanticsProblem z (notVarsErrStr functions))
+
+                Err _ ->
                     Err (semanticsProblem z "substitution parsing failed")
 
         Nothing ->
@@ -67,7 +98,7 @@ checkNewVariables z =
 
 
 isSimilarAbove : String -> Zipper.Zipper -> Bool
-isSimilarAbove var z = 
+isSimilarAbove var z =
     let
         parsedF =
             z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
@@ -75,7 +106,9 @@ isSimilarAbove var z =
     case parsedF of
         Ok parsed ->
             Set.member var (Formula.free (parsed |> Formula.Signed.getFormula))
-                || (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)
+                || (z |> Zipper.up)
+                /= z
+                && isSimilarAbove var (z |> Zipper.up)
 
         Err _ ->
             (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)
@@ -94,9 +127,10 @@ validate z =
                 (semanticsProblem z "Referenced formula is not δ")
             )
         |> Result.map (always z)
-        |> Result.andThen 
+        |> Result.andThen
             (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
-                (semanticsProblem z "δ rule must be used with at most 1 substitution pair"))
+                (semanticsProblem z "δ rule must be used with at most 1 substitution pair")
+            )
         |> Result.andThen
             checkNewVariables
         |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)

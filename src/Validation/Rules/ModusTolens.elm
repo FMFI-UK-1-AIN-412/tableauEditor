@@ -1,4 +1,4 @@
-module Validation.Rules.ModusTolens exposing (checkFormulaOrder, validate)
+module Validation.Rules.ModusTolens exposing (check, validate)
 
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
@@ -9,41 +9,39 @@ import Zipper
 
 
 refStructureErr =
-    RuleError RefFormulasErr "MT rule can't be used on referenced formulas"
+    "MT rule can't be used on referenced formulas"
 
 
 currentFormulaErr =
-    RuleError CurrentFormulaErr "formula was not created using the MT rule"
+    "Formula was not created using the MT rule"
 
 
-checkFormulaOrder : Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-checkFormulaOrder sf1 sf2 currentF =
-    case sf1 of
-        T (Impl a b) ->
-            case sf2 of
-                F f2 ->
-                    if b == f2 then
-                        case currentF of
-                            F cf ->
-                                if cf == a then
-                                    Ok "ok"
+getNewFormula : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+getNewFormula f1 f2 =
+    case ( f1, f2 ) of
+        ( T (Impl a b), F c ) ->
+            if b == c then
+                Ok (F a)
 
-                                else
-                                    Err currentFormulaErr
+            else
+                Err refStructureErr
 
-                            _ ->
-                                Err currentFormulaErr
+        ( F c, T (Impl a b) ) ->
+            if b == c then
+                Ok (F a)
 
-                    else
-                        Err refStructureErr
-
-                _ ->
-                    Err refStructureErr
+            else
+                Err refStructureErr
 
         _ ->
             Err refStructureErr
 
 
+check : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+check f1 f2 z =
+    checkFormulas currentFormulaErr f1 f2 getNewFormula z
+
+
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "Modus tolens" (tryBothFormulaOrders checkFormulaOrder) z
+    validate2RefUnaryRule "MT" check z

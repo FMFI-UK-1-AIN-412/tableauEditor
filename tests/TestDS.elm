@@ -8,9 +8,8 @@ import Term exposing (Term(..))
 import Tableau exposing (..)
 import Test exposing (..)
 import Validation.Common exposing (..)
-import Validation.Rules.DS exposing (structureOne, structureTwo)
+import Validation.Rules.DS exposing (check)
 import Zipper exposing (..)
-import FontAwesome exposing (check)
 
 
 zipperWithFormula f = 
@@ -34,11 +33,11 @@ z3 = zipperWithFormula "T ∀x(p(x) & r(x))"
 
 suiteTryBothOrdersAndStructures : Test
 suiteTryBothOrdersAndStructures =
-    describe "validation with tryBothOrdersAndStructures function in DS"
+    describe "validation with check function in DS"
         [ test "first structure with disj" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (PredAtom "b" [])(Disj((PredAtom "a" []))((PredAtom "b" [])))))
                         (F (PredAtom "b" []))
                         z1
@@ -48,7 +47,7 @@ suiteTryBothOrdersAndStructures =
         , test "second structure withequality" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (F (ForAll "c" (PredAtom "r" [Var "c"])))
                         (T (Disj (EqAtom (Var "a") (Fun "f" [Var "b"]))(ForAll "c" (PredAtom "r" [Var "c"]))))
                         z2
@@ -58,7 +57,7 @@ suiteTryBothOrdersAndStructures =
         , test "first structure with forall conj" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (Neg(EqAtom (Var "a")(Var "b")))(ForAll "x" (Conj (PredAtom "p" [Var "x"]) (PredAtom "r" [Var "x"])))))
                         (F (Neg(EqAtom (Var "a")(Var "b"))))
                         z3
@@ -68,7 +67,7 @@ suiteTryBothOrdersAndStructures =
         , test "wrong ref formulas1" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (PredAtom "a" [])(PredAtom "b" [])))
                         (T (PredAtom "a" []))
                         z1
@@ -78,7 +77,7 @@ suiteTryBothOrdersAndStructures =
         , test "wrong ref formulas2" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (F (Exists "c" (PredAtom "p" [Var "x"])))
                         (T (Impl (Exists "x" (PredAtom "p" [Var "z"]))(Exists "c" (PredAtom "p" [Var "c"]))))
                         z2
@@ -88,7 +87,7 @@ suiteTryBothOrdersAndStructures =
         , test "wrong ref formulas3" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))(Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"])))))
                         (F (Conj ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))))
                         z3
@@ -98,32 +97,32 @@ suiteTryBothOrdersAndStructures =
         , test "wrong new formula1" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (Disj(PredAtom "b" [])(PredAtom "b" []))(PredAtom "a" [])))
                         (F (Disj(PredAtom "b" [])(PredAtom "b" [])))
                         z1
                     ) 
-                    (Err (semanticsProblem z1 "formula was not created using the DS rule")) 
+                    (Err (semanticsProblem z1 "Formula was not created using the DS rule")) 
             )
         , test "wrong new formula2" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (F (ForAll "c" (PredAtom "r" [Var "c"])))
                         (T (Disj (ForAll "c" (PredAtom "r" [Var "c"])) (Exists "x" (PredAtom "p" [Var "x"]))))
                         z2
                     ) 
-                    (Err (semanticsProblem z2 "formula was not created using the DS rule")) 
+                    (Err (semanticsProblem z2 "Formula was not created using the DS rule")) 
             )
         , test "wrong new formula3" 
             (\() ->
                 Expect.equal
-                    (tryBothOrdersAndStructures structureOne structureTwo
+                    (check
                         (T (Disj (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))) (ForAll "x" (Conj (PredAtom "p" [Var "x"]) (PredAtom "p" [Var "x"])))))
                         (F (Impl ((PredAtom "p" [Var "x"]))((PredAtom "r" [Var "x"]))))
                         z3
                     ) 
-                    (Err (semanticsProblem z3 "formula was not created using the DS rule")) 
+                    (Err (semanticsProblem z3 "Formula was not created using the DS rule")) 
             )
         ]
 

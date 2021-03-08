@@ -24,9 +24,10 @@ validate z =
                 (semanticsProblem z "Referenced formula is not γ")
             )
         |> Result.map (always z)
-        |> Result.andThen 
+        |> Result.andThen
             (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
-                (semanticsProblem z "γ rule must be used with at most 1 substitution pair"))
+                (semanticsProblem z "γ rule must be used with at most 1 substitution pair")
+            )
         |> Result.andThen (\z1 -> getReffedSignedFormula Zipper.zFirstRef z1)
         |> Result.map2 (\a b -> ( a, b )) (checkFormula "Formula" z)
         |> Result.andThen

@@ -7,70 +7,47 @@ import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Zipper
 
+
 refStructureErr =
-    RuleError RefFormulasErr "NCS rule can't be used on referenced formulas"
+    "NCS rule can't be used on referenced formulas"
 
 
 currentFormulaErr =
-    RuleError CurrentFormulaErr "formula was not created using the NCS rule"
+    "Formula was not created using the NCS rule"
 
 
-structureOne : Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-structureOne sf1 sf2 currentF =
-    case sf1 of
-        F (Conj a b) ->
-            case sf2 of
-                T f2 ->
-                    if a == f2 then
-                        case currentF of
-                            F cf ->
-                                if cf == b then
-                                    Ok "ok"
+getNewFormula : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+getNewFormula f1 f2 =
+    case ( f1, f2 ) of
+        ( F (Conj a b), T c ) ->
+            if c == a then
+                Ok (F b)
 
-                                else
-                                    Err currentFormulaErr
+            else if c == b then
+                Ok (F a)
 
-                            _ ->
-                                Err currentFormulaErr
+            else
+                Err refStructureErr
 
-                    else
-                        Err refStructureErr
+        ( T c, F (Conj a b) ) ->
+            if c == a then
+                Ok (F b)
 
-                _ ->
-                    Err refStructureErr
+            else if c == b then
+                Ok (F a)
 
-        _ ->
-            Err refStructureErr
-
-
-structureTwo : Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-structureTwo sf1 sf2 currentF =
-    case sf1 of
-        F (Conj a b) ->
-            case sf2 of
-                T f2 ->
-                    if b == f2 then
-                        case currentF of
-                            F cf ->
-                                if cf == a then
-                                    Ok "ok"
-
-                                else
-                                    Err currentFormulaErr
-
-                            _ ->
-                                Err currentFormulaErr
-
-                    else
-                        Err refStructureErr
-
-                _ ->
-                    Err refStructureErr
+            else
+                Err refStructureErr
 
         _ ->
             Err refStructureErr
+
+
+check : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+check f1 f2 z =
+    checkFormulas currentFormulaErr f1 f2 getNewFormula z
 
 
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "NCS" (tryBothOrdersAndStructures structureOne structureTwo) z
+    validate2RefUnaryRule "NCS" check z

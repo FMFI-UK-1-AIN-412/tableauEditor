@@ -9,11 +9,12 @@ import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Zipper
 
+
 getBetaChildren f z =
     f
-    |> checkPredicate Formula.Signed.isBeta
-        (semanticsProblem z "Referenced formula is not β")
-    |> Result.map Formula.Signed.subformulas
+        |> checkPredicate Formula.Signed.isBeta
+            (semanticsProblem z "Referenced formula is not β")
+        |> Result.map Formula.Signed.subformulas
 
 
 validate :

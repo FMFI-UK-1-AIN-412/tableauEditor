@@ -19,8 +19,5 @@ getECDFChildren f z =
 
 
 validate : Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validate this other = 
+validate this other =
     validateBinary "ECDF" getECDFChildren this other
-
-
-

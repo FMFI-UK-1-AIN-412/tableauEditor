@@ -1,4 +1,4 @@
-module Validation.Rules.ModusPonens exposing (checkFormulaOrder, validate)
+module Validation.Rules.ModusPonens exposing (check, validate)
 
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
@@ -9,41 +9,39 @@ import Zipper
 
 
 refStructureErr =
-    RuleError RefFormulasErr "MP rule can't be used on referenced formulas"
+    "MP rule can't be used on referenced formulas"
 
 
 currentFormulaErr =
-    RuleError CurrentFormulaErr "formula was not created using the MP rule"
+    "Formula was not created using the MP rule"
 
 
-checkFormulaOrder : Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String
-checkFormulaOrder sf1 sf2 currentF =
-    case sf1 of
-        T (Impl a b) ->
-            case sf2 of
-                T f2 ->
-                    if a == f2 then
-                        case currentF of
-                            T cf ->
-                                if cf == b then
-                                    Ok "ok"
+getNewFormula : Signed Formula -> Signed Formula -> Result String (Signed Formula)
+getNewFormula f1 f2 =
+    case ( f1, f2 ) of
+        ( T (Impl a b), T c ) ->
+            if a == c then
+                Ok (T b)
 
-                                else
-                                    Err currentFormulaErr
+            else
+                Err refStructureErr
 
-                            _ ->
-                                Err currentFormulaErr
+        ( T c, T (Impl a b) ) ->
+            if a == c then
+                Ok (T b)
 
-                    else
-                        Err refStructureErr
-
-                _ ->
-                    Err refStructureErr
+            else
+                Err refStructureErr
 
         _ ->
             Err refStructureErr
 
 
+check : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+check f1 f2 z =
+    checkFormulas currentFormulaErr f1 f2 getNewFormula z
+
+
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "Modus ponens" (tryBothFormulaOrders checkFormulaOrder) z
+    validate2RefUnaryRule "MP" check z

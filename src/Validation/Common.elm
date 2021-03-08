@@ -25,15 +25,15 @@ type alias Problem =
     }
 
 
-type RuleErrorType = 
-    RefFormulasErr
+type RuleErrorType
+    = RefFormulasErr
     | CurrentFormulaErr
 
 
-type alias RuleError = 
+type alias RuleError =
     { typ : RuleErrorType
     , msg : String
-    }   
+    }
 
 
 syntaxProblem : Zipper.Zipper -> String -> List Problem
@@ -132,21 +132,24 @@ always2 r _ _ =
 
 getParsedSubst : Zipper.Zipper -> Term.Substitution
 getParsedSubst z =
-    z |> Zipper.zSubstitution 
-    |> Maybe.withDefault Tableau.defSubstitution
-    |> .parsedSubst 
-    |> Result.withDefault (Dict.fromList [])
+    z
+        |> Zipper.zSubstitution
+        |> Maybe.withDefault Tableau.defSubstitution
+        |> .parsedSubst
+        |> Result.withDefault (Dict.fromList [])
 
 
 getTermsToString : Zipper.Zipper -> String
-getTermsToString z = 
-    z |> getParsedSubst |> Dict.values 
-    |> (\ts -> (String.join "," (List.map Term.toString ts)))
+getTermsToString z =
+    z
+        |> getParsedSubst
+        |> Dict.values
+        |> (\ts -> String.join "," (List.map Term.toString ts))
 
 
 getVarsToString : Zipper.Zipper -> String
-getVarsToString z = 
-    (z |> getParsedSubst |> Dict.keys |> String.join ",")
+getVarsToString z =
+    z |> getParsedSubst |> Dict.keys |> String.join ","
 
 
 substitutionIsValid : Term.Substitution -> Signed Formula -> Signed Formula -> Bool
@@ -221,8 +224,6 @@ isSubstituable substitution new original =
     removeSign substitution original
 
 
-
-
 getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
 getReffedId extractRef z =
     String.fromInt
@@ -235,48 +236,34 @@ getReffedId extractRef z =
 hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
 hasNumberOfRefs n z =
     List.length (Zipper.zNode z).references == n
-    
+
 
 numberOfSubstPairs : Zipper.Zipper -> Int
-numberOfSubstPairs z = 
+numberOfSubstPairs z =
     case Zipper.zSubstitution (Zipper.up z) of
         Just subst ->
-            case subst.parsedSubst of 
+            case subst.parsedSubst of
                 Ok parsed ->
                     Dict.size parsed
+
                 Err _ ->
                     0
+
         Nothing ->
             0
 
 
-{- If one of the errors is CurrentFormulaErr, it will be returned. Returns the first error otherwise -}
-ruleErrorToShow: RuleError -> RuleError -> RuleError
-ruleErrorToShow e1 e2 = 
-    case e1.typ of 
-        CurrentFormulaErr ->
-            e1
+checkFormulas err f1 f2 getNewFormula z =
+    let
+        newFormula =
+            z |> checkFormula "Formula"
 
-        RefFormulasErr ->
-            case e2.typ of
-                CurrentFormulaErr ->
-                    e2
-                _ ->
-                    e1
-
-
-{- Returns the first Ok Result. If both are Err, returns the one with CurrentFormulaErr -}
-betterOutcome : Result RuleError value -> Result RuleError value -> Result RuleError value
-betterOutcome r1 r2 = 
-        case r1 of
-            Ok val1 ->
-               Ok val1
-            Err err1 ->
-                case r2 of
-                    Ok val2 ->
-                        Ok val2
-                    Err err2 ->
-                        Err (ruleErrorToShow err1 err2)
+        correctNewFormula =
+            getNewFormula f1 f2
+                |> Result.mapError (semanticsProblem z)
+    in
+    Result.map2 (==) newFormula correctNewFormula
+        |> Result.andThen (resultFromBool z (semanticsProblem z err))
 
 
 validate2RefUnaryRule : String -> (Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper) -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -297,40 +284,13 @@ validate2RefUnaryRule ruleName check z =
                     )
                     z
             )
-        |> Result.map (always z) 
-
-
-tryBothFormulaOrders: (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> Signed Formula -> Signed Formula ->  Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-tryBothFormulaOrders checkFormulaOrder sf1 sf2 z = 
-    let
-        currentF = (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
-    in
-        betterOutcome (checkFormulaOrder sf1 sf2 currentF) (checkFormulaOrder sf2 sf1 currentF)
-        |> Result.mapError (\err -> (semanticsProblem z err.msg))
-        |> Result.map (always z)
-
-
-tryBothOrdersAndStructures : (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> (Signed Formula -> Signed Formula -> Signed Formula -> Result RuleError String) -> Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-tryBothOrdersAndStructures struct1 struct2 sf1 sf2 z =
-    let
-        currentF =
-            (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
-
-        firstOption =
-            betterOutcome (struct1 sf1 sf2 currentF) (struct1 sf2 sf1 currentF)
-
-        secondOption =
-            betterOutcome (struct2 sf1 sf2 currentF) (struct2 sf2 sf1 currentF)
-    in
-    betterOutcome firstOption secondOption
-        |> Result.mapError (\err -> semanticsProblem z err.msg)
         |> Result.map (always z)
 
 
 validateBinary :
-    String ->
-    (Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula))) ->
-    Zipper.Zipper
+    String
+    -> (Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula)))
+    -> Zipper.Zipper
     -> Zipper.Zipper
     -> Result (List Problem) Zipper.Zipper
 validateBinary ruleName getChildren this other =
@@ -365,7 +325,7 @@ validateBinary ruleName getChildren this other =
 
 
 childrenHaveSameRef :
-    String 
+    String
     -> Zipper.Zipper
     -> Zipper.Zipper
     -> Result (List Problem) Zipper.Zipper
@@ -386,17 +346,23 @@ childrenHaveSameRef ruleName this other =
             (resultFromBool this (semanticsProblem this (ruleName ++ " references are not the same")))
 
 
-validateLeft : (Zipper.Zipper
+validateLeft :
+    (Zipper.Zipper
+     -> Zipper.Zipper
+     -> Result (List Problem) Zipper.Zipper
+    )
     -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper) 
-    -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 validateLeft validate z =
     validate z (z |> Zipper.up |> Zipper.right)
 
 
-validateRight : (Zipper.Zipper
+validateRight :
+    (Zipper.Zipper
+     -> Zipper.Zipper
+     -> Result (List Problem) Zipper.Zipper
+    )
     -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper) 
-    -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
 validateRight validate z =
     validate z (z |> Zipper.up |> Zipper.left)
