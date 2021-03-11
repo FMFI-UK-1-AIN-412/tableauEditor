@@ -36,7 +36,6 @@ validate z =
                 (\( a, b ) ->
                     isSubstituable
                         (z
-                            |> Zipper.up
                             |> getParsedSubst
                         )
                         a
@@ -45,7 +44,6 @@ validate z =
                 (semanticsProblem z
                     ("This is not substituable. Variable '"
                         ++ (z
-                                |> Zipper.up
                                 |> getTermsToString
                            )
                         ++ "' is bound in referrenced formula ("
@@ -60,7 +58,6 @@ validate z =
                 (\( a, b ) ->
                     substitutionIsValid
                         (z
-                            |> Zipper.up
                             |> getParsedSubst
                         )
                         a
@@ -69,12 +66,10 @@ validate z =
                 (semanticsProblem z
                     ("This isn't valid γ-subformula created by substituting '"
                         ++ (z
-                                |> Zipper.up
                                 |> getTermsToString
                            )
                         ++ "' for '"
                         ++ (z
-                                |> Zipper.up
                                 |> getVarsToString
                            )
                         ++ "' from ("

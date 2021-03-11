@@ -130,13 +130,19 @@ always2 r _ _ =
     r
 
 
+implicitSubst : Term.Substitution -> Zipper.Zipper -> Term.Substitution
+implicitSubst subst z = 
+    ((unsubstitutedVars subst z) |> List.map (\x -> ((Term.toString x), x)) |> Dict.fromList)
+
+
 getParsedSubst : Zipper.Zipper -> Term.Substitution
 getParsedSubst z =
-    z
+    (z |> Zipper.up)
         |> Zipper.zSubstitution
         |> Maybe.withDefault Tableau.defSubstitution
         |> .parsedSubst
         |> Result.withDefault (Dict.fromList [])
+        |> (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
 
 
 getTermsToString : Zipper.Zipper -> String
@@ -240,17 +246,7 @@ hasNumberOfRefs n z =
 
 numberOfSubstPairs : Zipper.Zipper -> Int
 numberOfSubstPairs z =
-    case Zipper.zSubstitution (Zipper.up z) of
-        Just subst ->
-            case subst.parsedSubst of
-                Ok parsed ->
-                    Dict.size parsed
-
-                Err _ ->
-                    0
-
-        Nothing ->
-            0
+    z |> getParsedSubst |> Dict.size
 
 
 checkFormulas err f1 f2 getNewFormula z =
@@ -366,3 +362,93 @@ validateRight :
     -> Result (List Problem) Zipper.Zipper
 validateRight validate z =
     validate z (z |> Zipper.up |> Zipper.left)
+
+
+unsubstitutedVars : Term.Substitution -> Zipper.Zipper -> (List Term)
+unsubstitutedVars subst z = 
+    let
+        newF = checkFormula "Formula" z |> Result.map Formula.Signed.getFormula
+        refF = getReffedSignedFormula Zipper.zFirstRef z |> Result.map Formula.Signed.getFormula
+        removedQuants = Result.map2 numOfRemovedQuants refF newF  
+    in
+    removedQuants 
+    |> Result.andThen (\n ->
+            Result.map (\f -> getUnsubstitutedVars [] subst n f) refF
+        )
+    |> Result.withDefault []
+
+
+getUnsubstitutedVars : (List Term) -> Term.Substitution -> Int -> Formula -> (List Term)
+getUnsubstitutedVars vars subst n f = 
+    if n == 0 then 
+        vars
+    else
+    case f of
+        ForAll v subf ->
+            if Dict.member v subst then
+                getUnsubstitutedVars vars subst (n-1) subf
+            else
+                getUnsubstitutedVars ((Var v) :: vars) subst (n-1) subf
+        
+        Exists v subf ->
+            if Dict.member v subst then
+                getUnsubstitutedVars vars subst (n-1) subf
+            else
+                getUnsubstitutedVars ((Var v) :: vars) subst (n-1) subf
+
+        _ ->
+            vars
+
+
+startWithSameQuant : (Formula) -> (Formula) -> Bool
+startWithSameQuant f1 f2 = 
+    case (f1, f2) of
+        (ForAll _ _, ForAll _ _) ->
+            True
+        (Exists _ _, Exists _ _) ->
+            True
+        _ ->
+            False
+
+numOfRemovedQuants : Formula -> Formula -> Int
+numOfRemovedQuants refF newF = 
+    if not (startWithSameQuant refF newF) then
+        countLeadingQuantifiers refF
+    else
+    Basics.max 0 
+    ((countLeadingQuantifiers refF)
+     - 
+    (countLeadingQuantifiers newF))
+
+
+countExistQuantifiers : Int -> Formula -> Int
+countExistQuantifiers count f =
+    case f of
+        Formula.Exists x subf ->
+            countExistQuantifiers (count + 1) subf
+
+        _ ->
+            count
+
+
+countForAllQuantifiers : Int -> Formula -> Int
+countForAllQuantifiers count f =
+    case f of
+        Formula.ForAll x subf ->
+            countExistQuantifiers (count + 1) subf
+
+        _ ->
+            count
+
+
+countLeadingQuantifiers : Formula -> Int
+countLeadingQuantifiers f =
+    case f of
+        Formula.ForAll x subf ->
+            countForAllQuantifiers 0 f
+
+        Formula.Exists x subf ->
+            countExistQuantifiers 0 f
+
+        _ ->
+            0

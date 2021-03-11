@@ -788,6 +788,7 @@ suiteZipper =
                     (checkNewVariables
                         (newVariableSimilarToExistingFreeAboveZipper
                             |> Zipper.down
+                            |> Zipper.down
                         )
                     )
             )

@@ -29,6 +29,9 @@ import Validation.Rules.ESFT
 import Validation.Rules.ESTF
 import Validation.Rules.ESTT
 import Zipper exposing (zSubstitution)
+import Term
+import Dict
+import Set
 
 
 
@@ -91,6 +94,14 @@ isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
 
 
+areTermsDistinct : Term.Substitution -> Bool
+areTermsDistinct subst =
+    let 
+        terms = Dict.values subst
+    in
+    List.length terms == Set.size (Set.fromList (List.map Term.toString terms))
+
+
 isValidSubstitution : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidSubstitution z =
     if (Zipper.up z) == z then
@@ -100,6 +111,9 @@ isValidSubstitution z =
             Just subst ->
                 subst |> .parsedSubst 
                 |> Result.mapError (\_ -> syntaxProblem z "Wrong form of substitution") 
+                |> Result.map  (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
+                |> Result.andThen (checkPredicate areTermsDistinct 
+                    (syntaxProblem z "Substituted terms must be distict"))
                 |> Result.map (always z)
 
             Nothing ->

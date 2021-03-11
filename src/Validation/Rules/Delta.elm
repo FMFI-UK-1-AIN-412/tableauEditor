@@ -9,6 +9,7 @@ import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Zipper
+import String
 
 
 notVarsErrStr lst =
@@ -67,34 +68,25 @@ isFunction term =
 
 checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 checkNewVariables z =
-    case Zipper.up z |> Zipper.zSubstitution of
-        Just subst ->
-            case subst.parsedSubst of
-                Ok parsed ->
-                    let
-                        terms =
-                            Dict.values parsed
+        let
+            parsedS = getParsedSubst z
+            terms =
+                (Dict.values parsedS) 
 
-                        termsToString =
-                            List.map Term.toString terms
-                    in
-                    case List.filter isFunction terms of
-                        [] ->
-                            case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
-                                [] ->
-                                    Ok z
+            termsToString =
+                List.map Term.toString terms
+        in
+        case List.filter isFunction terms of
+            [] ->
+                case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
+                    [] ->
+                        Ok z 
 
-                                vars ->
-                                    Err (semanticsProblem z (similarAboveErrStr vars))
+                    vars ->
+                        Err (semanticsProblem z (similarAboveErrStr vars))
 
-                        functions ->
-                            Err (semanticsProblem z (notVarsErrStr functions))
-
-                Err _ ->
-                    Err (semanticsProblem z "substitution parsing failed")
-
-        Nothing ->
-            Err (semanticsProblem z "node contains no substitution")
+            functions ->
+                Err (semanticsProblem z (notVarsErrStr functions))
 
 
 isSimilarAbove : String -> Zipper.Zipper -> Bool
@@ -128,7 +120,7 @@ validate z =
             )
         |> Result.map (always z)
         |> Result.andThen
-            (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
+            (checkPredicate (\z1 -> numberOfSubstPairs (Zipper.up z1) <= 1)
                 (semanticsProblem z "δ rule must be used with at most 1 substitution pair")
             )
         |> Result.andThen
@@ -141,7 +133,6 @@ validate z =
                 (\( a, b ) ->
                     isSubstituable
                         (z
-                            |> Zipper.up
                             |> getParsedSubst
                         )
                         a
@@ -150,7 +141,6 @@ validate z =
                 (semanticsProblem z
                     ("This is not substituable. Variable '"
                         ++ (z
-                                |> Zipper.up
                                 |> getTermsToString
                            )
                         ++ "' is bound in referrenced formula ("
@@ -165,7 +155,6 @@ validate z =
                 (\( a, b ) ->
                     substitutionIsValid
                         (z
-                            |> Zipper.up
                             |> getParsedSubst
                         )
                         a
@@ -174,12 +163,10 @@ validate z =
                 (semanticsProblem z
                     ("This isn't valid δ-subformula created by substituting '"
                         ++ (z
-                                |> Zipper.up
                                 |> getTermsToString
                            )
                         ++ "' for '"
                         ++ (z
-                                |> Zipper.up
                                 |> getVarsToString
                            )
                         ++ "' from ("
