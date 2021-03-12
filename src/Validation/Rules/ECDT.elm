@@ -8,8 +8,8 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-getECDThildren : Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula))
-getECDThildren f z =
+getECDTchildren : Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula))
+getECDTchildren f z =
     case f of
         T (Equiv a b) ->
             Ok [ T (Conj a b), F (Disj a b) ]
@@ -20,4 +20,4 @@ getECDThildren f z =
 
 validate : Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate this other =
-    validateBinary "ECDT" getECDThildren this other
+    validate2RefBinary "ECDT" getECDTchildren this other

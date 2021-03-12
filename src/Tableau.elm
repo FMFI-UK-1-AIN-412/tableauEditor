@@ -39,33 +39,39 @@ type alias Substitution =
     }
 
 
-type ExtType
+type UnaryExtType
     = Alpha 
-    | Beta  
-    | Gamma  
-    | Delta  
     | Refl 
     | Leibnitz 
     | MP 
     | MT 
-    | Cut  
     | HS 
     | DS 
     | NCS 
-    | ECDF
-    | ECDT
     | ESFF
     | ESFT
     | ESTF 
     | ESTT
 
 
+type UnaryWithSubstExtType
+    = Gamma  
+    | Delta 
+
+
+type BinaryExtType 
+    = Beta 
+    | Cut 
+    | ECDF
+    | ECDT    
+
+
 type Extension
     = Open
     | Closed Ref Ref
-    | Unary ExtType Tableau
-    | UnaryWithSubst ExtType Tableau Substitution
-    | Binary ExtType Tableau Tableau
+    | Unary UnaryExtType Tableau
+    | UnaryWithSubst UnaryWithSubstExtType Tableau Substitution
+    | Binary BinaryExtType Tableau Tableau
 
 
 defSubstitution : Substitution
@@ -141,3 +147,69 @@ strRefsToList str =
 refsToString : List Ref -> String
 refsToString lst =
     String.join "," (List.map (\r -> r.str) lst)
+
+
+unaryExtTypeToString : UnaryExtType -> String
+unaryExtTypeToString extType = 
+    case extType of
+        Alpha ->
+            "α"
+
+        Refl ->
+            "Reflexivity"
+
+        Leibnitz  ->
+            "Leibnitz"
+
+        MP ->
+            "MP"
+
+        MT ->
+            "MT"
+
+        HS ->
+            "HS"
+
+        DS ->
+            "DS"
+
+        NCS ->
+            "NCS"
+
+        ESFF ->
+            "ESFF"
+
+        ESFT ->
+            "ESFT"
+
+        ESTF ->
+            "ESTF"
+
+        ESTT ->
+            "ESTT"
+
+
+unaryWithSubstExtTypeToString : UnaryWithSubstExtType -> String
+unaryWithSubstExtTypeToString extType = 
+    case extType of
+        Gamma ->    
+            "γ"
+        
+        Delta ->
+            "δ"
+
+
+binaryExtTypeToString : BinaryExtType -> String
+binaryExtTypeToString extType = 
+    case extType of
+        Beta ->
+            "β"
+
+        Cut ->
+            "Cut"
+
+        ECDF ->
+            "ECDF"
+
+        ECDT ->
+            "ECDT"

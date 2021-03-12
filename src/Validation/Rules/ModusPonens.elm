@@ -44,4 +44,4 @@ check f1 f2 z =
 
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "MP" check z
+    validate2RefUnary "MP" check z

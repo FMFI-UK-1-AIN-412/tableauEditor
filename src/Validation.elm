@@ -229,6 +229,72 @@ areCloseRefsComplementary r1 r2 z =
         |> Result.andThen (resultFromBool z (semanticsProblem z "Closing formulas are not complementary."))
 
 
+validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateUnary extType =
+    case extType of
+        Alpha ->
+            Validation.Rules.Alpha.validate
+
+        Refl ->
+            Validation.Rules.Reflexivity.validate
+
+        Leibnitz  ->
+            Validation.Rules.Leibnitz.validate
+
+        MP ->
+            Validation.Rules.ModusPonens.validate
+
+        MT ->
+            Validation.Rules.ModusTolens.validate
+
+        HS ->
+            Validation.Rules.HS.validate
+
+        DS ->
+            Validation.Rules.DS.validate
+
+        NCS ->
+            Validation.Rules.NCS.validate
+
+        ESFF ->
+            Validation.Rules.ESFF.validate
+
+        ESFT ->
+            Validation.Rules.ESFT.validate
+
+        ESTF ->
+            Validation.Rules.ESTF.validate
+
+        ESTT ->
+            Validation.Rules.ESTT.validate
+
+
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper.Zipper -> Result (List Problem) (Tableau, Zipper.BreadCrumbs)
+validateUnaryWithSubst extType =
+    case extType of
+        Gamma ->    
+            Validation.Rules.Gamma.validate
+        
+        Delta ->
+            Validation.Rules.Delta.validate
+
+
+validateBinary : BinaryExtType -> Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateBinary extType =  
+    case extType of
+        Beta ->
+            Validation.Rules.Beta.validate
+
+        Cut ->
+            Validation.Rules.Cut.validate
+
+        ECDF ->
+            Validation.Rules.ECDF.validate
+
+        ECDT ->
+            Validation.Rules.ECDT.validate
+
+
 isCorrectRule :
     ( Tableau, Zipper.BreadCrumbs )
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
@@ -243,70 +309,19 @@ isCorrectRule (( t, bs ) as z) =
                 False ->
                     Validation.Rules.Alpha.validate z
 
-        (Zipper.BinaryLeftCrumb Beta _ _ ) :: _ ->
-            validateLeft Validation.Rules.Beta.validate z
+        (Zipper.UnaryCrumb extType _ ) :: _ ->
+            (validateUnary extType) z
 
-        (Zipper.BinaryRightCrumb Beta _ _ ) :: _ ->
-            validateRight Validation.Rules.Beta.validate z
+        (Zipper.UnaryCrumbWithSubst extType _ _ ) :: _ ->
+            (validateUnaryWithSubst extType) z
 
-        (Zipper.UnaryCrumbWithSubst Gamma _ _  ) :: _ ->
-            Validation.Rules.Gamma.validate z
+        (Zipper.BinaryLeftCrumb extType _ _ ) :: _ ->
+            validateLeft (validateBinary extType) z
 
-        (Zipper.UnaryCrumbWithSubst Delta _ _ ) :: _ ->
-            Validation.Rules.Delta.validate z
+        (Zipper.BinaryRightCrumb extType _ _ ) :: _ ->
+            validateRight (validateBinary extType) z
 
-        (Zipper.UnaryCrumb Refl _ ) :: _ ->
-            Validation.Rules.Reflexivity.validate z
-
-        (Zipper.UnaryCrumb Leibnitz _ ) :: _ ->
-            Validation.Rules.Leibnitz.validate z
-            
-        (Zipper.UnaryCrumb MP _ ) :: _ ->
-            Validation.Rules.ModusPonens.validate z
-            
-        (Zipper.UnaryCrumb MT _ ) :: _ ->
-            Validation.Rules.ModusTolens.validate z
-            
-        (Zipper.BinaryLeftCrumb Cut _ _) :: _ ->
-            validateLeft Validation.Rules.Cut.validate z
-
-        (Zipper.BinaryRightCrumb Cut _ _) :: _ ->
-            validateRight Validation.Rules.Cut.validate z
-            
-        (Zipper.UnaryCrumb HS _) :: _ ->
-            Validation.Rules.HS.validate z
-            
-        (Zipper.UnaryCrumb DS _) :: _ ->
-            Validation.Rules.DS.validate z
-            
-        (Zipper.UnaryCrumb NCS _) :: _ ->
-            Validation.Rules.NCS.validate z
-
-        (Zipper.BinaryLeftCrumb ECDF _ _) :: _ ->
-            validateLeft Validation.Rules.ECDF.validate z
-
-        (Zipper.BinaryRightCrumb ECDF _ _) :: _ ->
-            validateRight Validation.Rules.ECDF.validate z
-
-        (Zipper.BinaryLeftCrumb ECDT _ _) :: _ ->
-            validateLeft Validation.Rules.ECDT.validate z
-
-        (Zipper.BinaryRightCrumb ECDT _ _) :: _ ->
-            validateRight Validation.Rules.ECDT.validate z
-      
-        (Zipper.UnaryCrumb ESFF _) :: _ ->
-            Validation.Rules.ESFF.validate z
-                        
-        (Zipper.UnaryCrumb ESFT _) :: _ ->
-            Validation.Rules.ESFT.validate z
-                        
-        (Zipper.UnaryCrumb ESTF _) :: _ ->
-            Validation.Rules.ESTF.validate z
-                        
-        (Zipper.UnaryCrumb ESTT _) :: _ ->
-            Validation.Rules.ESTT.validate z
-
-        _ ->    
+        [] ->    
             Ok z
 
 

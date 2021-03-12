@@ -109,14 +109,14 @@ body {
 	max-width: 97%;
 }
 
-.button, .onclick-menu:before {
+.button, .onclick-menu:before, .onclick-menu.change, .onclick-menu.add, .onclick-menu.del {
 	padding: 2px 10px;
 	background-color: #fff;
 	border-radius: 20px;
 	border: thin solid lightgray;
 	font-size: .75rem;
 }
-.button:focus, .onclick-menu:focus:before {
+.button:focus, .onclick-menu:focus:before, .onclick-menu.change:focus, .onclick-menu.add:focus, .onclick-menu.del:focus {
 	background-color: rgba(0, 0, 0, 0.05);
 	border-color: #16a;
 }
@@ -163,20 +163,20 @@ body {
 	display: inline-block;
 }
 
-.onclick-menu.del:before {
+/* .onclick-menu.del:before {
 	content: "Delete ▾";
-}
+} */
 
-.onclick-menu.change:before {
+/* .onclick-menu.change:before {
 	content: "▾";
-}
+} */
 .onclick-menu.change .onclick-menu-content {
 	left: auto;
 	right: -2em;
 }
 
-.onclick-menu.add:before {
-	content: "Add ▾";
+.onclick-menu.add {
+	/* content: "Add ▾"; */
 	margin-left: 5px;
 }
 

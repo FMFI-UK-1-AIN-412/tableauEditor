@@ -99,14 +99,14 @@ type Msg
     | MakeClosed Zipper.Zipper
     | SetClosed Int Zipper.Zipper String
     | MakeOpen Zipper.Zipper
-    | ExpandUnary Tableau.ExtType Zipper.Zipper
-    | ExpandUnaryWithSubst Tableau.ExtType Zipper.Zipper
-    | ExpandBinary Tableau.ExtType Zipper.Zipper
+    | ExpandUnary Tableau.UnaryExtType Zipper.Zipper
+    | ExpandUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
+    | ExpandBinary Tableau.BinaryExtType Zipper.Zipper
     | ChangeSubst Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
-    | ChangeToUnary Tableau.ExtType Zipper.Zipper
-    | ChangeToUnaryWithSubst Tableau.ExtType Zipper.Zipper
-    | ChangeToBinary Tableau.ExtType Zipper.Zipper
+    | ChangeToUnary Tableau.UnaryExtType Zipper.Zipper
+    | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
+    | ChangeToBinary Tableau.BinaryExtType Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -376,28 +376,7 @@ viewNodeInputs additional z =
                 , onInput <| ChangeText z
                 ]
             :: viewRuleType z
-            :: div [ class "onclick-menu change", tabindex 0 ]
-                [ ul [ class "onclick-menu-content" ]
-                    [ li [] [ button [ onClick (ChangeToUnary Alpha z) ] [ text "Change to α" ] ]
-                    , li [] [ button [ onClick (ChangeToBinary Beta z) ] [ text "Change to β" ] ]
-                    , li [] [ button [ onClick (ChangeToUnaryWithSubst Gamma z) ] [ text "Change to γ" ] ]
-                    , li [] [ button [ onClick (ChangeToUnaryWithSubst Delta z) ] [ text "Change to δ" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary Refl z) ] [ text "Change to Reflexivity" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary Leibnitz z) ] [ text "Change to Leibnitz" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary MP z) ] [ text "Change to MP" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary MT z) ] [ text "Change to MT" ] ]
-                    , li [] [ button [ onClick (ChangeToBinary Cut z) ] [ text "Change to Cut" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary HS z) ] [ text "Change to HS" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary DS z) ] [ text "Change to DS" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary NCS z) ] [ text "Change to NCS" ] ]
-                    , li [] [ button [ onClick (ChangeToBinary ECDF z) ] [ text "Change to ECDF" ] ]
-                    , li [] [ button [ onClick (ChangeToBinary ECDT z) ] [ text "Change to ECDT" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary ESFF z) ] [ text "Change to ESFF" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary ESFT z) ] [ text "Change to ESFT" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary ESTF z) ] [ text "Change to ESTF" ] ]
-                    , li [] [ button [ onClick (ChangeToUnary ESTT z) ] [ text "Change to ESTT" ] ]
-                    ]
-                ]
+            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" z
             :: text "["
             :: autoSizeInput
                 (Tableau.refsToString (Zipper.zNode z).references)
@@ -409,6 +388,34 @@ viewNodeInputs additional z =
             :: additional
                 [ viewButtonsAppearanceControlls z ]
         )
+
+
+ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls z =
+    let
+        unaryItem extType = menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ (unaryExtTypeToString extType))
+        unaryWithSubstItem extType = menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ (unaryWithSubstExtTypeToString extType))
+        binaryItem extType = menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ (binaryExtTypeToString extType))
+    in
+        div [ class  "onclick-menu" ]
+            [button [class <| "onclick-menu " ++ cls, tabindex 0] [
+                    text label,
+                 ul [ class "onclick-menu-content"] <|
+                    [ unaryItem Alpha
+                    , binaryItem Beta
+                    , unaryWithSubstItem Gamma
+                    , unaryWithSubstItem Delta
+                    ]
+                    ++ List.map unaryItem [ Refl, Leibnitz, MP, MT ]
+                    ++ binaryItem Cut
+                    :: List.map unaryItem [ HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+                    ++ List.map binaryItem [ ECDF, ECDT ]
+            ]
+            ]
+
+
+menuItem : Msg -> String -> Html Msg
+menuItem msg str = 
+    li [] [ button [onClick msg] [ text str ] ]
 
 
 autoSizeInput : String -> List (Attribute Msg) -> Html Msg
@@ -437,63 +444,15 @@ viewRuleType z =
 
             Closed _ _ ->
                 text "C"
+            
+            Unary extType _ ->
+                text (unaryExtTypeToString extType)
 
-            Unary Alpha _ ->
-                text "α"
+            Binary extType _ _ ->
+                text (binaryExtTypeToString extType)
 
-            Binary Beta _ _ ->
-                text "β"
-
-            UnaryWithSubst Gamma _ _ ->
-                text "γ"
-
-            UnaryWithSubst Delta _ _ ->
-                text "δ"
-
-            Unary Refl _ ->
-                text "Reflexivity"
-
-            Unary Leibnitz _ ->
-                text "Leibnitz"
-
-            Unary MP _ ->
-                text "MP"
-
-            Unary MT _ ->
-                text "MT"
-
-            Binary Cut _ _ ->
-                text "Cut"
-
-            Unary HS _ ->
-                text "HS"
-
-            Unary DS _ ->
-                text "DS"
-
-            Unary NCS _ ->
-                text "NCS"
-
-            Binary ECDF _ _ ->
-                text "ECDF"
-
-            Binary ECDT _ _ ->
-                text "ECDT"
-
-            Unary ESFF _ ->
-                text "ESFF"
-
-            Unary ESFT _ ->
-                text "ESFT"
-
-            Unary ESTF _ ->
-                text "ESTF"
-
-            Unary ESTT _ ->
-                text "ESTT"
-
-            _ ->
-                text "wrong extension type"
+            UnaryWithSubst extType _ _ ->
+                text (unaryWithSubstExtTypeToString extType)
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -634,33 +593,15 @@ viewControls (( t, _ ) as z) =
                 in
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
-                    , div [ class "onclick-menu add", tabindex 0 ]
-                        [ ul [ class "onclick-menu-content" ]
-                            [ li [] [ button [ onClick (ExpandUnary Alpha z) ] [ text "Add α" ] ]
-                            , li [] [ button [ onClick (ExpandBinary Beta z) ] [ text "Add β" ] ]
-                            , li [] [ button [ onClick (ExpandUnaryWithSubst Gamma z) ] [ text "Add γ" ] ]
-                            , li [] [ button [ onClick (ExpandUnaryWithSubst Delta z) ] [ text "Add δ" ] ]
-                            , li [] [ button [ onClick (ExpandUnary Refl z) ] [ text "Add Reflexivity" ] ]
-                            , li [] [ button [ onClick (ExpandUnary Leibnitz z) ] [ text "Add Leibnitz" ] ]
-                            , li [] [ button [ onClick (ExpandUnary MP z) ] [ text "Add MP" ] ]
-                            , li [] [ button [ onClick (ExpandUnary MT z) ] [ text "Add MT" ] ]
-                            , li [] [ button [ onClick (ExpandBinary Cut z) ] [ text "Add Cut" ] ]
-                            , li [] [ button [ onClick (ExpandUnary HS z) ] [ text "Add HS" ] ]
-                            , li [] [ button [ onClick (ExpandUnary DS z) ] [ text "Add DS" ] ]
-                            , li [] [ button [ onClick (ExpandUnary NCS z) ] [ text "Add NCS" ] ]
-                            , li [] [ button [ onClick (ExpandBinary ECDF z) ] [ text "Add ECDF" ] ]
-                            , li [] [ button [ onClick (ExpandBinary ECDT z) ] [ text "Add ECDT" ] ]
-                            , li [] [ button [ onClick (ExpandUnary ESFF z) ] [ text "Add ESFF" ] ]
-                            , li [] [ button [ onClick (ExpandUnary ESFT z) ] [ text "Add ESFT" ] ]
-                            , li [] [ button [ onClick (ExpandUnary ESTF z) ] [ text "Add ESTF" ] ]
-                            , li [] [ button [ onClick (ExpandUnary ESTT z) ] [ text "Add ESTT" ] ]
-                            ]
-                        ]
-                    , div [ class "onclick-menu del", tabindex 0 ]
-                        [ ul [ class "onclick-menu-content" ]
+                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" z
+                    , div [ class "onclick-menu" ]
+                        [ button [ class "onclick-menu del", tabindex 0 ] [
+                            text "Delete ▾",
+                            ul [ class "onclick-menu-content" ]
                             [ li [] [ deleteMeButton ]
                             , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                             ]
+                        ]
                         ]
                     , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
                     , switchBetasButton

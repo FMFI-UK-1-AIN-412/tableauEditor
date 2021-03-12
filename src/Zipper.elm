@@ -15,10 +15,11 @@ import Tableau
 
 
 type Crumb
-    = UnaryCrumb ExtType Node
-    | UnaryCrumbWithSubst ExtType Node Tableau.Substitution
-    | BinaryLeftCrumb ExtType Node Tableau
-    | BinaryRightCrumb ExtType Node Tableau
+    = UnaryCrumb UnaryExtType Node
+    | UnaryCrumbWithSubst UnaryWithSubstExtType Node Tableau.Substitution
+    | BinaryLeftCrumb BinaryExtType Node Tableau
+    | BinaryRightCrumb BinaryExtType Node Tableau
+
 
 type alias BreadCrumbs =
     List Crumb
@@ -525,16 +526,16 @@ extendWithRule extWithType z =
             )
 
 
-extendUnary : Tableau.ExtType -> Zipper -> Zipper
+extendUnary : Tableau.UnaryExtType -> Zipper -> Zipper
 extendUnary extType z = 
     extendWithRule (Unary extType) z
 
 
-extendUnaryWithSubst : Tableau.ExtType -> Zipper -> Zipper
+extendUnaryWithSubst : Tableau.UnaryWithSubstExtType -> Zipper -> Zipper
 extendUnaryWithSubst extType z =
     extendWithRule (\t -> (UnaryWithSubst extType) t defSubstitution) z
 
-extendBinary : Tableau.ExtType -> Zipper -> Zipper
+extendBinary : Tableau.BinaryExtType -> Zipper -> Zipper
 extendBinary extType z = 
     extendWithRule (\t -> (Binary extType) t (Tableau defNode Open)) z
 
@@ -753,17 +754,17 @@ doChangeToUnaryRule extWithType z =
         z
 
 
-changeToUnaryRule : ExtType -> Zipper -> Zipper
+changeToUnaryRule : UnaryExtType -> Zipper -> Zipper
 changeToUnaryRule extType z =
     doChangeToUnaryRule (Unary extType) z
 
 
-changeToUnaryRuleWithSubst : ExtType -> Zipper -> Zipper
+changeToUnaryRuleWithSubst : UnaryWithSubstExtType -> Zipper -> Zipper
 changeToUnaryRuleWithSubst extType z =
     doChangeToUnaryRule (\t -> UnaryWithSubst extType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
 
 
-changeToBinaryRule : ExtType -> Zipper -> Zipper
+changeToBinaryRule : BinaryExtType -> Zipper -> Zipper
 changeToBinaryRule extType z = 
     changeRule (\t1 t2 -> Just ((Binary extType) t1 t2)) z
 

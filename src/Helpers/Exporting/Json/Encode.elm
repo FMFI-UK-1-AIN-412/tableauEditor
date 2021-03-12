@@ -1,8 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(..), ExtType(..), GUI, Node, Tableau)
-import Tableau
+import Tableau exposing (..)
 
 
 jsonRef : { a | str : String } -> Value
@@ -71,62 +70,14 @@ jsonTblList tableau =
                      )
                    ]
 
-        Unary Alpha t ->
-            encodeUnaryRule tableau "alpha" t
+        Unary extType t ->
+            encodeUnaryRule tableau (unaryExtTypeToString extType) t
 
-        Binary Beta lt rt ->
-            encodeBinaryRule tableau "beta" lt rt
+        UnaryWithSubst extType t s ->  
+            encodeUnaryRuleWithSubst tableau (unaryWithSubstExtTypeToString extType) t s
 
-        UnaryWithSubst Gamma t s ->
-            encodeUnaryRuleWithSubst tableau "gamma" t s
-
-        UnaryWithSubst Delta t s ->
-            encodeUnaryRuleWithSubst tableau "delta" t s
-
-        Unary Refl t ->
-            encodeUnaryRule tableau "refl" t
-
-        Unary Leibnitz t ->
-            encodeUnaryRule tableau "leibnitz" t
-
-        Unary MP t ->
-            encodeUnaryRule tableau "mp" t
-        
-        Unary MT t ->
-            encodeUnaryRule tableau "mt" t
-
-        Binary Cut lt rt ->
-            encodeBinaryRule tableau "cut" lt rt
-
-        Unary HS t ->
-            encodeUnaryRule tableau "hs" t
-
-        Unary DS t ->
-            encodeUnaryRule tableau "ds" t
-
-        Unary NCS t ->
-            encodeUnaryRule tableau "ncs" t
-
-        Binary ECDF lt rt ->
-            encodeBinaryRule tableau "ecdf" lt rt
-
-        Binary ECDT lt rt ->
-            encodeBinaryRule tableau "ecdt" lt rt
-
-        Unary ESFF t ->
-            encodeUnaryRule tableau "esff" t
-            
-        Unary ESFT t ->
-            encodeUnaryRule tableau "esft" t
-            
-        Unary ESTF t ->
-            encodeUnaryRule tableau "estf" t
-            
-        Unary ESTT t ->
-            encodeUnaryRule tableau "estt" t
-
-        _ ->
-            encodeUnaryRule tableau "unknown" tableau
+        Binary extType lt rt ->
+            encodeBinaryRule tableau (binaryExtTypeToString extType) lt rt
 
 
 jsonTableau : Tableau -> Value

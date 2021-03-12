@@ -65,7 +65,7 @@ closed =
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
-unaryRule : Tableau.ExtType -> Decoder Tableau.Tableau
+unaryRule : Tableau.UnaryExtType -> Decoder Tableau.Tableau
 unaryRule extType =
     map2
         Tableau.Tableau
@@ -73,7 +73,7 @@ unaryRule extType =
         (map (Tableau.Unary extType) (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
-unaryRuleWithSubst : Tableau.ExtType -> Decoder Tableau.Tableau
+unaryRuleWithSubst : Tableau.UnaryWithSubstExtType -> Decoder Tableau.Tableau
 unaryRuleWithSubst extType =
     map2
         Tableau.Tableau
@@ -81,7 +81,7 @@ unaryRuleWithSubst extType =
         (map2 (Tableau.UnaryWithSubst extType) (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
-binaryRule : Tableau.ExtType -> Decoder Tableau.Tableau
+binaryRule : Tableau.BinaryExtType -> Decoder Tableau.Tableau
 binaryRule extType =
     map2 Tableau.Tableau
         (field "node" node)
@@ -97,58 +97,58 @@ tblTypeDecoder typ =
         "closed" ->
             closed
 
-        "alpha" ->
+        "α" ->
             unaryRule Tableau.Alpha
 
-        "beta" ->
+        "β" ->
             binaryRule Tableau.Beta
 
-        "gamma" ->
+        "γ" ->
             unaryRuleWithSubst Tableau.Gamma
 
-        "delta" ->
+        "δ" ->
             unaryRuleWithSubst Tableau.Delta
 
-        "refl" ->
+        "Reflexivity" ->
             unaryRule Tableau.Refl
 
-        "leibnitz" ->
+        "Leibnitz" ->
             unaryRule Tableau.Leibnitz
 
-        "mp" ->
+        "MP" ->
             unaryRule Tableau.MP
 
-        "mt" ->
+        "MT" ->
             unaryRule Tableau.MT
 
-        "cut" ->
+        "Cut" ->
             binaryRule Tableau.Cut
 
-        "hs" ->
+        "HS" ->
             unaryRule Tableau.HS
 
-        "ds" ->
+        "DS" ->
             unaryRule Tableau.DS
 
-        "ncs" ->
+        "NCS" ->
             unaryRule Tableau.NCS
 
-        "ecdf" ->
+        "ECDF" ->
             binaryRule Tableau.ECDF
 
-        "ecdt" ->
+        "ECDT" ->
             binaryRule Tableau.ECDT
             
-        "esff" ->
+        "ESFF" ->
             unaryRule Tableau.ESFF
             
-        "esft" ->
+        "ESFT" ->
             unaryRule Tableau.ESFT
             
-        "estf" ->
+        "ESTF" ->
             unaryRule Tableau.ESTF
             
-        "estt" ->
+        "ESTT" ->
             unaryRule Tableau.ESTT
 
         _ ->

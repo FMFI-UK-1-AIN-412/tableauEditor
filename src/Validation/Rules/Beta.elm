@@ -22,4 +22,4 @@ validate :
     -> Zipper.Zipper
     -> Result (List Problem) Zipper.Zipper
 validate this other =
-    validateBinary "Beta" getBetaChildren this other
+    validate2RefBinary "Beta" getBetaChildren this other

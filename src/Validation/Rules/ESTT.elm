@@ -50,4 +50,4 @@ check f1 f2 z =
 
 validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validate z =
-    validate2RefUnaryRule "ESTT" check z
+    validate2RefUnary "ESTT" check z

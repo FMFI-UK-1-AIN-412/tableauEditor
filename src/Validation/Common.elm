@@ -262,8 +262,8 @@ checkFormulas err f1 f2 getNewFormula z =
         |> Result.andThen (resultFromBool z (semanticsProblem z err))
 
 
-validate2RefUnaryRule : String -> (Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper) -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validate2RefUnaryRule ruleName check z =
+validate2RefUnary : String -> (Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper) -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate2RefUnary ruleName check z =
     z
         |> checkPredicate (hasNumberOfRefs 2)
             (semanticsProblem z (ruleName ++ " rule must have 2 references"))
@@ -283,13 +283,13 @@ validate2RefUnaryRule ruleName check z =
         |> Result.map (always z)
 
 
-validateBinary :
+validate2RefBinary :
     String
     -> (Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula)))
     -> Zipper.Zipper
     -> Zipper.Zipper
     -> Result (List Problem) Zipper.Zipper
-validateBinary ruleName getChildren this other =
+validate2RefBinary ruleName getChildren this other =
     let
         ft =
             this |> checkFormula "Formula"
@@ -386,15 +386,15 @@ getUnsubstitutedVars vars subst n f =
     case f of
         ForAll v subf ->
             if Dict.member v subst then
-                getUnsubstitutedVars vars subst (n-1) subf
+                getUnsubstitutedVars vars subst (n - 1) subf
             else
-                getUnsubstitutedVars ((Var v) :: vars) subst (n-1) subf
+                getUnsubstitutedVars ((Var v) :: vars) subst (n - 1) subf
         
         Exists v subf ->
             if Dict.member v subst then
-                getUnsubstitutedVars vars subst (n-1) subf
+                getUnsubstitutedVars vars subst (n - 1) subf
             else
-                getUnsubstitutedVars ((Var v) :: vars) subst (n-1) subf
+                getUnsubstitutedVars ((Var v) :: vars) subst (n - 1) subf
 
         _ ->
             vars

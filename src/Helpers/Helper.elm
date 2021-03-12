@@ -3,7 +3,7 @@ module Helpers.Helper exposing (..)
 import Formula exposing (Formula)
 import Formula.Signed exposing (Signed)
 import Result
-import Tableau exposing (Extension(..), ExtType(..))
+import Tableau exposing (Extension(..), UnaryExtType(..))
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper
