@@ -32,8 +32,8 @@ z2 = zipperWithFormula "F ∀c r(c)"
 
 z3 = zipperWithFormula "F (p(x) | r(x))"
 
-suitetryBothFormulaOrders : Test
-suitetryBothFormulaOrders =
+suiteCheck : Test
+suiteCheck =
     describe "the tryBothFormulaOrders function"
         [ test "simple impl" 
             (\() ->

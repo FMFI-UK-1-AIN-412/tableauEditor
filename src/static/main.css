@@ -385,6 +385,7 @@ button.delete {
 	border-collapse: collapse;
 	width: 100%;
 	box-sizing: border-box;
+	margin-bottom: 15px;
 }
 
 .rulesHelpTable th, td {

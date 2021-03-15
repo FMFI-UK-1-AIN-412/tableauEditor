@@ -31,8 +31,8 @@ z1 = zipperWithFormula "T (a | b)"
 z2 = zipperWithFormula "T a = f(b)"
 z3 = zipperWithFormula "T ∀x(p(x) & r(x))"
 
-suiteTryBothOrdersAndStructures : Test
-suiteTryBothOrdersAndStructures =
+suiteCheck : Test
+suiteCheck =
     describe "validation with check function in DS"
         [ test "first structure with disj" 
             (\() ->

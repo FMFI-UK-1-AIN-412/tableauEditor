@@ -4,106 +4,10 @@ import Dict
 import Formula exposing (Formula(..))
 import Formula.Parser
 import Formula.Signed exposing (Signed(..))
-import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Zipper
-import String
-
-
-notVarsErrStr lst =
-    "The function"
-        ++ (if List.length lst > 1 then
-                "s '"
-
-            else
-                " '"
-           )
-        ++ String.join "," (List.map Term.toString lst)
-        ++ (if List.length lst > 1 then
-                "' are"
-
-            else
-                "' is"
-           )
-        ++ " supposed to be "
-        ++ (if List.length lst > 1 then
-                "variables"
-
-            else
-                "a variable"
-           )
-
-
-similarAboveErrStr lst =
-    "The variable"
-        ++ (if List.length lst > 1 then
-                "s "
-
-            else
-                " "
-           )
-        ++ "'"
-        ++ String.join "," lst
-        ++ "'"
-        ++ (if List.length lst > 1 then
-                " were"
-
-            else
-                " was"
-           )
-        ++ " located above as free"
-
-
-isFunction : Term -> Bool
-isFunction term =
-    case term of
-        Var _ ->
-            False
-
-        Fun _ _ ->
-            True
-
-
-checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-checkNewVariables z =
-        let
-            parsedS = getParsedSubst z
-            terms =
-                (Dict.values parsedS) 
-
-            termsToString =
-                List.map Term.toString terms
-        in
-        case List.filter isFunction terms of
-            [] ->
-                case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
-                    [] ->
-                        Ok z 
-
-                    vars ->
-                        Err (semanticsProblem z (similarAboveErrStr vars))
-
-            functions ->
-                Err (semanticsProblem z (notVarsErrStr functions))
-
-
-isSimilarAbove : String -> Zipper.Zipper -> Bool
-isSimilarAbove var z =
-    let
-        parsedF =
-            z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
-    in
-    case parsedF of
-        Ok parsed ->
-            Set.member var (Formula.free (parsed |> Formula.Signed.getFormula))
-                || (z |> Zipper.up)
-                /= z
-                && isSimilarAbove var (z |> Zipper.up)
-
-        Err _ ->
-            (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)
 
 
 validate :
@@ -120,7 +24,7 @@ validate z =
             )
         |> Result.map (always z)
         |> Result.andThen
-            (checkPredicate (\z1 -> numberOfSubstPairs (Zipper.up z1) <= 1)
+            (checkPredicate (\z1 -> numberOfSubstPairs z1 <= 1)
                 (semanticsProblem z "δ rule must be used with at most 1 substitution pair")
             )
         |> Result.andThen

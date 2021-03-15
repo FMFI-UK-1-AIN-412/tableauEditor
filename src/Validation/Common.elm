@@ -5,8 +5,6 @@ import Errors
 import Formula exposing (Formula(..))
 import Formula.Parser
 import Formula.Signed exposing (Signed(..))
-import Helpers.Parser
-import Parser
 import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
@@ -22,17 +20,6 @@ type alias Problem =
     { typ : ProblemType
     , msg : String
     , zip : Zipper.Zipper
-    }
-
-
-type RuleErrorType
-    = RefFormulasErr
-    | CurrentFormulaErr
-
-
-type alias RuleError =
-    { typ : RuleErrorType
-    , msg : String
     }
 
 
@@ -131,8 +118,8 @@ always2 r _ _ =
 
 
 implicitSubst : Term.Substitution -> Zipper.Zipper -> Term.Substitution
-implicitSubst subst z = 
-    ((unsubstitutedVars subst z) |> List.map (\x -> ((Term.toString x), x)) |> Dict.fromList)
+implicitSubst subst z =
+    unsubstitutedVars subst z |> List.map (\x -> ( Term.toString x, x )) |> Dict.fromList
 
 
 getParsedSubst : Zipper.Zipper -> Term.Substitution
@@ -364,61 +351,85 @@ validateRight validate z =
     validate z (z |> Zipper.up |> Zipper.left)
 
 
-unsubstitutedVars : Term.Substitution -> Zipper.Zipper -> (List Term)
-unsubstitutedVars subst z = 
+unsubstitutedVars : Term.Substitution -> Zipper.Zipper -> List Term
+unsubstitutedVars subst z =
     let
-        newF = checkFormula "Formula" z |> Result.map Formula.Signed.getFormula
-        refF = getReffedSignedFormula Zipper.zFirstRef z |> Result.map Formula.Signed.getFormula
-        removedQuants = Result.map2 numOfRemovedQuants refF newF  
+        newF =
+            checkFormula "Formula" z |> Result.map Formula.Signed.getFormula
+
+        refF =
+            getReffedSignedFormula Zipper.zFirstRef z |> Result.map Formula.Signed.getFormula
+
+        removedQuants =
+            Result.map2 numOfRemovedQuants refF newF
     in
-    removedQuants 
-    |> Result.andThen (\n ->
-            Result.map (\f -> getUnsubstitutedVars [] subst n f) refF
-        )
-    |> Result.withDefault []
+    removedQuants
+        |> Result.andThen
+            (\n ->
+                Result.map (\f -> getUnsubstitutedVars [] subst n f) refF
+            )
+        |> Result.withDefault []
 
 
-getUnsubstitutedVars : (List Term) -> Term.Substitution -> Int -> Formula -> (List Term)
-getUnsubstitutedVars vars subst n f = 
-    if n == 0 then 
+getUnsubstitutedVars : List Term -> Term.Substitution -> Int -> Formula -> List Term
+getUnsubstitutedVars vars subst n f =
+    varsToBeSubstituted vars n f 
+    |> List.filter (\v -> not <| List.member (Term.toString v) (Dict.keys subst))
+
+
+varsToBeSubstituted : List Term -> Int -> Formula -> List Term
+varsToBeSubstituted vars n f =
+    if n == 0 then
         vars
+
     else
-    case f of
-        ForAll v subf ->
-            if Dict.member v subst then
-                getUnsubstitutedVars vars subst (n - 1) subf
-            else
-                getUnsubstitutedVars ((Var v) :: vars) subst (n - 1) subf
-        
-        Exists v subf ->
-            if Dict.member v subst then
-                getUnsubstitutedVars vars subst (n - 1) subf
-            else
-                getUnsubstitutedVars ((Var v) :: vars) subst (n - 1) subf
+        case f of
+            ForAll v subf ->
+                varsToBeSubstituted (Var v :: vars) (n - 1) subf
 
-        _ ->
-            vars
+            Exists v subf ->
+                varsToBeSubstituted (Var v :: vars) (n - 1) subf
+
+            _ ->
+                vars
 
 
-startWithSameQuant : (Formula) -> (Formula) -> Bool
-startWithSameQuant f1 f2 = 
-    case (f1, f2) of
-        (ForAll _ _, ForAll _ _) ->
+startWithSameQuant : Formula -> Formula -> Bool
+startWithSameQuant f1 f2 =
+    case ( f1, f2 ) of
+        ( ForAll _ _, ForAll _ _ ) ->
             True
-        (Exists _ _, Exists _ _) ->
+
+        ( Exists _ _, Exists _ _ ) ->
             True
+
         _ ->
             False
 
+
+haveSameSign : Signed Formula -> Signed Formula -> Bool
+haveSameSign f1 f2 =
+    case ( f1, f2 ) of
+        ( T _, T _ ) ->
+            True
+
+        ( F _, F _ ) ->
+            True
+
+        _ ->
+            False
+
+
 numOfRemovedQuants : Formula -> Formula -> Int
-numOfRemovedQuants refF newF = 
+numOfRemovedQuants refF newF =
     if not (startWithSameQuant refF newF) then
         countLeadingQuantifiers refF
+
     else
-    Basics.max 0 
-    ((countLeadingQuantifiers refF)
-     - 
-    (countLeadingQuantifiers newF))
+        Basics.max 0
+            (countLeadingQuantifiers refF
+                - countLeadingQuantifiers newF
+            )
 
 
 countExistQuantifiers : Int -> Formula -> Int
@@ -452,3 +463,168 @@ countLeadingQuantifiers f =
 
         _ ->
             0
+    
+
+removeNQuants : Int -> Formula -> Formula
+removeNQuants n f =
+    if n == 0 then
+        f
+
+    else
+        case f of
+            ForAll _ subf ->
+                removeNQuants (n - 1) subf
+
+            Exists _ subf ->
+                removeNQuants (n - 1) subf
+
+            _ ->
+                f
+
+
+forbiddenVarsErrStr lst =
+    "The variable"
+        ++ (if List.length lst > 1 then
+                "s "
+
+            else
+                " "
+           )
+        ++ "'"
+        ++ String.join "," lst
+        ++ "'"
+        ++ " can't be substituted for"
+
+
+checkSubstitutedVars : (List Term) -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkSubstitutedVars allowedVars subst z = 
+    let
+        allowed = allowedVars |>  List.map Term.toString
+        forbidden = subst |> Dict.keys |> List.filter (\v -> not ( List.member v allowed))
+    in
+    case forbidden of
+        [] ->
+            Ok z
+        lst ->
+            Err <| semanticsProblem z (forbiddenVarsErrStr lst)
+
+
+unaryWithSubstCheck : String -> Signed Formula -> Signed Formula -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+unaryWithSubstCheck ruleName refF newF subst z =
+    let
+        referenced =
+            Formula.Signed.getFormula refF
+
+        new =
+            Formula.Signed.getFormula newF
+
+        removedQuantsCount =
+            numOfRemovedQuants referenced new
+
+        allowedVars = varsToBeSubstituted [] removedQuantsCount referenced
+
+    in
+    checkSubstitutedVars allowedVars subst z 
+    |> Result.andThen (\_ ->
+    removeNQuants removedQuantsCount referenced
+        |> Formula.substitute subst
+        |> Result.mapError (\str -> semanticsProblem z str)
+        |> Result.map (\f -> f == new && haveSameSign refF newF)
+        |> Result.andThen (\b -> resultFromBool z 
+        (semanticsProblem z ("Formula was not created by using the " ++ ruleName ++ " rule")) b))
+
+
+notVarsErrStr lst =
+    "The function"
+        ++ (if List.length lst > 1 then
+                "s '"
+
+            else
+                " '"
+           )
+        ++ String.join "," (List.map Term.toString lst)
+        ++ (if List.length lst > 1 then
+                "' are"
+
+            else
+                "' is"
+           )
+        ++ " supposed to be "
+        ++ (if List.length lst > 1 then
+                "variables"
+
+            else
+                "a variable"
+           )
+
+
+similarAboveErrStr lst =
+    "The variable"
+        ++ (if List.length lst > 1 then
+                "s "
+
+            else
+                " "
+           )
+        ++ "'"
+        ++ String.join "," lst
+        ++ "'"
+        ++ (if List.length lst > 1 then
+                " were"
+
+            else
+                " was"
+           )
+        ++ " located above as free"
+
+
+isFunction : Term -> Bool
+isFunction term =
+    case term of
+        Var _ ->
+            False
+
+        Fun _ _ ->
+            True
+
+
+checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkNewVariables z =
+    let
+        parsedS =
+            getParsedSubst z
+
+        terms =
+            Dict.values parsedS
+
+        termsToString =
+            List.map Term.toString terms
+    in
+    case List.filter isFunction terms of
+        [] ->
+            case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
+                [] ->
+                    Ok z
+
+                vars ->
+                    Err (semanticsProblem z (similarAboveErrStr vars))
+
+        functions ->
+            Err (semanticsProblem z (notVarsErrStr functions))
+
+
+isSimilarAbove : String -> Zipper.Zipper -> Bool
+isSimilarAbove var z =
+    let
+        parsedF =
+            z |> Zipper.zNode |> .value |> Formula.Parser.parseSigned
+    in
+    case parsedF of
+        Ok parsed ->
+            Set.member var (Formula.free (parsed |> Formula.Signed.getFormula))
+                || (z |> Zipper.up)
+                /= z
+                && isSimilarAbove var (z |> Zipper.up)
+
+        Err _ ->
+            (z |> Zipper.up) /= z && isSimilarAbove var (z |> Zipper.up)

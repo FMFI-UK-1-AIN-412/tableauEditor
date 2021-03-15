@@ -8,19 +8,6 @@ import Validation.Common exposing (..)
 import Zipper
 
 
-haveDifferentSign : Signed Formula -> Signed Formula -> Bool
-haveDifferentSign f1 f2 =
-    case ( f1, f2 ) of
-        ( T x, F y ) ->
-            True
-
-        ( F x, T y ) ->
-            True
-
-        _ ->
-            False
-
-
 areUniform : Signed Formula -> Signed Formula -> Bool
 areUniform f1 f2 =
     Formula.Signed.getFormula f1 == Formula.Signed.getFormula f2
@@ -28,7 +15,7 @@ areUniform f1 f2 =
 
 checkStructure : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 checkStructure f1 f2 z =
-    haveDifferentSign f1 f2
+    not (haveSameSign f1 f2)
         |> resultFromBool z (semanticsProblem z "Both Cut formulas have the same sign")
         |> Result.andThen
             (\_ ->

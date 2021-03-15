@@ -11,8 +11,7 @@ import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
 import Validation
-import Validation.Common
-import Validation.Rules.Leibnitz
+import Validation.Common exposing(..)
 import Validation.Rules.Delta exposing (..)
 import Zipper exposing (..)
 

@@ -32,8 +32,8 @@ z2 = zipperWithFormula "T ∀c r(c)"
 
 z3 = zipperWithFormula "T (p(x) -> r(x))"
 
-suitetryBothFormulaOrders : Test
-suitetryBothFormulaOrders =
+suiteCheck : Test
+suiteCheck =
     describe "the check function in MP"
         [ test "simple impl" 
             (\() ->

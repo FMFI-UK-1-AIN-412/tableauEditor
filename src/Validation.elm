@@ -2,7 +2,6 @@ module Validation exposing (..)
 
 import Errors
 import Formula exposing (Formula(..))
-import Formula.Parser
 import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
@@ -28,7 +27,6 @@ import Validation.Rules.ESFF
 import Validation.Rules.ESFT
 import Validation.Rules.ESTF
 import Validation.Rules.ESTT
-import Zipper exposing (zSubstitution)
 import Term
 import Dict
 import Set
