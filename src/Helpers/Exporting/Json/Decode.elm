@@ -97,58 +97,58 @@ tblTypeDecoder typ =
         "closed" ->
             closed
 
-        "α" ->
+        "alpha" ->
             unaryRule Tableau.Alpha
 
-        "β" ->
+        "beta" ->
             binaryRule Tableau.Beta
 
-        "γ" ->
+        "gamma" ->
             unaryRuleWithSubst Tableau.Gamma
 
-        "δ" ->
+        "delta" ->
             unaryRuleWithSubst Tableau.Delta
 
-        "Reflexivity" ->
+        "refl" ->
             unaryRule Tableau.Refl
 
-        "Leibnitz" ->
+        "leibnitz" ->
             unaryRule Tableau.Leibnitz
 
-        "MP" ->
+        "mp" ->
             unaryRule Tableau.MP
 
-        "MT" ->
+        "mt" ->
             unaryRule Tableau.MT
 
-        "Cut" ->
+        "cut" ->
             binaryRule Tableau.Cut
 
-        "HS" ->
+        "hs" ->
             unaryRule Tableau.HS
 
-        "DS" ->
+        "ds" ->
             unaryRule Tableau.DS
 
-        "NCS" ->
+        "ncs" ->
             unaryRule Tableau.NCS
 
-        "ECDF" ->
+        "ecdf" ->
             binaryRule Tableau.ECDF
 
-        "ECDT" ->
+        "ecdt" ->
             binaryRule Tableau.ECDT
             
-        "ESFF" ->
+        "esff" ->
             unaryRule Tableau.ESFF
             
-        "ESFT" ->
+        "esft" ->
             unaryRule Tableau.ESFT
             
-        "ESTF" ->
+        "estf" ->
             unaryRule Tableau.ESTF
             
-        "ESTT" ->
+        "estt" ->
             unaryRule Tableau.ESTT
 
         _ ->

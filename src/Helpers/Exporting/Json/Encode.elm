@@ -71,13 +71,13 @@ jsonTblList tableau =
                    ]
 
         Unary extType t ->
-            encodeUnaryRule tableau (unaryExtTypeToString extType) t
+            encodeUnaryRule tableau (unaryExtTypeJsonStr extType) t
 
         UnaryWithSubst extType t s ->  
-            encodeUnaryRuleWithSubst tableau (unaryWithSubstExtTypeToString extType) t s
+            encodeUnaryRuleWithSubst tableau (unaryWithSubstExtTypeJsonStr extType) t s
 
         Binary extType lt rt ->
-            encodeBinaryRule tableau (binaryExtTypeToString extType) lt rt
+            encodeBinaryRule tableau (binaryExtTypeJsonStr extType) lt rt
 
 
 jsonTableau : Tableau -> Value

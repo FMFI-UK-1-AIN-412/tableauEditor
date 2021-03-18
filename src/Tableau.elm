@@ -213,3 +213,69 @@ binaryExtTypeToString extType =
 
         ECDT ->
             "ECDT"
+
+
+unaryExtTypeJsonStr : UnaryExtType -> String
+unaryExtTypeJsonStr extType = 
+    case extType of
+        Alpha ->
+            "alpha"
+
+        Refl ->
+            "refl"
+
+        Leibnitz  ->
+            "leibnitz"
+
+        MP ->
+            "mp"
+
+        MT ->
+            "mt"
+
+        HS ->
+            "hs"
+
+        DS ->
+            "ds"
+
+        NCS ->
+            "ncs"
+
+        ESFF ->
+            "esff"
+
+        ESFT ->
+            "esft"
+
+        ESTF ->
+            "estf"
+
+        ESTT ->
+            "estt"
+
+
+unaryWithSubstExtTypeJsonStr : UnaryWithSubstExtType -> String
+unaryWithSubstExtTypeJsonStr extType = 
+    case extType of
+        Gamma ->    
+            "gamma"
+        
+        Delta ->
+            "delta"
+
+
+binaryExtTypeJsonStr : BinaryExtType -> String
+binaryExtTypeJsonStr extType = 
+    case extType of
+        Beta ->
+            "beta"
+
+        Cut ->
+            "cut"
+
+        ECDF ->
+            "ecdf"
+
+        ECDT ->
+            "ecdt"
