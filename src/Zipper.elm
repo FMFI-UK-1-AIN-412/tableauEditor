@@ -6,8 +6,6 @@ import Formula.Parser
 import Formula.Signed
 import Html exposing (table)
 import Tableau exposing (..)
-import Tableau
-import Tableau
 
 
 

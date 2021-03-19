@@ -151,6 +151,12 @@ tblTypeDecoder typ =
         "estt" ->
             unaryRule Tableau.ESTT
 
+        "gammaStar" ->
+            unaryRuleWithSubst Tableau.GammaStar
+
+        "deltaStar" ->
+            unaryRuleWithSubst Tableau.DeltaStar
+
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")
 

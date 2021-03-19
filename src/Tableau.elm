@@ -56,7 +56,9 @@ type UnaryExtType
 
 type UnaryWithSubstExtType
     = Gamma  
-    | Delta 
+    | Delta
+    | GammaStar
+    | DeltaStar 
 
 
 type BinaryExtType 
@@ -198,6 +200,12 @@ unaryWithSubstExtTypeToString extType =
         Delta ->
             "δ"
 
+        GammaStar ->    
+            "γ*"
+        
+        DeltaStar ->
+            "δ*"
+
 
 binaryExtTypeToString : BinaryExtType -> String
 binaryExtTypeToString extType = 
@@ -263,6 +271,12 @@ unaryWithSubstExtTypeJsonStr extType =
         
         Delta ->
             "delta"
+
+        GammaStar ->    
+            "gammaStar"
+        
+        DeltaStar ->
+            "deltaStar"
 
 
 binaryExtTypeJsonStr : BinaryExtType -> String

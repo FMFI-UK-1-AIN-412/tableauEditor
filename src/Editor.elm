@@ -422,13 +422,10 @@ ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
                  ul [ class "onclick-menu-content"] <|
                     [ unaryItem Alpha
                     , binaryItem Beta
-                    , unaryWithSubstItem Gamma
-                    , unaryWithSubstItem Delta
                     ]
-                    ++ List.map unaryItem [ Refl, Leibnitz, MP, MT ]
-                    ++ binaryItem Cut
-                    :: List.map unaryItem [ HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
-                    ++ List.map binaryItem [ ECDF, ECDT ]
+                    ++ List.map unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
+                    ++ List.map unaryItem [Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+                    ++ List.map binaryItem [ Cut, ECDF, ECDT ]
             ]
             ]
 

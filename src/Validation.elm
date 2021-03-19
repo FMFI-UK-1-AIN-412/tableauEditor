@@ -32,6 +32,8 @@ import Dict
 import Set
 import Config exposing(Config)
 import Formula exposing (toString)
+import Validation.Rules.GammaStar
+import Validation.Rules.DeltaStar
 
 
 
@@ -277,6 +279,12 @@ validateUnaryWithSubst extType =
         
         Delta ->
             Validation.Rules.Delta.validate
+
+        GammaStar ->    
+            Validation.Rules.GammaStar.validate
+        
+        DeltaStar ->
+            Validation.Rules.DeltaStar.validate
 
 
 validateBinary : BinaryExtType -> Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
