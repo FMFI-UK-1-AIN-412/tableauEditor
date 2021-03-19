@@ -30,6 +30,8 @@ import Validation.Rules.ESTT
 import Term
 import Dict
 import Set
+import Config exposing(Config)
+import Formula exposing (toString)
 
 
 
@@ -48,14 +50,14 @@ import Set
 --     ( lp ++ error [] (f z), z )
 
 
-isCorrectTableau : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectTableau z =
+isCorrectTableau : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectTableau config z =
     Errors.merge2 (always2 z)
-        (isCorrectNode z)
+        (isCorrectNode config z)
         (List.foldl
             (Errors.merge2 (always2 z))
             (Ok z)
-            (List.map isCorrectTableau (Zipper.children z))
+            (List.map (isCorrectTableau config) (Zipper.children z))
         )
 
 
@@ -68,23 +70,23 @@ isValidNode z =
         (areValidCloseRefs z)
 
 
-isCorrectNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectNode z =
+isCorrectNode : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectNode config z =
     isValidNode z
         |> Result.andThen
             (\_ ->
                 Errors.merge2 second
-                    (isCorrectRule z)
+                    (isCorrectRule config z)
                     (areCorrectCloseRefs z)
             )
 
 
 {-| Just for the formula dislplay -- don't check the ref for syntax
 -}
-isCorrectFormula : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectFormula z =
+isCorrectFormula : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectFormula config z =
     isValidFormula z
-        |> Result.andThen isCorrectRule
+        |> Result.andThen (isCorrectRule config)
 
 
 isValidFormula : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -293,10 +295,18 @@ validateBinary extType =
             Validation.Rules.ECDT.validate
 
 
+validateRule rule validator config = 
+    if Dict.get rule config |> Maybe.withDefault False then
+        validator
+    else
+        (\z -> Err <| semanticsProblem z <| rule ++ " rule is forbidden in current configuration")
+
+
 isCorrectRule :
+    Config.Config -> 
     ( Tableau, Zipper.BreadCrumbs )
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
-isCorrectRule (( t, bs ) as z) =
+isCorrectRule config (( t, bs ) as z) =
     case bs of
         (Zipper.UnaryCrumb Alpha _) :: _ ->
             case t.node.references |> List.isEmpty of
@@ -305,19 +315,19 @@ isCorrectRule (( t, bs ) as z) =
                     Ok z
 
                 False ->
-                    Validation.Rules.Alpha.validate z
+                    (validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config) z
 
         (Zipper.UnaryCrumb extType _ ) :: _ ->
-            (validateUnary extType) z
+            (validateRule (unaryExtTypeToString extType) (validateUnary extType) config) z
 
         (Zipper.UnaryCrumbWithSubst extType _ _ ) :: _ ->
-            (validateUnaryWithSubst extType) z
+            (validateRule (unaryWithSubstExtTypeToString extType) (validateUnaryWithSubst extType) config) z
 
         (Zipper.BinaryLeftCrumb extType _ _ ) :: _ ->
-            validateLeft (validateBinary extType) z
+            (validateRule (binaryExtTypeToString extType) (validateLeft (validateBinary extType)) config) z
 
         (Zipper.BinaryRightCrumb extType _ _ ) :: _ ->
-            validateRight (validateBinary extType) z
+            (validateRule (binaryExtTypeToString extType) (validateRight (validateBinary extType)) config) z
 
         [] ->    
             Ok z

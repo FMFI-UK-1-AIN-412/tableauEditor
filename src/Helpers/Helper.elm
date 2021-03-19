@@ -8,6 +8,7 @@ import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper
 import Validation.Common exposing (semanticsProblem)
+import Config exposing (Config)
 
 
 hasReference : Zipper.Zipper -> Bool
@@ -69,30 +70,30 @@ second =
     \a b -> Tuple.second ( a, b )
 
 
-isClosed : Zipper.Zipper -> Result (List Problem) Bool
-isClosed z =
+isClosed : Config -> Zipper.Zipper -> Result (List Problem) Bool
+isClosed config z =
     case (Zipper.zTableau z).ext of
         Unary _ _ ->
             merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.down z))
 
         UnaryWithSubst _ _ _ ->
             merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.down z))
 
         Binary _ _ _ ->
             merge3 (\_ b c -> b && c)
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.left z))
-                (isClosed (Zipper.right z))
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.left z))
+                (isClosed config (Zipper.right z))
 
         Open ->
-            Validation.isCorrectNode z |> Result.map (always False)
+            Validation.isCorrectNode config z |> Result.map (always False)
 
         Closed r1 r2 ->
-            Validation.isCorrectNode z |> Result.map (always True)
+            Validation.isCorrectNode config z |> Result.map (always True)
 
 
 assumptions : Zipper.Zipper -> List (Signed Formula)

@@ -26,6 +26,9 @@ import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
 import Json.Encode exposing (set)
+import Dict exposing (Dict)
+import Config exposing(Config)
+import Config
 
 
 main : Program (Maybe String) Model Msg
@@ -48,6 +51,7 @@ type alias Model =
     UndoList
         { tableau : Tableau
         , jsonImport : JsonImport
+        , config : Config
         }
 
 
@@ -81,6 +85,7 @@ init mts =
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
+        , config = Config.defConfig
         }
     , Cmd.none
     )
@@ -313,28 +318,28 @@ view ({ present } as model) =
                 , button [ class "button", onClick Redo ] [ text "Redo" ]
                 ]
             , jsonImportError present.jsonImport
-            , viewNode (Zipper.zipper present.tableau)
-            , verdict present.tableau
-            , problems present.tableau
+            , viewNode present.config (Zipper.zipper present.tableau)
+            , verdict present.config present.tableau
+            , problems present.config present.tableau
             , Rules.help
             ]
         ]
     }
 
 
-viewNode : Zipper.Zipper -> Html Msg
-viewNode z =
+viewNode : Config -> Zipper.Zipper -> Html Msg
+viewNode config z =
     div
         [ class "formula" ]
-        [ viewNodeInputs identity z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
+        [ viewNodeInputs identity config z
+        , singleNodeProblems config z
+        , viewControls config z
+        , viewChildren config z
         ]
 
 
-viewSubsNode : Zipper.Zipper -> Html Msg
-viewSubsNode z =
+viewSubsNode : Config -> Zipper.Zipper -> Html Msg
+viewSubsNode config z =
     div [ class "formula" ]
         [ viewNodeInputs
             (\rest ->
@@ -351,18 +356,20 @@ viewSubsNode z =
                     :: text "}"
                     :: rest
             )
+            config
             z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
+        , singleNodeProblems config z
+        , viewControls config z
+        , viewChildren config z
         ]
 
 
 viewNodeInputs :
     (List (Html Msg) -> List (Html Msg))
+    -> Config
     -> Zipper.Zipper
     -> Html Msg
-viewNodeInputs additional z =
+viewNodeInputs additional config z =
     div [ class "inputGroup" ]
         (text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
             :: autoSizeInput
@@ -371,12 +378,12 @@ viewNodeInputs additional z =
                     [ ( "textInputFormula", True )
                     , ( "premise", Helper.isPremise z )
                     ]
-                , class (errorsClass <| Validation.isCorrectFormula z)
+                , class (errorsClass <| Validation.isCorrectFormula config z)
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
             :: viewRuleType z
-            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" z
+            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" config z 
             :: text "["
             :: autoSizeInput
                 (Tableau.refsToString (Zipper.zNode z).references)
@@ -390,11 +397,24 @@ viewNodeInputs additional z =
         )
 
 
-ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls z =
+ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
     let
-        unaryItem extType = menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ (unaryExtTypeToString extType))
-        unaryWithSubstItem extType = menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ (unaryWithSubstExtTypeToString extType))
-        binaryItem extType = menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ (binaryExtTypeToString extType))
+        item rule itemToShow =
+            if Dict.get rule config |> Maybe.withDefault False then
+                itemToShow
+            else
+                text ""
+        unaryItem extType = 
+            item (unaryExtTypeToString extType) <| 
+            menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ (unaryExtTypeToString extType))
+
+        unaryWithSubstItem extType = 
+            item (unaryWithSubstExtTypeToString extType) <| 
+            menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ (unaryWithSubstExtTypeToString extType))
+        binaryItem extType = 
+            item (binaryExtTypeToString extType) <| 
+            menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ (binaryExtTypeToString extType))
+
     in
         div [ class  "onclick-menu" ]
             [button [class <| "onclick-menu " ++ cls, tabindex 0] [
@@ -475,8 +495,8 @@ viewButtonsAppearanceControlls z =
                 [ icon ellipsisHorizontal ]
 
 
-viewChildren : Zipper.Zipper -> Html Msg
-viewChildren z =
+viewChildren : Config -> Zipper.Zipper -> Html Msg
+viewChildren config z =
     case (Zipper.zTableau z).ext of
         Open ->
             viewOpen z
@@ -485,29 +505,29 @@ viewChildren z =
             viewClosed z
 
         Unary _ _ ->
-            viewUnary z
+            viewUnary config z
 
         UnaryWithSubst _ _ _ ->
-            viewUnaryWithSubst z
+            viewUnaryWithSubst config z
 
         Binary _ _ _ ->
-            viewBinary z
+            viewBinary config z
 
 
-viewUnary : Zipper.Zipper -> Html Msg
-viewUnary z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+viewUnary : Config -> Zipper.Zipper -> Html Msg
+viewUnary config z =
+    div [ class "alpha" ] [ viewNode config (Zipper.down z) ]
 
-viewUnaryWithSubst : Zipper.Zipper -> Html Msg
-viewUnaryWithSubst z =
-    div [ class "alpha" ] [ viewSubsNode (Zipper.down z) ]
+viewUnaryWithSubst : Config -> Zipper.Zipper -> Html Msg
+viewUnaryWithSubst config z =
+    div [ class "alpha" ] [ viewSubsNode config (Zipper.down z) ]
 
 
-viewBinary : Zipper.Zipper -> Html Msg
-viewBinary z =
+viewBinary : Config -> Zipper.Zipper -> Html Msg
+viewBinary config z =
     div [ class "beta" ]
-        [ viewNode (Zipper.left z)
-        , viewNode (Zipper.right z)
+        [ viewNode config (Zipper.left z)
+        , viewNode config (Zipper.right z)
         ]
 
 
@@ -521,8 +541,8 @@ viewClosed z =
     div [] []
 
 
-viewControls : Zipper.Zipper -> Html Msg
-viewControls (( t, _ ) as z) =
+viewControls : Config -> Zipper.Zipper -> Html Msg
+viewControls config (( t, _ ) as z) =
     div [ class "expandControls" ]
         (case t.ext of
             Tableau.Closed r1 r2 ->
@@ -593,7 +613,7 @@ viewControls (( t, _ ) as z) =
                 in
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
-                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" z
+                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" config z
                     , div [ class "onclick-menu" ]
                         [ button [ class "onclick-menu del", tabindex 0 ] [
                             text "Delete ▾",
@@ -612,11 +632,11 @@ viewControls (( t, _ ) as z) =
         )
 
 
-singleNodeProblems : Zipper -> Html Msg
-singleNodeProblems z =
+singleNodeProblems : Config -> Zipper -> Html Msg
+singleNodeProblems config z =
     let
         errors =
-            Errors.errors <| Validation.isCorrectNode <| z
+            Errors.errors <| Validation.isCorrectNode config <| z
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
@@ -629,11 +649,11 @@ singleNodeProblems z =
             )
 
 
-problems : Tableau -> Html Msg
-problems t =
+problems : Config -> Tableau -> Html Msg
+problems config t =
     let
         errors =
-            Errors.errors <| Validation.isCorrectTableau <| Zipper.zipper <| t
+            Errors.errors <| Validation.isCorrectTableau  config  <| Zipper.zipper <| t
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
@@ -714,8 +734,8 @@ jsonImportError jsonImport =
             div [] []
 
 
-verdict : Tableau -> Html msg
-verdict t =
+verdict : Config -> Tableau -> Html msg
+verdict config t =
     let
         ass =
             t |> Zipper.zipper |> Helper.assumptions
@@ -739,7 +759,7 @@ verdict t =
         div [ class "verdict" ]
             [ p []
                 [ text "This tableau "
-                , text (textVerdict <| Zipper.zipper t)
+                , text (textVerdict config <| Zipper.zipper t)
                 , text ":"
                 ]
             , p []
@@ -750,9 +770,9 @@ verdict t =
             ]
 
 
-textVerdict : Zipper -> String
-textVerdict t =
-    case Helper.isClosed t of
+textVerdict : Config -> Zipper -> String
+textVerdict config t =
+    case Helper.isClosed config t of
         Ok True ->
             "proves"
 
