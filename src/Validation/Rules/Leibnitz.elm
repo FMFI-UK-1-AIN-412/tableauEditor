@@ -166,6 +166,16 @@ commonFormulaTemplate refF currentF =
                 _ ->
                     differentStructureError
 
+        Equiv refSf1 refSf2 ->
+            case currentF of
+                Equiv currentSf1 currentSf2 ->
+                    Result.map2 (\f1 f2 -> Equiv f1 f2)
+                        (commonFormulaTemplate refSf1 currentSf1)
+                        (commonFormulaTemplate refSf2 currentSf2)
+
+                _ ->
+                    differentStructureError
+
         ForAll refX refSf ->
             case currentF of
                 ForAll currentX currentSf ->
