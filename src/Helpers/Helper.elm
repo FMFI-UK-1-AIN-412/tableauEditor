@@ -1,14 +1,13 @@
 module Helpers.Helper exposing (..)
 
+import Config exposing (Config)
 import Formula exposing (Formula)
 import Formula.Signed exposing (Signed)
 import Result
 import Tableau exposing (Extension(..), UnaryExtType(..))
 import Validation
-import Validation.Common exposing (Problem, ProblemType(..))
+import Validation.Common exposing (Problem, ProblemType(..), semanticsProblem)
 import Zipper
-import Validation.Common exposing (semanticsProblem)
-import Config exposing (Config)
 
 
 hasReference : Zipper.Zipper -> Bool

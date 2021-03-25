@@ -1,11 +1,11 @@
 module Tableau exposing (..)
 
+import Dict
 import Formula exposing (Formula)
 import Formula.Parser
 import Formula.Signed exposing (Signed)
 import Parser
 import Term
-import Dict
 
 
 type alias Tableau =
@@ -35,37 +35,37 @@ type alias Ref =
 
 type alias Substitution =
     { str : String
-    , parsedSubst : Result (List Parser.DeadEnd) Term.Substitution 
+    , parsedSubst : Result (List Parser.DeadEnd) Term.Substitution
     }
 
 
 type UnaryExtType
-    = Alpha 
-    | Refl 
-    | Leibnitz 
-    | MP 
-    | MT 
-    | HS 
-    | DS 
-    | NCS 
+    = Alpha
+    | Refl
+    | Leibnitz
+    | MP
+    | MT
+    | HS
+    | DS
+    | NCS
     | ESFF
     | ESFT
-    | ESTF 
+    | ESTF
     | ESTT
 
 
 type UnaryWithSubstExtType
-    = Gamma  
+    = Gamma
     | Delta
     | GammaStar
-    | DeltaStar 
+    | DeltaStar
 
 
-type BinaryExtType 
-    = Beta 
-    | Cut 
+type BinaryExtType
+    = Beta
+    | Cut
     | ECDF
-    | ECDT    
+    | ECDT
 
 
 type Extension
@@ -110,7 +110,7 @@ leftSubtree t =
         Closed _ _ ->
             Tableau defNode Open
 
-        Unary _ subT  ->
+        Unary _ subT ->
             subT
 
         UnaryWithSubst _ subT _ ->
@@ -152,7 +152,7 @@ refsToString lst =
 
 
 unaryExtTypeToString : UnaryExtType -> String
-unaryExtTypeToString extType = 
+unaryExtTypeToString extType =
     case extType of
         Alpha ->
             "α"
@@ -160,7 +160,7 @@ unaryExtTypeToString extType =
         Refl ->
             "Reflexivity"
 
-        Leibnitz  ->
+        Leibnitz ->
             "Leibnitz"
 
         MP ->
@@ -192,23 +192,23 @@ unaryExtTypeToString extType =
 
 
 unaryWithSubstExtTypeToString : UnaryWithSubstExtType -> String
-unaryWithSubstExtTypeToString extType = 
+unaryWithSubstExtTypeToString extType =
     case extType of
-        Gamma ->    
+        Gamma ->
             "γ"
-        
+
         Delta ->
             "δ"
 
-        GammaStar ->    
+        GammaStar ->
             "γ*"
-        
+
         DeltaStar ->
             "δ*"
 
 
 binaryExtTypeToString : BinaryExtType -> String
-binaryExtTypeToString extType = 
+binaryExtTypeToString extType =
     case extType of
         Beta ->
             "β"
@@ -224,7 +224,7 @@ binaryExtTypeToString extType =
 
 
 unaryExtTypeJsonStr : UnaryExtType -> String
-unaryExtTypeJsonStr extType = 
+unaryExtTypeJsonStr extType =
     case extType of
         Alpha ->
             "alpha"
@@ -232,7 +232,7 @@ unaryExtTypeJsonStr extType =
         Refl ->
             "refl"
 
-        Leibnitz  ->
+        Leibnitz ->
             "leibnitz"
 
         MP ->
@@ -264,23 +264,23 @@ unaryExtTypeJsonStr extType =
 
 
 unaryWithSubstExtTypeJsonStr : UnaryWithSubstExtType -> String
-unaryWithSubstExtTypeJsonStr extType = 
+unaryWithSubstExtTypeJsonStr extType =
     case extType of
-        Gamma ->    
+        Gamma ->
             "gamma"
-        
+
         Delta ->
             "delta"
 
-        GammaStar ->    
+        GammaStar ->
             "gammaStar"
-        
+
         DeltaStar ->
             "deltaStar"
 
 
 binaryExtTypeJsonStr : BinaryExtType -> String
-binaryExtTypeJsonStr extType = 
+binaryExtTypeJsonStr extType =
     case extType of
         Beta ->
             "beta"

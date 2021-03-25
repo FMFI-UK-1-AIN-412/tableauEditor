@@ -3,11 +3,10 @@ module Helpers.Rules exposing (..)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Html exposing (Attribute, Html, div, h2, h3, p, table, td, text, tr, sub, sup, span)
+import Html exposing (Attribute, Html, code, div, h2, h3, p, span, sub, sup, table, td, text, tr)
 import Html.Attributes exposing (..)
 import Markdown
 import Term exposing (Term(..))
-import Html exposing (code)
 
 
 fA =
@@ -49,46 +48,59 @@ deltas =
 gammas =
     [ T (ForAll "x" fD), F (Exists "x" fD) ]
 
-reflexivityFormulas = 
-    [("", "", "T t≐t")]
 
-mpFormulas = 
-    [("T (A→B)","T A", "T B")]
+reflexivityFormulas =
+    [ ( "", "", "T t≐t" ) ]
 
-mtFormulas = 
-    [("T (A→B)", "F B", "F A")]
 
-dsFormulas = 
-    [("T (A∨B)", "F A", "T B"), ("T (A∨B)", "F B", "T A")]
+mpFormulas =
+    [ ( "T (A→B)", "T A", "T B" ) ]
 
-ncsFormulas = 
-    [("F (A∧B)", "T A", "F B"), ("F (A∧B)", "T B", "F A")]
 
-cutFormulas = 
-    [("", "T A", "F A")]
+mtFormulas =
+    [ ( "T (A→B)", "F B", "F A" ) ]
 
-hsFormulas = 
-    [("T (A→B)", "T (B→C)", "T (A→C)")]
 
-esttFormulas = 
-    [("T (A↔B)", "T A", "T B"),("T (A↔B)", "T B", "T A")]
+dsFormulas =
+    [ ( "T (A∨B)", "F A", "T B" ), ( "T (A∨B)", "F B", "T A" ) ]
 
-estfFormulas = 
-    [("T (A↔B)", "F A", "F B"), ("T (A↔B)", "F B", "F A")]
 
-esftFormulas = 
-    [("F (A↔B)", "T A", "F B"), ("F (A↔B)", "T B", "F A")]
+ncsFormulas =
+    [ ( "F (A∧B)", "T A", "F B" ), ( "F (A∧B)", "T B", "F A" ) ]
 
-esffFormulas = 
-    [("F (A↔B)", "F A", "T B"), ("F (A↔B)", "F B", "T A")]
+
+cutFormulas =
+    [ ( "", "T A", "F A" ) ]
+
+
+hsFormulas =
+    [ ( "T (A→B)", "T (B→C)", "T (A→C)" ) ]
+
+
+esttFormulas =
+    [ ( "T (A↔B)", "T A", "T B" ), ( "T (A↔B)", "T B", "T A" ) ]
+
+
+estfFormulas =
+    [ ( "T (A↔B)", "F A", "F B" ), ( "T (A↔B)", "F B", "F A" ) ]
+
+
+esftFormulas =
+    [ ( "F (A↔B)", "T A", "F B" ), ( "F (A↔B)", "T B", "F A" ) ]
+
+
+esffFormulas =
+    [ ( "F (A↔B)", "F A", "T B" ), ( "F (A↔B)", "F B", "T A" ) ]
+
 
 ecdtFormulas =
-    [("T (A↔B)", "T (A∧B)", "F (A∨B)")]
+    [ ( "T (A↔B)", "T (A∧B)", "F (A∨B)" ) ]
+
 
 ecdfFormulas =
-    [("F (A↔B)", "T (A∧¬B)", "F (A∨¬B)")]
+    [ ( "F (A↔B)", "T (A∧¬B)", "F (A∨¬B)" ) ]
 
-    
+
 renderAlpha : Signed Formula -> Html msg
 renderAlpha a =
     table [ class "rule" ] <|
@@ -138,16 +150,17 @@ renderDelta d =
                 (Formula.Signed.subformulas d)
 
 
-renderUnary : (String, String, String) -> Html msg
-renderUnary (f1, f2, f3) =
+renderUnary : ( String, String, String ) -> Html msg
+renderUnary ( f1, f2, f3 ) =
     table [ class "rule", class "withWhiteSpace" ] <|
         [ tr [] [ td [] [ text <| (f1 ++ "   " ++ f2) ] ]
         , tr [] [ td [] [ text <| f3 ] ]
         ]
 
-renderBinary : (String, String, String) -> Html msg
-renderBinary (f, sf1, sf2) =
-    table [class "rule"]
+
+renderBinary : ( String, String, String ) -> Html msg
+renderBinary ( f, sf1, sf2 ) =
+    table [ class "rule" ]
         [ div [ class "formula" ]
             [ text <| f
             , div [ class "beta" ]
@@ -157,10 +170,11 @@ renderBinary (f, sf1, sf2) =
             ]
         ]
 
-renderGeneralGammaDelta (sign, quant) = 
+
+renderGeneralGammaDelta ( sign, quant ) =
     table [ class "rule", class "withWhiteSpace" ] <|
-        [ tr [] [ td [] [ text (sign++" " ++ quant++"x") ,subs "1",text (",...,"++quant++"x") ,subs "n" ,text "A" ] ]
-        , tr [] [ td [] [ text (sign++" A{x"), subs "1", text "→y",subs "1",text",...,x",subs"n",text "→y",subs"n",text"}"] ]
+        [ tr [] [ td [] [ text (sign ++ " " ++ quant ++ "x"), subs "1", text (",...," ++ quant ++ "x"), subs "n", text "A" ] ]
+        , tr [] [ td [] [ text (sign ++ " A{x"), subs "1", text "→y", subs "1", text ",...,x", subs "n", text "→y", subs "n", text "}" ] ]
         ]
 
 
@@ -187,7 +201,7 @@ symbolsTable =
         [ h3 [] [ text "Propositional and first-order logical symbols" ]
         , Html.table [ class "rulesHelpTable" ]
             [ Html.tr []
-                [ Html.th [] [ text "Negation" ] 
+                [ Html.th [] [ text "Negation" ]
                 , Html.th [] [ text "Equality" ]
                 , Html.th [] [ text "Inequality" ]
                 , Html.th [] [ text "Conjunction" ]
@@ -276,7 +290,7 @@ notesTable =
         ]
 
 
-linearExample a b c = 
+linearExample a b c =
     Html.td []
         [ div [ class "formula" ]
             [ text a
@@ -290,7 +304,7 @@ linearExample a b c =
         ]
 
 
-binaryExample a b c = 
+binaryExample a b c =
     Html.td []
         [ div [ class "formula" ]
             [ text a
@@ -302,11 +316,13 @@ binaryExample a b c =
         ]
 
 
-subs txt = 
-    sub[][text txt]
+subs txt =
+    sub [] [ text txt ]
 
-sups txt = 
-    sup[][text txt]
+
+sups txt =
+    sup [] [ text txt ]
+
 
 rulesTable =
     div [ class "full" ]
@@ -328,10 +344,12 @@ rulesTable =
                 , Html.td [] [ div [] (List.map renderGamma gammas) ]
                 , Html.td [] [ div [] (List.map renderDelta deltas) ]
                 , Html.td [] [ div [] (List.map renderUnary reflexivityFormulas) ]
-                , Html.td [] [table [ class "rule", class "withWhiteSpace" ] <|
-                    [ tr [] [ td [] [ text  "T t" , subs "1", text "≐t" , subs "2", text "  A", sups "+", text "{q→t", subs "1",text"}"]]
-                    , tr [] [td [][text "   A", sups"+", text "{q→t", subs "2",text"}"]  ]
-                 ]]
+                , Html.td []
+                    [ table [ class "rule", class "withWhiteSpace" ] <|
+                        [ tr [] [ td [] [ text "T t", subs "1", text "≐t", subs "2", text "  A", sups "+", text "{q→t", subs "1", text "}" ] ]
+                        , tr [] [ td [] [ text "   A", sups "+", text "{q→t", subs "2", text "}" ] ]
+                        ]
+                    ]
                 ]
             , Html.tr []
                 [ Html.td [] [ text "example" ]
@@ -376,7 +394,7 @@ rulesTable2 =
                 ]
             , Html.tr []
                 [ Html.td [] [ text "rules" ]
-                , Html.td [] [ div [] (List.map renderBinary cutFormulas) ] 
+                , Html.td [] [ div [] (List.map renderBinary cutFormulas) ]
                 , Html.td [] [ div [] (List.map renderUnary mpFormulas) ]
                 , Html.td [] [ div [] (List.map renderUnary mtFormulas) ]
                 , Html.td [] [ div [] (List.map renderUnary hsFormulas) ]
@@ -385,7 +403,7 @@ rulesTable2 =
                 ]
             , Html.tr []
                 [ Html.td [] [ text "example" ]
-                , binaryExample "" "T a [ ]" "F a [ ]" 
+                , binaryExample "" "T a [ ]" "F a [ ]"
                 , linearExample "(1) T(a→b) [ ]" "(2) T a [ ]" "(3) T b [1,2]"
                 , linearExample "(1) T(a→b) [ ]" "(2) F b [ ]" "(3) F a [1,2]"
                 , linearExample "(1) T(a→b) [ ]" "(2) T(b→c) [ ]" "(3) T(a→c) [1,2]"
@@ -401,15 +419,13 @@ rulesTable3 =
         [ Html.table [ class "rulesHelpTable" ]
             [ Html.tr []
                 [ Html.th [] [ text "" ]
-                
                 , Html.th [] [ text "ESTT-rule" ]
                 , Html.th [] [ text "ESTF-rule" ]
                 , Html.th [] [ text "ESFT-rule" ]
                 , Html.th [] [ text "ESFF-rule" ]
                 ]
-            , Html.tr [] 
+            , Html.tr []
                 [ Html.td [] [ text "rules" ]
-                
                 , Html.td [] [ div [] (List.map renderUnary esttFormulas) ]
                 , Html.td [] [ div [] (List.map renderUnary estfFormulas) ]
                 , Html.td [] [ div [] (List.map renderUnary esftFormulas) ]
@@ -417,7 +433,6 @@ rulesTable3 =
                 ]
             , Html.tr []
                 [ Html.td [] [ text "example" ]
-                
                 , linearExample "(1) T(a↔b) [ ]" "(2) T b [ ]" "(3) T a [1,2]"
                 , linearExample "(1) T(a↔b) [ ]" "(2) F a [ ]" "(3) F b [1,2]"
                 , linearExample "(1) F(a↔b) [ ]" "(2) T a [ ]" "(3) F b [1,2]"
@@ -437,12 +452,12 @@ rulesTable4 =
                 , Html.th [] [ text "γ*-rule" ]
                 , Html.th [] [ text "δ*-rule" ]
                 ]
-            , Html.tr [] 
+            , Html.tr []
                 [ Html.td [] [ text "rules" ]
                 , Html.td [] [ div [] (List.map renderBinary ecdtFormulas) ]
                 , Html.td [] [ div [] (List.map renderBinary ecdfFormulas) ]
-                , Html.td [] [ div[] (List.map renderGeneralGammaDelta [("T", "∀"), ("F", "∃")]) ]
-                , Html.td [] [ div[] (List.map renderGeneralGammaDelta [("F", "∀"), ("T", "∃")]) ]
+                , Html.td [] [ div [] (List.map renderGeneralGammaDelta [ ( "T", "∀" ), ( "F", "∃" ) ]) ]
+                , Html.td [] [ div [] (List.map renderGeneralGammaDelta [ ( "F", "∀" ), ( "T", "∃" ) ]) ]
                 ]
             , Html.tr []
                 [ Html.td [] [ text "example" ]

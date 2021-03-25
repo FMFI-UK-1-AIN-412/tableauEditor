@@ -373,8 +373,8 @@ unsubstitutedVars subst z =
 
 getUnsubstitutedVars : List Term -> Term.Substitution -> Int -> Formula -> List Term
 getUnsubstitutedVars vars subst n f =
-    varsToBeSubstituted vars n f 
-    |> List.filter (\v -> not <| List.member (Term.toString v) (Dict.keys subst))
+    varsToBeSubstituted vars n f
+        |> List.filter (\v -> not <| List.member (Term.toString v) (Dict.keys subst))
 
 
 varsToBeSubstituted : List Term -> Int -> Formula -> List Term
@@ -463,7 +463,7 @@ countLeadingQuantifiers f =
 
         _ ->
             0
-    
+
 
 removeNQuants : Int -> Formula -> Formula
 removeNQuants n f =
@@ -496,15 +496,19 @@ forbiddenVarsErrStr lst =
         ++ " can't be substituted for"
 
 
-checkSubstitutedVars : (List Term) -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-checkSubstitutedVars allowedVars subst z = 
+checkSubstitutedVars : List Term -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkSubstitutedVars allowedVars subst z =
     let
-        allowed = allowedVars |>  List.map Term.toString
-        forbidden = subst |> Dict.keys |> List.filter (\v -> not ( List.member v allowed))
+        allowed =
+            allowedVars |> List.map Term.toString
+
+        forbidden =
+            subst |> Dict.keys |> List.filter (\v -> not (List.member v allowed))
     in
     case forbidden of
         [] ->
             Ok z
+
         lst ->
             Err <| semanticsProblem z (forbiddenVarsErrStr lst)
 
@@ -521,17 +525,23 @@ unaryWithSubstCheck ruleName refF newF subst z =
         removedQuantsCount =
             numOfRemovedQuants referenced new
 
-        allowedVars = varsToBeSubstituted [] removedQuantsCount referenced
-
+        allowedVars =
+            varsToBeSubstituted [] removedQuantsCount referenced
     in
-    checkSubstitutedVars allowedVars subst z 
-    |> Result.andThen (\_ ->
-    removeNQuants removedQuantsCount referenced
-        |> Formula.substitute subst
-        |> Result.mapError (\str -> semanticsProblem z str)
-        |> Result.map (\f -> f == new && haveSameSign refF newF)
-        |> Result.andThen (\b -> resultFromBool z 
-        (semanticsProblem z ("Formula was not created by using the " ++ ruleName ++ " rule")) b))
+    checkSubstitutedVars allowedVars subst z
+        |> Result.andThen
+            (\_ ->
+                removeNQuants removedQuantsCount referenced
+                    |> Formula.substitute subst
+                    |> Result.mapError (\str -> semanticsProblem z str)
+                    |> Result.map (\f -> f == new && haveSameSign refF newF)
+                    |> Result.andThen
+                        (\b ->
+                            resultFromBool z
+                                (semanticsProblem z ("Formula was not created by using the " ++ ruleName ++ " rule"))
+                                b
+                        )
+            )
 
 
 notVarsErrStr lst =

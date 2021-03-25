@@ -37,9 +37,9 @@ merge4 func ra rb rc rd =
     case Result.map4 func ra rb rc rd of
         Ok val ->
             Ok val
+
         _ ->
             Err (errors ra ++ errors rb ++ errors rc ++ errors rd)
-        
 
 
 errors : Result (List x) a -> List x

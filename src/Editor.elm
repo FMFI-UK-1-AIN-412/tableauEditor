@@ -3,6 +3,8 @@ port module Editor exposing (main, top, topRenumbered)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
+import Config exposing (Config)
+import Dict exposing (Dict)
 import Errors
 import File exposing (File)
 import File.Download as Download
@@ -19,16 +21,13 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
+import Json.Encode exposing (set)
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
-import Json.Encode exposing (set)
-import Dict exposing (Dict)
-import Config exposing(Config)
-import Config
 
 
 main : Program (Maybe String) Model Msg
@@ -62,7 +61,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , references = [ ]
+                , references = []
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -351,7 +350,7 @@ viewSubsNode config z =
                             , ( "semanticsProblem", Helper.hasReference z )
                             ]
                         , onInput <| ChangeSubst z
-                        , placeholder "a↦b,.." 
+                        , placeholder "a↦b,.."
                         ]
                     :: text "}"
                     :: rest
@@ -383,7 +382,7 @@ viewNodeInputs additional config z =
                 , onInput <| ChangeText z
                 ]
             :: viewRuleType z
-            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" config z 
+            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" config z
             :: text "["
             :: autoSizeInput
                 (Tableau.refsToString (Zipper.zNode z).references)
@@ -402,42 +401,43 @@ ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
         item rule itemToShow =
             if Dict.get rule config |> Maybe.withDefault False then
                 itemToShow
+
             else
                 text ""
-        unaryItem extType = 
-            item (unaryExtTypeToString extType) <| 
-            menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ (unaryExtTypeToString extType))
 
-        unaryWithSubstItem extType = 
-            item (unaryWithSubstExtTypeToString extType) <| 
-            menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ (unaryWithSubstExtTypeToString extType))
-        binaryItem extType = 
-            item (binaryExtTypeToString extType) <| 
-            menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ (binaryExtTypeToString extType))
+        unaryItem extType =
+            item (unaryExtTypeToString extType) <|
+                menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ unaryExtTypeToString extType)
 
+        unaryWithSubstItem extType =
+            item (unaryWithSubstExtTypeToString extType) <|
+                menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ unaryWithSubstExtTypeToString extType)
+
+        binaryItem extType =
+            item (binaryExtTypeToString extType) <|
+                menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ binaryExtTypeToString extType)
     in
-        menu cls label <|
-            [ unaryItem Alpha
-            , binaryItem Beta
-            ]
+    menu cls label <|
+        [ unaryItem Alpha
+        , binaryItem Beta
+        ]
             ++ List.map unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
-            ++ List.map unaryItem [Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+            ++ List.map unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
             ++ List.map binaryItem [ Cut, ECDF, ECDT ]
 
 
-
 menuItem : Msg -> String -> Html Msg
-menuItem msg str = 
-    li [] [ button [onClick msg] [ text str ] ]
+menuItem msg str =
+    li [] [ button [ onClick msg ] [ text str ] ]
 
 
-menu cls label content= 
-    div [ class  "onclick-menu" ]
-            [button [class <| "onclick-menu " ++ cls, tabindex 0] [
-                    text label,
-                 ul [ class "onclick-menu-content"] <| content
+menu cls label content =
+    div [ class "onclick-menu" ]
+        [ button [ class <| "onclick-menu " ++ cls, tabindex 0 ]
+            [ text label
+            , ul [ class "onclick-menu-content" ] <| content
             ]
-            ]
+        ]
 
 
 autoSizeInput : String -> List (Attribute Msg) -> Html Msg
@@ -466,7 +466,7 @@ viewRuleType z =
 
             Closed _ _ ->
                 text "C"
-            
+
             Unary extType _ ->
                 text (unaryExtTypeToString extType)
 
@@ -519,6 +519,7 @@ viewChildren config z =
 viewUnary : Config -> Zipper.Zipper -> Html Msg
 viewUnary config z =
     div [ class "alpha" ] [ viewNode config (Zipper.down z) ]
+
 
 viewUnaryWithSubst : Config -> Zipper.Zipper -> Html Msg
 viewUnaryWithSubst config z =
@@ -580,16 +581,16 @@ viewControls config (( t, _ ) as z) =
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
                                 Binary _ _ _ ->
                                     case t.node.value of
-                                            "" ->
-                                                case t.ext of
-                                                    Open ->
-                                                        button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                        "" ->
+                                            case t.ext of
+                                                Open ->
+                                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
-                                                    _ ->
-                                                        div [] []
+                                                _ ->
+                                                    div [] []
 
-                                            _ ->
-                                                div [] []
+                                        _ ->
+                                            div [] []
 
                                 _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
@@ -616,7 +617,7 @@ viewControls config (( t, _ ) as z) =
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
                     , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" config z
-                    , menu "del" "Delete ▾" <|
+                    , menu "del" "Delete\u{00A0}▾" <|
                         [ li [] [ deleteMeButton ]
                         , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                         ]
@@ -650,7 +651,7 @@ problems : Config -> Tableau -> Html Msg
 problems config t =
     let
         errors =
-            Errors.errors <| Validation.isCorrectTableau  config  <| Zipper.zipper <| t
+            Errors.errors <| Validation.isCorrectTableau config <| Zipper.zipper <| t
     in
     if List.isEmpty errors then
         div [ class "problems" ] []

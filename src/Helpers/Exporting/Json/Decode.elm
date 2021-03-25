@@ -6,7 +6,6 @@ import Formula.Parser
 import Json.Decode exposing (..)
 import Tableau exposing (Tableau)
 import Zipper
-import Tableau
 
 
 
@@ -138,16 +137,16 @@ tblTypeDecoder typ =
 
         "ecdt" ->
             binaryRule Tableau.ECDT
-            
+
         "esff" ->
             unaryRule Tableau.ESFF
-            
+
         "esft" ->
             unaryRule Tableau.ESFT
-            
+
         "estf" ->
             unaryRule Tableau.ESTF
-            
+
         "estt" ->
             unaryRule Tableau.ESTT
 

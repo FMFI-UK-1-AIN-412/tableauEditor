@@ -1,39 +1,37 @@
 module Validation exposing (..)
 
+import Config exposing (Config)
+import Dict
 import Errors
-import Formula exposing (Formula(..))
+import Formula exposing (Formula(..), toString)
 import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
+import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
-import Zipper
 import Validation.Common exposing (..)
 import Validation.Rules.Alpha
 import Validation.Rules.Beta
-import Validation.Rules.Delta
-import Validation.Rules.Gamma
-import Validation.Rules.Leibnitz
-import Validation.Rules.Reflexivity
-import Validation.Rules.ModusPonens
-import Validation.Rules.ModusTolens
 import Validation.Rules.Cut
-import Validation.Rules.HS
 import Validation.Rules.DS
-import Validation.Rules.NCS
+import Validation.Rules.Delta
+import Validation.Rules.DeltaStar
 import Validation.Rules.ECDF
 import Validation.Rules.ECDT
 import Validation.Rules.ESFF
 import Validation.Rules.ESFT
 import Validation.Rules.ESTF
 import Validation.Rules.ESTT
-import Term
-import Dict
-import Set
-import Config exposing(Config)
-import Formula exposing (toString)
+import Validation.Rules.Gamma
 import Validation.Rules.GammaStar
-import Validation.Rules.DeltaStar
+import Validation.Rules.HS
+import Validation.Rules.Leibnitz
+import Validation.Rules.ModusPonens
+import Validation.Rules.ModusTolens
+import Validation.Rules.NCS
+import Validation.Rules.Reflexivity
+import Zipper
 
 
 
@@ -98,25 +96,30 @@ isValidFormula z =
 
 areTermsDistinct : Term.Substitution -> Bool
 areTermsDistinct subst =
-    let 
-        terms = Dict.values subst
+    let
+        terms =
+            Dict.values subst
     in
     List.length terms == Set.size (Set.fromList (List.map Term.toString terms))
 
 
 isValidSubstitution : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidSubstitution z =
-    if (Zipper.up z) == z then
+    if Zipper.up z == z then
         Ok z
-    else    
+
+    else
         case Zipper.zSubstitution (Zipper.up z) of
             Just subst ->
-                subst |> .parsedSubst 
-                |> Result.mapError (\_ -> syntaxProblem z "Wrong form of substitution") 
-                |> Result.map  (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
-                |> Result.andThen (checkPredicate areTermsDistinct 
-                    (syntaxProblem z "Substituted terms must be distict"))
-                |> Result.map (always z)
+                subst
+                    |> .parsedSubst
+                    |> Result.mapError (\_ -> syntaxProblem z "Wrong form of substitution")
+                    |> Result.map (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
+                    |> Result.andThen
+                        (checkPredicate areTermsDistinct
+                            (syntaxProblem z "Substituted terms must be distict")
+                        )
+                    |> Result.map (always z)
 
             Nothing ->
                 Ok z
@@ -240,7 +243,7 @@ validateUnary extType =
         Refl ->
             Validation.Rules.Reflexivity.validate
 
-        Leibnitz  ->
+        Leibnitz ->
             Validation.Rules.Leibnitz.validate
 
         MP ->
@@ -271,24 +274,24 @@ validateUnary extType =
             Validation.Rules.ESTT.validate
 
 
-validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper.Zipper -> Result (List Problem) (Tableau, Zipper.BreadCrumbs)
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateUnaryWithSubst extType =
     case extType of
-        Gamma ->    
+        Gamma ->
             Validation.Rules.Gamma.validate
-        
+
         Delta ->
             Validation.Rules.Delta.validate
 
-        GammaStar ->    
+        GammaStar ->
             Validation.Rules.GammaStar.validate
-        
+
         DeltaStar ->
             Validation.Rules.DeltaStar.validate
 
 
 validateBinary : BinaryExtType -> Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-validateBinary extType =  
+validateBinary extType =
     case extType of
         Beta ->
             Validation.Rules.Beta.validate
@@ -303,16 +306,17 @@ validateBinary extType =
             Validation.Rules.ECDT.validate
 
 
-validateRule rule validator config = 
+validateRule rule validator config =
     if Dict.get rule config |> Maybe.withDefault False then
         validator
+
     else
-        (\z -> Err <| semanticsProblem z <| rule ++ " rule is forbidden in current configuration")
+        \z -> Err <| semanticsProblem z <| rule ++ " rule is forbidden in current configuration"
 
 
 isCorrectRule :
-    Config.Config -> 
-    ( Tableau, Zipper.BreadCrumbs )
+    Config.Config
+    -> ( Tableau, Zipper.BreadCrumbs )
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 isCorrectRule config (( t, bs ) as z) =
     case bs of
@@ -323,21 +327,21 @@ isCorrectRule config (( t, bs ) as z) =
                     Ok z
 
                 False ->
-                    (validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config) z
+                    validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
 
-        (Zipper.UnaryCrumb extType _ ) :: _ ->
-            (validateRule (unaryExtTypeToString extType) (validateUnary extType) config) z
+        (Zipper.UnaryCrumb extType _) :: _ ->
+            validateRule (unaryExtTypeToString extType) (validateUnary extType) config z
 
-        (Zipper.UnaryCrumbWithSubst extType _ _ ) :: _ ->
-            (validateRule (unaryWithSubstExtTypeToString extType) (validateUnaryWithSubst extType) config) z
+        (Zipper.UnaryCrumbWithSubst extType _ _) :: _ ->
+            validateRule (unaryWithSubstExtTypeToString extType) (validateUnaryWithSubst extType) config z
 
-        (Zipper.BinaryLeftCrumb extType _ _ ) :: _ ->
-            (validateRule (binaryExtTypeToString extType) (validateLeft (validateBinary extType)) config) z
+        (Zipper.BinaryLeftCrumb extType _ _) :: _ ->
+            validateRule (binaryExtTypeToString extType) (validateLeft (validateBinary extType)) config z
 
-        (Zipper.BinaryRightCrumb extType _ _ ) :: _ ->
-            (validateRule (binaryExtTypeToString extType) (validateRight (validateBinary extType)) config) z
+        (Zipper.BinaryRightCrumb extType _ _) :: _ ->
+            validateRule (binaryExtTypeToString extType) (validateRight (validateBinary extType)) config z
 
-        [] ->    
+        [] ->
             Ok z
 
 

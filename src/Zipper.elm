@@ -40,10 +40,10 @@ children z =
     in
     case t.ext of
         Unary _ _ ->
-            [down z]
+            [ down z ]
 
         UnaryWithSubst _ _ _ ->
-            [down z]
+            [ down z ]
 
         Binary _ _ _ ->
             [ left z, right z ]
@@ -99,10 +99,10 @@ up ( t, bs ) =
             ( Tableau n (UnaryWithSubst extType t subst), bss )
 
         (BinaryLeftCrumb extType n rt) :: bss ->
-            (Tableau n (Binary extType t rt), bss)
+            ( Tableau n (Binary extType t rt), bss )
 
         (BinaryRightCrumb extType n lt) :: bss ->
-            (Tableau n (Binary extType lt t), bss)
+            ( Tableau n (Binary extType lt t), bss )
 
         [] ->
             ( t, bs )
@@ -172,7 +172,7 @@ zWalkPost f (( t, bs ) as z) =
 
         Binary _ _ _ ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
-        
+
         _ ->
             z |> down |> zWalkPost f |> up |> f
 
@@ -239,7 +239,7 @@ renumber tableau =
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 tableau num =
     let
-        renumberUnary extWithType subT = 
+        renumberUnary extWithType subT =
             let
                 ( new_tableau, num1 ) =
                     renumber2 subT (num + 1)
@@ -260,9 +260,8 @@ renumber2 tableau num =
                 node =
                     tableau.node
             in
-            ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )  
+            ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )
     in
-    
     case tableau.ext of
         Open ->
             let
@@ -288,7 +287,7 @@ renumber2 tableau num =
             renumberUnary (Unary extType) subT
 
         UnaryWithSubst extType subT subst ->
-            renumberUnary (\t -> (UnaryWithSubst extType) t subst) subT
+            renumberUnary (\t -> UnaryWithSubst extType t subst) subT
 
         Binary extType lt rt ->
             renumberBinary (Binary extType) lt rt
@@ -392,7 +391,6 @@ renumberJusts tableau f lengthOfPathFromFather =
                     (renumberJusts (renumberJust rt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                 )
     in
-    
     case tableau.ext of
         Unary extType subT ->
             renumberJustsUnary (Unary extType) subT
@@ -507,7 +505,7 @@ setSubstitution text z =
         (\tableau ->
             case tableau.ext of
                 UnaryWithSubst extType t subst ->
-                    Tableau tableau.node (UnaryWithSubst extType t { subst | str = text, parsedSubst = (Formula.Parser.parseSubstitution text)})
+                    Tableau tableau.node (UnaryWithSubst extType t { subst | str = text, parsedSubst = Formula.Parser.parseSubstitution text })
 
                 _ ->
                     tableau
@@ -525,17 +523,18 @@ extendWithRule extWithType z =
 
 
 extendUnary : Tableau.UnaryExtType -> Zipper -> Zipper
-extendUnary extType z = 
+extendUnary extType z =
     extendWithRule (Unary extType) z
 
 
 extendUnaryWithSubst : Tableau.UnaryWithSubstExtType -> Zipper -> Zipper
 extendUnaryWithSubst extType z =
-    extendWithRule (\t -> (UnaryWithSubst extType) t defSubstitution) z
+    extendWithRule (\t -> UnaryWithSubst extType t defSubstitution) z
+
 
 extendBinary : Tableau.BinaryExtType -> Zipper -> Zipper
-extendBinary extType z = 
-    extendWithRule (\t -> (Binary extType) t (Tableau defNode Open)) z
+extendBinary extType z =
+    extendWithRule (\t -> Binary extType t (Tableau defNode Open)) z
 
 
 delete : Zipper -> Zipper
@@ -561,7 +560,6 @@ deleteMe (( t, fatherbs ) as zip) =
                 else
                     currentT
         in
-        
         modifyNode
             (\tableau ->
                 case tableau.ext of
@@ -581,14 +579,14 @@ deleteMe (( t, fatherbs ) as zip) =
 
     else
         let
-            tryToKeepRightSubT currentT leftT rightT = 
+            tryToKeepRightSubT currentT leftT rightT =
                 if leftT.node.value == "" then
                     Tableau currentT.node (Unary Alpha rightT)
 
                 else
                     currentT
 
-            tryToKeepLeftSubT currentT leftT rightT = 
+            tryToKeepLeftSubT currentT leftT rightT =
                 if rightT.node.value == "" then
                     Tableau currentT.node (Unary Alpha leftT)
 
@@ -602,7 +600,6 @@ deleteMe (( t, fatherbs ) as zip) =
                     )
                     (zip |> up)
         in
-        
         case fatherbs of
             (BinaryLeftCrumb _ farherNode rt) :: bss ->
                 chooseSubTableau tryToKeepRightSubT
@@ -763,8 +760,8 @@ changeToUnaryRuleWithSubst extType z =
 
 
 changeToBinaryRule : BinaryExtType -> Zipper -> Zipper
-changeToBinaryRule extType z = 
-    changeRule (\t1 t2 -> Just ((Binary extType) t1 t2)) z
+changeToBinaryRule extType z =
+    changeRule (\t1 t2 -> Just (Binary extType t1 t2)) z
 
 
 prettify : Tableau -> Tableau
