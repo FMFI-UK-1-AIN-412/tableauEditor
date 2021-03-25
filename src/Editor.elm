@@ -616,14 +616,9 @@ viewControls config (( t, _ ) as z) =
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
                     , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" config z
-                    , div [ class "onclick-menu" ]
-                        [ button [ class "onclick-menu del", tabindex 0 ] [
-                            text "Delete ▾",
-                            ul [ class "onclick-menu-content" ]
-                            [ li [] [ deleteMeButton ]
-                            , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
-                            ]
-                        ]
+                    , menu "del" "Delete ▾" <|
+                        [ li [] [ deleteMeButton ]
+                        , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                         ]
                     , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
                     , switchBetasButton
