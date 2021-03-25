@@ -6,8 +6,8 @@ type alias Config =
     Dict String Bool
 
     
-defConfig : Config
-defConfig = 
+defaultConfig : Config
+defaultConfig = 
     let
         rules = ["α","β","γ","δ","Reflexivity","Leibnitz", "MP","MT","Cut","HS","DS","NCS","ESTT","ESTF","ESFT","ESFF","ECDT","ECDF","γ*","δ*"]
     in

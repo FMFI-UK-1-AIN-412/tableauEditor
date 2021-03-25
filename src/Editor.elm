@@ -85,7 +85,7 @@ init mts =
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
-        , config = Config.defConfig
+        , config = Config.defaultConfig
         }
     , Cmd.none
     )
@@ -416,23 +416,28 @@ ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
             menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ (binaryExtTypeToString extType))
 
     in
-        div [ class  "onclick-menu" ]
-            [button [class <| "onclick-menu " ++ cls, tabindex 0] [
-                    text label,
-                 ul [ class "onclick-menu-content"] <|
-                    [ unaryItem Alpha
-                    , binaryItem Beta
-                    ]
-                    ++ List.map unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
-                    ++ List.map unaryItem [Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
-                    ++ List.map binaryItem [ Cut, ECDF, ECDT ]
+        menu cls label <|
+            [ unaryItem Alpha
+            , binaryItem Beta
             ]
-            ]
+            ++ List.map unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
+            ++ List.map unaryItem [Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+            ++ List.map binaryItem [ Cut, ECDF, ECDT ]
+
 
 
 menuItem : Msg -> String -> Html Msg
 menuItem msg str = 
     li [] [ button [onClick msg] [ text str ] ]
+
+
+menu cls label content= 
+    div [ class  "onclick-menu" ]
+            [button [class <| "onclick-menu " ++ cls, tabindex 0] [
+                    text label,
+                 ul [ class "onclick-menu-content"] <| content
+            ]
+            ]
 
 
 autoSizeInput : String -> List (Attribute Msg) -> Html Msg

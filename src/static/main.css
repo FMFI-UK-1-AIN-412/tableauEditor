@@ -163,13 +163,6 @@ body {
 	display: inline-block;
 }
 
-/* .onclick-menu.del:before {
-	content: "Delete ▾";
-} */
-
-/* .onclick-menu.change:before {
-	content: "▾";
-} */
 .onclick-menu.change .onclick-menu-content {
 	left: auto;
 	right: -2em;
