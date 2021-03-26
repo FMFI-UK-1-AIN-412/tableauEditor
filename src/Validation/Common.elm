@@ -484,16 +484,9 @@ removeNQuants n f =
 
 forbiddenVarsErrStr lst =
     "The variable"
-        ++ (if List.length lst > 1 then
-                "s "
-
-            else
-                " "
-           )
-        ++ "'"
+        ++ pluralFromList " '" "s '" lst
         ++ String.join "," lst
-        ++ "'"
-        ++ " can't be substituted for"
+        ++ "' can't be substituted for"
 
 
 checkSubstitutedVars : List Term -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -545,47 +538,25 @@ unaryWithSubstCheck ruleName refF newF subst z =
 
 
 notVarsErrStr lst =
-    "The function"
-        ++ (if List.length lst > 1 then
-                "s '"
-
-            else
-                " '"
-           )
-        ++ String.join "," (List.map Term.toString lst)
-        ++ (if List.length lst > 1 then
-                "' are"
-
-            else
-                "' is"
-           )
-        ++ " supposed to be "
-        ++ (if List.length lst > 1 then
-                "variables"
-
-            else
-                "a variable"
-           )
+    "The term"
+        ++ pluralFromList " '" "s '" lst
+        ++ String.join "', '" (List.map Term.toString lst)
+        ++ "' must be "
+        ++ pluralFromList "a variable" "variables" lst
 
 
 similarAboveErrStr lst =
     "The variable"
-        ++ (if List.length lst > 1 then
-                "s "
-
-            else
-                " "
-           )
-        ++ "'"
+        ++ pluralFromList " '" "s '" lst
         ++ String.join "," lst
-        ++ "'"
-        ++ (if List.length lst > 1 then
-                " were"
-
-            else
-                " was"
-           )
+        ++ pluralFromList "' was" "' were" lst
         ++ " located above as free"
+
+
+pluralFromList singular plural lst =
+    case lst of
+        _ :: _ :: _ -> plural
+        _ -> singular
 
 
 isFunction : Term -> Bool
@@ -614,13 +585,18 @@ checkNewVariables z =
         [] ->
             case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
                 [] ->
-                    Ok z
+                    areDisctint termsToString z
 
                 vars ->
                     Err (semanticsProblem z (similarAboveErrStr vars))
 
         functions ->
             Err (semanticsProblem z (notVarsErrStr functions))
+
+
+areDisctint vars z = 
+    List.length vars == Set.size (Set.fromList vars)
+    |> resultFromBool z (semanticsProblem z "Substituted variables must be distinct")
 
 
 isSimilarAbove : String -> Zipper.Zipper -> Bool
