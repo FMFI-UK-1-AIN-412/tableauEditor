@@ -398,32 +398,28 @@ viewNodeInputs additional config z =
 
 ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
     let
-        item rule itemToShow =
-            if Dict.get rule config |> Maybe.withDefault False then
-                itemToShow
+        item ruleTypeStr msg =
+            if Dict.get ruleTypeStr config |> Maybe.withDefault False then
+                Just <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr)
 
             else
-                text ""
+                Nothing
 
         unaryItem extType =
-            item (unaryExtTypeToString extType) <|
-                menuItem (unaryMsg extType z) (labelPrefix ++ " " ++ unaryExtTypeToString extType)
+            item (unaryExtTypeToString extType) (unaryMsg extType z) 
 
         unaryWithSubstItem extType =
-            item (unaryWithSubstExtTypeToString extType) <|
-                menuItem (unaryWithSubstMsg extType z) (labelPrefix ++ " " ++ unaryWithSubstExtTypeToString extType)
+            item (unaryWithSubstExtTypeToString extType) (unaryWithSubstMsg extType z) 
 
         binaryItem extType =
-            item (binaryExtTypeToString extType) <|
-                menuItem (binaryMsg extType z) (labelPrefix ++ " " ++ binaryExtTypeToString extType)
+            item (binaryExtTypeToString extType) (binaryMsg extType z) 
     in
     menu cls label <|
-        [ unaryItem Alpha
-        , binaryItem Beta
-        ]
-            ++ List.map unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
-            ++ List.map unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
-            ++ List.map binaryItem [ Cut, ECDF, ECDT ]
+        List.filterMap unaryItem [Alpha]
+        ++ List.filterMap binaryItem [Beta]
+        ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
+        ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+        ++ List.filterMap binaryItem [ Cut, ECDF, ECDT ]
 
 
 menuItem : Msg -> String -> Html Msg
@@ -523,7 +519,7 @@ viewUnary config z =
 
 viewUnaryWithSubst : Config -> Zipper.Zipper -> Html Msg
 viewUnaryWithSubst config z =
-    div [ class "alpha" ] [ viewSubsNode config (Zipper.down z) ]
+    div [ class "alpha", class "withSubstitution" ] [ viewSubsNode config (Zipper.down z) ]
 
 
 viewBinary : Config -> Zipper.Zipper -> Html Msg
@@ -617,7 +613,7 @@ viewControls config (( t, _ ) as z) =
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
                     , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" config z
-                    , menu "del" "Delete\u{00A0}▾" <|
+                    , menu "del" "Delete ▾" <|
                         [ li [] [ deleteMeButton ]
                         , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                         ]
