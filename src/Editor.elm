@@ -381,8 +381,7 @@ viewNodeInputs additional config z =
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
-            :: viewRuleType z
-            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary "▾" "Change to" "change" config z
+            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary (viewRuleType z) "Change to" "change" config z
             :: text "["
             :: autoSizeInput
                 (Tableau.refsToString (Zipper.zNode z).references)
@@ -399,27 +398,24 @@ viewNodeInputs additional config z =
 ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
     let
         item ruleTypeStr msg =
-            if Dict.get ruleTypeStr config |> Maybe.withDefault False then
-                Just <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr)
-
-            else
-                Nothing
+            Dict.get ruleTypeStr config
+                |> Maybe.map (always <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr))
 
         unaryItem extType =
-            item (unaryExtTypeToString extType) (unaryMsg extType z) 
+            item (unaryExtTypeToString extType) (unaryMsg extType z)
 
         unaryWithSubstItem extType =
-            item (unaryWithSubstExtTypeToString extType) (unaryWithSubstMsg extType z) 
+            item (unaryWithSubstExtTypeToString extType) (unaryWithSubstMsg extType z)
 
         binaryItem extType =
-            item (binaryExtTypeToString extType) (binaryMsg extType z) 
+            item (binaryExtTypeToString extType) (binaryMsg extType z)
     in
     menu cls label <|
-        List.filterMap unaryItem [Alpha]
-        ++ List.filterMap binaryItem [Beta]
-        ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
-        ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
-        ++ List.filterMap binaryItem [ Cut, ECDF, ECDT ]
+        List.filterMap unaryItem [ Alpha ]
+            ++ List.filterMap binaryItem [ Beta ]
+            ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
+            ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+            ++ List.filterMap binaryItem [ Cut, ECDF, ECDT ]
 
 
 menuItem : Msg -> String -> Html Msg
@@ -430,7 +426,7 @@ menuItem msg str =
 menu cls label content =
     div [ class "onclick-menu" ]
         [ button [ class <| "onclick-menu " ++ cls, tabindex 0 ]
-            [ text label
+            [ span [] [ label, text " ▾" ]
             , ul [ class "onclick-menu-content" ] <| content
             ]
         ]
@@ -612,8 +608,8 @@ viewControls config (( t, _ ) as z) =
                 in
                 if t.node.gui.controlsShown then
                     [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
-                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary "Add ▾" "Add" "add" config z
-                    , menu "del" "Delete ▾" <|
+                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary (text "Add") "Add" "add" config z
+                    , menu "del" (text "Delete") <|
                         [ li [] [ deleteMeButton ]
                         , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                         ]
