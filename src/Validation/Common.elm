@@ -446,7 +446,7 @@ countForAllQuantifiers : Int -> Formula -> Int
 countForAllQuantifiers count f =
     case f of
         Formula.ForAll x subf ->
-            countExistQuantifiers (count + 1) subf
+            countForAllQuantifiers (count + 1) subf
 
         _ ->
             count
