@@ -585,7 +585,7 @@ checkNewVariables z =
         [] ->
             case List.filter (\var -> isSimilarAbove var (z |> Zipper.up)) termsToString of
                 [] ->
-                    areDisctint termsToString z
+                    areDistinct termsToString z
 
                 vars ->
                     Err (semanticsProblem z (similarAboveErrStr vars))
@@ -594,7 +594,7 @@ checkNewVariables z =
             Err (semanticsProblem z (notVarsErrStr functions))
 
 
-areDisctint vars z = 
+areDistinct vars z = 
     List.length vars == Set.size (Set.fromList vars)
     |> resultFromBool z (semanticsProblem z "Substituted variables must be distinct")
 

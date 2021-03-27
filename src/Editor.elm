@@ -424,11 +424,9 @@ menuItem msg str =
 
 
 menu cls label content =
-    div [ class "onclick-menu" ]
-        [ button [ class <| "onclick-menu " ++ cls, tabindex 0 ]
-            [ span [] [ label, text " ▾" ]
-            , ul [ class "onclick-menu-content" ] <| content
-            ]
+    div [ class <| "onclick-menu " ++ cls, tabindex 0 ]
+        [ span [] [label, text " ▾"]
+        , ul [ class "onclick-menu-content" ] content
         ]
 
 
