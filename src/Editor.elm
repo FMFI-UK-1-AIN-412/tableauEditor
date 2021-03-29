@@ -84,7 +84,7 @@ init mts =
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
-        , config = Config.defaultConfig
+        , config = Config.default
         }
     , Cmd.none
     )
