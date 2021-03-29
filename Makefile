@@ -32,7 +32,7 @@ $(ELM_OUT): elm.json $(wildcard $(SRC_DIR)/*.elm) $(wildcard $(SRC_DIR)/*/*.elm)
 	elm make $(ELM_MAIN) --output=$@
 
 $(OUT_DIR)/%: $(SRC_DIR)/%
-	mkdir -p $(OUT_DIR)
+	mkdir -p $(dir $@)
 	cp -av $(SRC_DIR)/$* $@
 
 
