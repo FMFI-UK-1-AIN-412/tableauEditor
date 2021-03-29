@@ -1,7 +1,7 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
 import Json.Encode exposing (..)
-import Tableau exposing (Extension(..), GUI, Node, Tableau)
+import Tableau exposing (..)
 
 
 jsonRef : { a | str : String } -> Value
@@ -23,11 +23,10 @@ jsonNodeList n =
     [ ( "node", jsonNode n ) ]
 
 
-jsonSubstitution : { a | var : String, term : String } -> Value
-jsonSubstitution { term, var } =
+jsonSubstitution : Tableau.Substitution -> Value
+jsonSubstitution { str, parsedSubst } =
     object
-        [ ( "term", string term )
-        , ( "var", string var )
+        [ ( "str", string str )
         ]
 
 
@@ -49,6 +48,13 @@ encodeUnaryRuleWithSubst tableau extType subTableau subst =
         ++ encodeSubstitution subst
 
 
+encodeBinaryRule : Tableau -> String -> Tableau -> Tableau -> List ( String, Value )
+encodeBinaryRule tableau extType lt rt =
+    [ ( "type", string extType ) ]
+        ++ jsonNodeList tableau.node
+        ++ [ ( "leftChild", jsonTableau lt ), ( "rightChild", jsonTableau rt ) ]
+
+
 jsonTblList : Tableau -> List ( String, Value )
 jsonTblList tableau =
     case tableau.ext of
@@ -64,25 +70,14 @@ jsonTblList tableau =
                      )
                    ]
 
-        Alpha t ->
-            encodeUnaryRule tableau "alpha" t
+        Unary extType t ->
+            encodeUnaryRule tableau (unaryExtTypeJsonStr extType) t
 
-        Beta lt rt ->
-            [ ( "type", string "beta" ) ]
-                ++ jsonNodeList tableau.node
-                ++ [ ( "leftChild", jsonTableau lt ), ( "rightChild", jsonTableau rt ) ]
+        UnaryWithSubst extType t s ->
+            encodeUnaryRuleWithSubst tableau (unaryWithSubstExtTypeJsonStr extType) t s
 
-        Gamma t s ->
-            encodeUnaryRuleWithSubst tableau "gamma" t s
-
-        Delta t s ->
-            encodeUnaryRuleWithSubst tableau "delta" t s
-
-        Refl t ->
-            encodeUnaryRule tableau "refl" t
-
-        Leibnitz t ->
-            encodeUnaryRule tableau "leibnitz" t
+        Binary extType lt rt ->
+            encodeBinaryRule tableau (binaryExtTypeJsonStr extType) lt rt
 
 
 jsonTableau : Tableau -> Value

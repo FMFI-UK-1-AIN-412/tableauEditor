@@ -45,8 +45,8 @@ node =
 substitution : Decoder Tableau.Substitution
 substitution =
     map2 Tableau.Substitution
-        (field "term" string)
-        (field "var" string)
+        (field "str" string)
+        (map Formula.Parser.parseSubstitution (field "str" string))
 
 
 open : Decoder Tableau.Tableau
@@ -64,52 +64,27 @@ closed =
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
-unaryRule : (Tableau.Tableau -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRule : Tableau.UnaryExtType -> Decoder Tableau.Tableau
 unaryRule extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map extType (field "child" (Json.Decode.lazy (\_ -> tableau))))
+        (map (Tableau.Unary extType) (field "child" (Json.Decode.lazy (\_ -> tableau))))
 
 
-unaryRuleWithSubst : (Tableau.Tableau -> Tableau.Substitution -> Tableau.Extension) -> Decoder Tableau.Tableau
+unaryRuleWithSubst : Tableau.UnaryWithSubstExtType -> Decoder Tableau.Tableau
 unaryRuleWithSubst extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map2 extType (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
+        (map2 (Tableau.UnaryWithSubst extType) (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
-alpha : Decoder Tableau.Tableau
-alpha =
-    unaryRule Tableau.Alpha
-
-
-beta : Decoder Tableau.Tableau
-beta =
+binaryRule : Tableau.BinaryExtType -> Decoder Tableau.Tableau
+binaryRule extType =
     map2 Tableau.Tableau
         (field "node" node)
-        (map2 Tableau.Beta (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
-
-
-delta : Decoder Tableau.Tableau
-delta =
-    unaryRuleWithSubst Tableau.Delta
-
-
-gamma : Decoder Tableau.Tableau
-gamma =
-    unaryRuleWithSubst Tableau.Gamma
-
-
-refl : Decoder Tableau.Tableau
-refl =
-    unaryRule Tableau.Refl
-
-
-leibnitz : Decoder Tableau.Tableau
-leibnitz =
-    unaryRule Tableau.Leibnitz
+        (map2 (Tableau.Binary extType) (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
 
 
 tblTypeDecoder : String -> Decoder Tableau.Tableau
@@ -122,22 +97,64 @@ tblTypeDecoder typ =
             closed
 
         "alpha" ->
-            alpha
+            unaryRule Tableau.Alpha
 
         "beta" ->
-            beta
+            binaryRule Tableau.Beta
 
         "gamma" ->
-            gamma
+            unaryRuleWithSubst Tableau.Gamma
 
         "delta" ->
-            delta
+            unaryRuleWithSubst Tableau.Delta
 
         "refl" ->
-            refl
+            unaryRule Tableau.Refl
 
         "leibnitz" ->
-            leibnitz
+            unaryRule Tableau.Leibnitz
+
+        "mp" ->
+            unaryRule Tableau.MP
+
+        "mt" ->
+            unaryRule Tableau.MT
+
+        "cut" ->
+            binaryRule Tableau.Cut
+
+        "hs" ->
+            unaryRule Tableau.HS
+
+        "ds" ->
+            unaryRule Tableau.DS
+
+        "ncs" ->
+            unaryRule Tableau.NCS
+
+        "ecdf" ->
+            binaryRule Tableau.ECDF
+
+        "ecdt" ->
+            binaryRule Tableau.ECDT
+
+        "esff" ->
+            unaryRule Tableau.ESFF
+
+        "esft" ->
+            unaryRule Tableau.ESFT
+
+        "estf" ->
+            unaryRule Tableau.ESTF
+
+        "estt" ->
+            unaryRule Tableau.ESTT
+
+        "gammaStar" ->
+            unaryRuleWithSubst Tableau.GammaStar
+
+        "deltaStar" ->
+            unaryRuleWithSubst Tableau.DeltaStar
 
         _ ->
             fail ("'" ++ typ ++ "' is not a correct tableau node type")

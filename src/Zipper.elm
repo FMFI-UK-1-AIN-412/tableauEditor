@@ -13,13 +13,10 @@ import Tableau exposing (..)
 
 
 type Crumb
-    = AlphaCrumb Node
-    | BetaLeftCrumb Node Tableau
-    | BetaRightCrumb Node Tableau
-    | GammaCrumb Node Tableau.Substitution
-    | DeltaCrumb Node Tableau.Substitution
-    | ReflCrumb Node
-    | LeibnitzCrumb Node
+    = UnaryCrumb UnaryExtType Node
+    | UnaryCrumbWithSubst UnaryWithSubstExtType Node Tableau.Substitution
+    | BinaryLeftCrumb BinaryExtType Node Tableau
+    | BinaryRightCrumb BinaryExtType Node Tableau
 
 
 type alias BreadCrumbs =
@@ -42,48 +39,27 @@ children z =
             z
     in
     case t.ext of
-        Open ->
-            []
-
-        Closed _ _ ->
-            []
-
-        Alpha _ ->
+        Unary _ _ ->
             [ down z ]
 
-        Beta _ _ ->
+        UnaryWithSubst _ _ _ ->
+            [ down z ]
+
+        Binary _ _ _ ->
             [ left z, right z ]
 
-        Gamma _ _ ->
-            [ down z ]
-
-        Delta _ _ ->
-            [ down z ]
-
-        Refl _ ->
-            [ down z ]
-
-        Leibnitz _ ->
-            [ down z ]
+        _ ->
+            []
 
 
 down : Zipper -> Zipper
 down ( t, bs ) =
     case t.ext of
-        Alpha subt ->
-            ( subt, AlphaCrumb t.node :: bs )
+        Unary extType subT ->
+            ( subT, UnaryCrumb extType t.node :: bs )
 
-        Gamma subtableau substitution ->
-            ( subtableau, GammaCrumb t.node substitution :: bs )
-
-        Delta subtableau substitution ->
-            ( subtableau, DeltaCrumb t.node substitution :: bs )
-
-        Refl subt ->
-            ( subt, ReflCrumb t.node :: bs )
-
-        Leibnitz subt ->
-            ( subt, LeibnitzCrumb t.node :: bs )
+        UnaryWithSubst extType subT subst ->
+            ( subT, UnaryCrumbWithSubst extType t.node subst :: bs )
 
         _ ->
             ( t, bs )
@@ -92,8 +68,8 @@ down ( t, bs ) =
 right : Zipper -> Zipper
 right ( t, bs ) =
     case t.ext of
-        Beta tl tr ->
-            ( tr, BetaRightCrumb t.node tl :: bs )
+        Binary extType lt rt ->
+            ( rt, BinaryRightCrumb extType t.node lt :: bs )
 
         _ ->
             ( t, bs )
@@ -106,8 +82,8 @@ right ( t, bs ) =
 left : Zipper -> Zipper
 left ( t, bs ) =
     case t.ext of
-        Beta tl tr ->
-            ( tl, BetaLeftCrumb t.node tr :: bs )
+        Binary extType lt rt ->
+            ( lt, BinaryLeftCrumb extType t.node rt :: bs )
 
         _ ->
             ( t, bs )
@@ -116,26 +92,17 @@ left ( t, bs ) =
 up : Zipper -> Zipper
 up ( t, bs ) =
     case bs of
-        (AlphaCrumb n) :: bss ->
-            ( Tableau n (Alpha t), bss )
+        (UnaryCrumb extType n) :: bss ->
+            ( Tableau n (Unary extType t), bss )
 
-        (BetaLeftCrumb n tr) :: bss ->
-            ( Tableau n (Beta t tr), bss )
+        (UnaryCrumbWithSubst extType n subst) :: bss ->
+            ( Tableau n (UnaryWithSubst extType t subst), bss )
 
-        (BetaRightCrumb n tl) :: bss ->
-            ( Tableau n (Beta tl t), bss )
+        (BinaryLeftCrumb extType n rt) :: bss ->
+            ( Tableau n (Binary extType t rt), bss )
 
-        (GammaCrumb n subst) :: bss ->
-            ( Tableau n (Gamma t subst), bss )
-
-        (DeltaCrumb n subst) :: bss ->
-            ( Tableau n (Delta t subst), bss )
-
-        (ReflCrumb n) :: bss ->
-            ( Tableau n (Refl t), bss )
-
-        (LeibnitzCrumb n) :: bss ->
-            ( Tableau n (Leibnitz t), bss )
+        (BinaryRightCrumb extType n lt) :: bss ->
+            ( Tableau n (Binary extType lt t), bss )
 
         [] ->
             ( t, bs )
@@ -183,11 +150,8 @@ zNode z =
 zSubstitution : Zipper -> Maybe Tableau.Substitution
 zSubstitution (( t, bs ) as z) =
     case t.ext of
-        Gamma node subs ->
-            Just subs
-
-        Delta node subs ->
-            Just subs
+        UnaryWithSubst _ _ subst ->
+            Just subst
 
         _ ->
             Nothing
@@ -206,22 +170,10 @@ zWalkPost f (( t, bs ) as z) =
         Closed _ _ ->
             f z
 
-        Alpha _ ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Beta tl tr ->
+        Binary _ _ _ ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
-        Gamma _ subst ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Delta _ subst ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Refl _ ->
-            z |> down |> zWalkPost f |> up |> f
-
-        Leibnitz _ ->
+        _ ->
             z |> down |> zWalkPost f |> up |> f
 
 
@@ -286,6 +238,30 @@ renumber tableau =
 
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 tableau num =
+    let
+        renumberUnary extWithType subT =
+            let
+                ( new_tableau, num1 ) =
+                    renumber2 subT (num + 1)
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (extWithType new_tableau), num1 )
+
+        renumberBinary extWithType lt rt =
+            let
+                ( new_left, num1 ) =
+                    renumber2 lt (num + 1)
+
+                ( new_right, num2 ) =
+                    renumber2 rt num1
+
+                node =
+                    tableau.node
+            in
+            ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )
+    in
     case tableau.ext of
         Open ->
             let
@@ -297,69 +273,6 @@ renumber2 tableau num =
             in
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-        Alpha t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Alpha new_tableau), num1 )
-
-        Beta lt rt ->
-            let
-                ( new_left, num1 ) =
-                    renumber2 lt (num + 1)
-
-                ( new_right, num2 ) =
-                    renumber2 rt num1
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Beta new_left new_right), num2 )
-
-        Gamma t subst ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Gamma new_tableau subst), num1 )
-
-        Delta t subst ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Delta new_tableau subst), num1 )
-
-        Refl t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Refl new_tableau), num1 )
-
-        Leibnitz t ->
-            let
-                ( new_tableau, num1 ) =
-                    renumber2 t (num + 1)
-
-                node =
-                    tableau.node
-            in
-            ( Tableau { node | id = num + 1 } (Leibnitz new_tableau), num1 )
-
         Closed r1 r2 ->
             let
                 node =
@@ -369,6 +282,15 @@ renumber2 tableau num =
                     tableau.ext
             in
             ( Tableau { node | id = num + 1 } ext, num + 1 )
+
+        Unary extType subT ->
+            renumberUnary (Unary extType) subT
+
+        UnaryWithSubst extType subT subst ->
+            renumberUnary (\t -> UnaryWithSubst extType t subst) subT
+
+        Binary extType lt rt ->
+            renumberBinary (Binary extType) lt rt
 
 
 modifyRef : List Ref -> Zipper -> Zipper
@@ -455,39 +377,29 @@ renumberJustInReferences f z =
 
 renumberJusts : Tableau -> (Ref -> Int -> Ref) -> Int -> Tableau
 renumberJusts tableau f lengthOfPathFromFather =
-    case tableau.ext of
-        Alpha t ->
+    let
+        renumberJustsUnary extWithType subT =
             Tableau
                 tableau.node
-                (Alpha (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+                (extWithType (renumberJusts (renumberJust subT f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
 
-        Beta lt rt ->
+        renumberJustsBinary extWithType lt rt =
             Tableau
                 tableau.node
-                (Beta
+                (extWithType
                     (renumberJusts (renumberJust lt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                     (renumberJusts (renumberJust rt f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1))
                 )
+    in
+    case tableau.ext of
+        Unary extType subT ->
+            renumberJustsUnary (Unary extType) subT
 
-        Gamma t s ->
-            Tableau
-                tableau.node
-                (Gamma (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
+        UnaryWithSubst extType subT subst ->
+            renumberJustsUnary (\t -> UnaryWithSubst extType t subst) subT
 
-        Delta t s ->
-            Tableau
-                tableau.node
-                (Delta (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)) s)
-
-        Refl t ->
-            Tableau
-                tableau.node
-                (Refl (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
-
-        Leibnitz t ->
-            Tableau
-                tableau.node
-                (Leibnitz (renumberJusts (renumberJust t f (lengthOfPathFromFather + 1)) f (lengthOfPathFromFather + 1)))
+        Binary extType lt rt ->
+            renumberJustsBinary (Binary extType) lt rt
 
         Open ->
             tableau
@@ -587,48 +499,42 @@ setRefs new z =
     z |> modifyRef (List.map (getRef z) (Tableau.strRefsToList new))
 
 
+setSubstitution : String -> Zipper -> Zipper
+setSubstitution text z =
+    modifyNode
+        (\tableau ->
+            case tableau.ext of
+                UnaryWithSubst extType t subst ->
+                    Tableau tableau.node (UnaryWithSubst extType t { subst | str = text, parsedSubst = Formula.Parser.parseSubstitution text })
+
+                _ ->
+                    tableau
+        )
+        (z |> up)
+
+
 extendWithRule : (Tableau -> Extension) -> Zipper -> Zipper
-extendWithRule extType z =
+extendWithRule extWithType z =
     z
         |> modifyNode
             (\tableau ->
-                Tableau (closeControls tableau.node) (extType (Tableau defNode tableau.ext))
+                Tableau (closeControls tableau.node) (extWithType (Tableau defNode tableau.ext))
             )
 
 
-extendRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
-extendRuleWithSubst extType z =
-    extendWithRule (\t -> extType t defSubstitution) z
+extendUnary : Tableau.UnaryExtType -> Zipper -> Zipper
+extendUnary extType z =
+    extendWithRule (Unary extType) z
 
 
-extendAlpha : Zipper -> Zipper
-extendAlpha z =
-    extendWithRule Tableau.Alpha z
+extendUnaryWithSubst : Tableau.UnaryWithSubstExtType -> Zipper -> Zipper
+extendUnaryWithSubst extType z =
+    extendWithRule (\t -> UnaryWithSubst extType t defSubstitution) z
 
 
-extendBeta : Zipper -> Zipper
-extendBeta z =
-    extendWithRule (\t -> Beta t (Tableau defNode Open)) z
-
-
-extendGamma : Zipper -> Zipper
-extendGamma z =
-    extendRuleWithSubst Tableau.Gamma z
-
-
-extendDelta : Zipper -> Zipper
-extendDelta z =
-    extendRuleWithSubst Tableau.Delta z
-
-
-extendRefl : Zipper -> Zipper
-extendRefl z =
-    extendWithRule Tableau.Refl z
-
-
-extendLeibnitz : Zipper -> Zipper
-extendLeibnitz z =
-    extendWithRule Tableau.Leibnitz z
+extendBinary : Tableau.BinaryExtType -> Zipper -> Zipper
+extendBinary extType z =
+    extendWithRule (\t -> Binary extType t (Tableau defNode Open)) z
 
 
 delete : Zipper -> Zipper
@@ -643,6 +549,17 @@ delete z =
 deleteMe : Zipper -> Zipper
 deleteMe (( t, fatherbs ) as zip) =
     if (zip |> up) == zip then
+        let
+            tableauToKeep currentT leftT rightT =
+                if leftT.node.value == "" then
+                    rightT
+
+                else if rightT.node.value == "" then
+                    leftT
+
+                else
+                    currentT
+        in
         modifyNode
             (\tableau ->
                 case tableau.ext of
@@ -652,16 +569,8 @@ deleteMe (( t, fatherbs ) as zip) =
                     Closed r1 r2 ->
                         Tableau defNode Open
 
-                    Beta lt rt ->
-                        -- mozem zmazat iba ked jedna z biet sa moze stat alfou
-                        if lt.node.value == "" then
-                            rt
-
-                        else if rt.node.value == "" then
-                            lt
-
-                        else
-                            tableau
+                    Binary _ lt rt ->
+                        tableauToKeep tableau lt rt
 
                     _ ->
                         Tableau.leftSubtree tableau
@@ -669,38 +578,34 @@ deleteMe (( t, fatherbs ) as zip) =
             zip
 
     else
+        let
+            tryToKeepRightSubT currentT leftT rightT =
+                if leftT.node.value == "" then
+                    Tableau currentT.node (Unary Alpha rightT)
+
+                else
+                    currentT
+
+            tryToKeepLeftSubT currentT leftT rightT =
+                if rightT.node.value == "" then
+                    Tableau currentT.node (Unary Alpha leftT)
+
+                else
+                    currentT
+
+            chooseSubTableau childToKeep =
+                modifyNode
+                    (\tableau ->
+                        childToKeep tableau (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau)
+                    )
+                    (zip |> up)
+        in
         case fatherbs of
-            (BetaLeftCrumb fatherNode tr) :: bss ->
-                modifyNode
-                    (\tableau ->
-                        case tableau.ext of
-                            Beta lt rt ->
-                                if lt.node.value == "" then
-                                    Tableau tableau.node (Alpha rt)
+            (BinaryLeftCrumb _ farherNode rt) :: bss ->
+                chooseSubTableau tryToKeepRightSubT
 
-                                else
-                                    tableau
-
-                            _ ->
-                                tableau
-                    )
-                    (zip |> up)
-
-            (BetaRightCrumb fatherNode tl) :: bss ->
-                modifyNode
-                    (\tableau ->
-                        case tableau.ext of
-                            Beta lt rt ->
-                                if rt.node.value == "" then
-                                    Tableau tableau.node (Alpha lt)
-
-                                else
-                                    tableau
-
-                            _ ->
-                                tableau
-                    )
-                    (zip |> up)
+            (BinaryRightCrumb _ farherNode lt) :: bss ->
+                chooseSubTableau tryToKeepLeftSubT
 
             _ ->
                 modifyNode
@@ -713,7 +618,7 @@ deleteMe (( t, fatherbs ) as zip) =
                             Closed r1 r2 ->
                                 Tableau tableau.node Open
 
-                            Beta _ _ ->
+                            Binary _ _ _ ->
                                 tableau
 
                             _ ->
@@ -765,47 +670,13 @@ makeOpen z =
         z
 
 
-changeVariable : String -> Zipper -> Zipper
-changeVariable newVariable z =
-    modifyNode
-        (\tableau ->
-            case tableau.ext of
-                Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | var = newVariable })
-
-                Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | var = newVariable })
-
-                _ ->
-                    tableau
-        )
-        (z |> up)
-
-
-changeTerm : String -> Zipper -> Zipper
-changeTerm newTerm z =
-    modifyNode
-        (\tableau ->
-            case tableau.ext of
-                Gamma t subs ->
-                    Tableau tableau.node (Gamma t { subs | term = newTerm })
-
-                Delta t subs ->
-                    Tableau tableau.node (Delta t { subs | term = newTerm })
-
-                _ ->
-                    tableau
-        )
-        (z |> up)
-
-
 switchBetas : Zipper -> Zipper
 switchBetas z =
     modifyNode
         (\tableau ->
             case tableau.ext of
-                Beta lt rt ->
-                    Tableau tableau.node (Beta rt lt)
+                Binary extType lt rt ->
+                    Tableau tableau.node (Binary extType rt lt)
 
                 _ ->
                     tableau
@@ -836,7 +707,7 @@ changeButtonAppearance z =
 
 
 changeRule : (Tableau -> Tableau -> Maybe Extension) -> Zipper -> Zipper
-changeRule extType z =
+changeRule extWithType z =
     if (z |> up) == z then
         z
 
@@ -852,7 +723,7 @@ changeRule extType z =
                         tableau
 
                     _ ->
-                        case extType (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau) of
+                        case extWithType (Tableau.leftSubtree tableau) (Tableau.rightSubtree tableau) of
                             Nothing ->
                                 tableau
 
@@ -862,15 +733,15 @@ changeRule extType z =
             (z |> up)
 
 
-changeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
-changeToUnaryRule extType z =
+doChangeToUnaryRule : (Tableau -> Extension) -> Zipper -> Zipper
+doChangeToUnaryRule extWithType z =
     changeRule
         (\lt rt ->
             if Tableau.isEmpty lt then
-                Just (extType rt)
+                Just (extWithType rt)
 
             else if Tableau.isEmpty rt then
-                Just (extType lt)
+                Just (extWithType lt)
 
             else
                 Nothing
@@ -878,39 +749,19 @@ changeToUnaryRule extType z =
         z
 
 
-changeToUnaryRuleWithSubst : (Tableau -> Substitution -> Extension) -> Zipper -> Zipper
+changeToUnaryRule : UnaryExtType -> Zipper -> Zipper
+changeToUnaryRule extType z =
+    doChangeToUnaryRule (Unary extType) z
+
+
+changeToUnaryRuleWithSubst : UnaryWithSubstExtType -> Zipper -> Zipper
 changeToUnaryRuleWithSubst extType z =
-    changeToUnaryRule (\t -> extType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
+    doChangeToUnaryRule (\t -> UnaryWithSubst extType t (zSubstitution (z |> up) |> Maybe.withDefault defSubstitution)) z
 
 
-changeToAlpha : Zipper -> Zipper
-changeToAlpha z =
-    changeToUnaryRule Tableau.Alpha z
-
-
-changeToBeta : Zipper -> Zipper
-changeToBeta z =
-    changeRule (\t1 t2 -> Just (Tableau.Beta t1 t2)) z
-
-
-changeToGamma : Zipper -> Zipper
-changeToGamma z =
-    changeToUnaryRuleWithSubst Tableau.Gamma z
-
-
-changeToDelta : Zipper -> Zipper
-changeToDelta z =
-    changeToUnaryRuleWithSubst Tableau.Delta z
-
-
-changeToRefl : Zipper -> Zipper
-changeToRefl z =
-    changeToUnaryRule Tableau.Refl z
-
-
-changeToLeibnitz : Zipper -> Zipper
-changeToLeibnitz z =
-    changeToUnaryRule Tableau.Leibnitz z
+changeToBinaryRule : BinaryExtType -> Zipper -> Zipper
+changeToBinaryRule extType z =
+    changeRule (\t1 t2 -> Just (Binary extType t1 t2)) z
 
 
 prettify : Tableau -> Tableau
@@ -936,23 +787,14 @@ prettify t =
         |> modifyNode
             (\tableau ->
                 case tableau.ext of
-                    Alpha tbl ->
-                        Tableau (tableau.node |> prettifyNode) (Alpha (prettify tbl))
+                    Unary extType subT ->
+                        Tableau (tableau.node |> prettifyNode) (Unary extType (prettify subT))
 
-                    Beta tl tr ->
-                        Tableau (tableau.node |> prettifyNode) (Beta (prettify tl) (prettify tr))
+                    UnaryWithSubst extType subT subst ->
+                        Tableau (tableau.node |> prettifyNode) (UnaryWithSubst extType (prettify subT) subst)
 
-                    Gamma tbl subs ->
-                        Tableau (tableau.node |> prettifyNode) (Gamma (prettify tbl) subs)
-
-                    Delta tbl subs ->
-                        Tableau (tableau.node |> prettifyNode) (Delta (prettify tbl) subs)
-
-                    Refl tbl ->
-                        Tableau (tableau.node |> prettifyNode) (Refl (prettify tbl))
-
-                    Leibnitz tbl ->
-                        Tableau (tableau.node |> prettifyNode) (Leibnitz (prettify tbl))
+                    Binary extType lt rt ->
+                        Tableau (tableau.node |> prettifyNode) (Binary extType (prettify lt) (prettify rt))
 
                     Open ->
                         Tableau (tableau.node |> prettifyNode) Open

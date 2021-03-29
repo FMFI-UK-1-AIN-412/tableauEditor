@@ -1,11 +1,12 @@
 module Helpers.Helper exposing (..)
 
+import Config exposing (Config)
 import Formula exposing (Formula)
 import Formula.Signed exposing (Signed)
 import Result
-import Tableau
+import Tableau exposing (Extension(..), UnaryExtType(..))
 import Validation
-import Validation.Common exposing (Problem, ProblemType(..))
+import Validation.Common exposing (Problem, ProblemType(..), semanticsProblem)
 import Zipper
 
 
@@ -17,11 +18,11 @@ hasReference z =
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
     case Zipper.up z |> Zipper.zTableau |> .ext of
-        Tableau.Alpha _ ->
+        Unary Alpha _ ->
             List.length (Zipper.zNode z).references == 0
 
         _ ->
-            False
+            Zipper.up z == z
 
 
 {-| Like `Result.map2` but merges errors (which must be lists).
@@ -68,45 +69,30 @@ second =
     \a b -> Tuple.second ( a, b )
 
 
-isClosed : Zipper.Zipper -> Result (List Problem) Bool
-isClosed z =
+isClosed : Config -> Zipper.Zipper -> Result (List Problem) Bool
+isClosed config z =
     case (Zipper.zTableau z).ext of
-        Tableau.Alpha t ->
+        Unary _ _ ->
             merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.down z))
 
-        Tableau.Beta lt rt ->
+        UnaryWithSubst _ _ _ ->
+            merge2 second
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.down z))
+
+        Binary _ _ _ ->
             merge3 (\_ b c -> b && c)
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.left z))
-                (isClosed (Zipper.right z))
+                (Validation.isCorrectNode config z)
+                (isClosed config (Zipper.left z))
+                (isClosed config (Zipper.right z))
 
-        Tableau.Gamma t s ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
+        Open ->
+            Validation.isCorrectNode config z |> Result.map (always False)
 
-        Tableau.Delta t s ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
-
-        Tableau.Refl t ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
-
-        Tableau.Leibnitz t ->
-            merge2 second
-                (Validation.isCorrectNode z)
-                (isClosed (Zipper.down z))
-
-        Tableau.Open ->
-            Validation.isCorrectNode z |> Result.map (always False)
-
-        Tableau.Closed r1 r2 ->
-            Validation.isCorrectNode z |> Result.map (always True)
+        Closed r1 r2 ->
+            Validation.isCorrectNode config z |> Result.map (always True)
 
 
 assumptions : Zipper.Zipper -> List (Signed Formula)

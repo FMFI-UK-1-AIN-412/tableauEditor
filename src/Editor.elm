@@ -3,6 +3,8 @@ port module Editor exposing (main, top, topRenumbered)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
+import Config exposing (Config)
+import Dict exposing (Dict)
 import Errors
 import File exposing (File)
 import File.Download as Download
@@ -19,6 +21,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
+import Json.Encode exposing (set)
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
@@ -47,6 +50,7 @@ type alias Model =
     UndoList
         { tableau : Tableau
         , jsonImport : JsonImport
+        , config : Config
         }
 
 
@@ -57,7 +61,7 @@ init mts =
             { node =
                 { id = 1
                 , value = ""
-                , references = [ { str = "1", up = Just 0 } ]
+                , references = []
                 , formula = Formula.Parser.parseSigned ""
                 , gui = defGUI
                 }
@@ -80,6 +84,7 @@ init mts =
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
+        , config = Config.defaultConfig
         }
     , Cmd.none
     )
@@ -93,26 +98,19 @@ subscriptions _ =
 type Msg
     = ChangeText Zipper.Zipper String
     | ChangeRef Zipper.Zipper String
-    | ExpandAlpha Zipper.Zipper
-    | ExpandBeta Zipper.Zipper
     | Delete Zipper.Zipper
     | DeleteMe Zipper.Zipper
     | MakeClosed Zipper.Zipper
     | SetClosed Int Zipper.Zipper String
     | MakeOpen Zipper.Zipper
-    | ExpandGamma Zipper.Zipper
-    | ExpandDelta Zipper.Zipper
-    | ExpandRefl Zipper.Zipper
-    | ExpandLeibnitz Zipper.Zipper
-    | ChangeVariable Zipper.Zipper String
-    | ChangeTerm Zipper.Zipper String
+    | ExpandUnary Tableau.UnaryExtType Zipper.Zipper
+    | ExpandUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
+    | ExpandBinary Tableau.BinaryExtType Zipper.Zipper
+    | ChangeSubst Zipper.Zipper String
     | SwitchBetas Zipper.Zipper
-    | ChangeToAlpha Zipper.Zipper
-    | ChangeToBeta Zipper.Zipper
-    | ChangeToGamma Zipper.Zipper
-    | ChangeToDelta Zipper.Zipper
-    | ChangeToRefl Zipper.Zipper
-    | ChangeToLeibnitz Zipper.Zipper
+    | ChangeToUnary Tableau.UnaryExtType Zipper.Zipper
+    | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
+    | ChangeToBinary Tableau.BinaryExtType Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
     | Undo
     | Redo
@@ -223,23 +221,14 @@ simpleUpdate msg model =
             ChangeText z new ->
                 { model | tableau = z |> Zipper.setFormula new |> top }
 
-            ExpandAlpha z ->
-                { model | tableau = z |> Zipper.extendAlpha |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandUnary extType z ->
+                { model | tableau = z |> Zipper.extendUnary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandBeta z ->
-                { model | tableau = z |> Zipper.extendBeta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandUnaryWithSubst extType z ->
+                { model | tableau = z |> Zipper.extendUnaryWithSubst extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandGamma z ->
-                { model | tableau = z |> Zipper.extendGamma |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandDelta z ->
-                { model | tableau = z |> Zipper.extendDelta |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandRefl z ->
-                { model | tableau = z |> Zipper.extendRefl |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
-
-            ExpandLeibnitz z ->
-                { model | tableau = z |> Zipper.extendLeibnitz |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+            ExpandBinary extType z ->
+                { model | tableau = z |> Zipper.extendBinary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
             ChangeRef z new ->
                 { model | tableau = z |> Zipper.setRefs new |> top }
@@ -267,32 +256,20 @@ simpleUpdate msg model =
             MakeOpen z ->
                 { model | tableau = z |> Zipper.makeOpen |> top }
 
-            ChangeVariable z newVariable ->
-                { model | tableau = z |> Zipper.changeVariable newVariable |> top }
-
-            ChangeTerm z newTerm ->
-                { model | tableau = z |> Zipper.changeTerm newTerm |> top }
+            ChangeSubst z newSubst ->
+                { model | tableau = z |> Zipper.setSubstitution newSubst |> top }
 
             SwitchBetas z ->
                 { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
 
-            ChangeToAlpha z ->
-                { model | tableau = z |> Zipper.changeToAlpha |> topRenumbered }
+            ChangeToUnary extType z ->
+                { model | tableau = z |> Zipper.changeToUnaryRule extType |> topRenumbered }
 
-            ChangeToBeta z ->
-                { model | tableau = z |> Zipper.changeToBeta |> topRenumbered }
+            ChangeToUnaryWithSubst extType z ->
+                { model | tableau = z |> Zipper.changeToUnaryRuleWithSubst extType |> topRenumbered }
 
-            ChangeToGamma z ->
-                { model | tableau = z |> Zipper.changeToGamma |> topRenumbered }
-
-            ChangeToDelta z ->
-                { model | tableau = z |> Zipper.changeToDelta |> topRenumbered }
-
-            ChangeToRefl z ->
-                { model | tableau = z |> Zipper.changeToRefl |> topRenumbered }
-
-            ChangeToLeibnitz z ->
-                { model | tableau = z |> Zipper.changeToLeibnitz |> topRenumbered }
+            ChangeToBinary extType z ->
+                { model | tableau = z |> Zipper.changeToBinaryRule extType |> topRenumbered }
 
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
@@ -340,64 +317,58 @@ view ({ present } as model) =
                 , button [ class "button", onClick Redo ] [ text "Redo" ]
                 ]
             , jsonImportError present.jsonImport
-            , viewNode (Zipper.zipper present.tableau)
-            , verdict present.tableau
-            , problems present.tableau
+            , viewNode present.config (Zipper.zipper present.tableau)
+            , verdict present.config present.tableau
+            , problems present.config present.tableau
             , Rules.help
             ]
         ]
     }
 
 
-viewNode : Zipper.Zipper -> Html Msg
-viewNode z =
+viewNode : Config -> Zipper.Zipper -> Html Msg
+viewNode config z =
     div
         [ class "formula" ]
-        [ viewNodeInputs identity z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
+        [ viewNodeInputs identity config z
+        , singleNodeProblems config z
+        , viewControls config z
+        , viewChildren config z
         ]
 
 
-viewSubsNode : Zipper.Zipper -> Html Msg
-viewSubsNode z =
+viewSubsNode : Config -> Zipper.Zipper -> Html Msg
+viewSubsNode config z =
     div [ class "formula" ]
         [ viewNodeInputs
             (\rest ->
                 text "{"
                     :: autoSizeInput
-                        (z |> up |> Zipper.zSubstitution |> Maybe.map .var |> Maybe.withDefault "")
+                        (z |> up |> Zipper.zSubstitution |> Maybe.map .str |> Maybe.withDefault "")
                         [ classList
-                            [ ( "textInput textInputVariable", True )
+                            [ ( "textInput textInputSubst", True )
                             , ( "semanticsProblem", Helper.hasReference z )
                             ]
-                        , onInput <| ChangeVariable z
-                        ]
-                    :: text "→"
-                    :: autoSizeInput
-                        (z |> up |> Zipper.zSubstitution |> Maybe.map .term |> Maybe.withDefault "")
-                        [ classList
-                            [ ( "textInput textInputTerm", True )
-                            , ( "semanticsProblem", Helper.hasReference z )
-                            ]
-                        , onInput <| ChangeTerm z
+                        , onInput <| ChangeSubst z
+                        , placeholder "a↦b,.."
                         ]
                     :: text "}"
                     :: rest
             )
+            config
             z
-        , singleNodeProblems z
-        , viewControls z
-        , viewChildren z
+        , singleNodeProblems config z
+        , viewControls config z
+        , viewChildren config z
         ]
 
 
 viewNodeInputs :
     (List (Html Msg) -> List (Html Msg))
+    -> Config
     -> Zipper.Zipper
     -> Html Msg
-viewNodeInputs additional z =
+viewNodeInputs additional config z =
     div [ class "inputGroup" ]
         (text ("(" ++ ((Zipper.zNode z).id |> String.fromInt) ++ ")")
             :: autoSizeInput
@@ -406,21 +377,11 @@ viewNodeInputs additional z =
                     [ ( "textInputFormula", True )
                     , ( "premise", Helper.isPremise z )
                     ]
-                , class (errorsClass <| Validation.isCorrectFormula z)
+                , class (errorsClass <| Validation.isCorrectFormula config z)
                 , type_ "text"
                 , onInput <| ChangeText z
                 ]
-            :: viewRuleType z
-            :: div [ class "onclick-menu change", tabindex 0 ]
-                [ ul [ class "onclick-menu-content" ]
-                    [ li [] [ button [ onClick (ChangeToAlpha z) ] [ text "Change to α" ] ]
-                    , li [] [ button [ onClick (ChangeToBeta z) ] [ text "Change to β" ] ]
-                    , li [] [ button [ onClick (ChangeToGamma z) ] [ text "Change to γ" ] ]
-                    , li [] [ button [ onClick (ChangeToDelta z) ] [ text "Change to δ" ] ]
-                    , li [] [ button [ onClick (ChangeToRefl z) ] [ text "Change to Reflexivity" ] ]
-                    , li [] [ button [ onClick (ChangeToLeibnitz z) ] [ text "Change to Leibnitz" ] ]
-                    ]
-                ]
+            :: ruleMenu ChangeToUnary ChangeToUnaryWithSubst ChangeToBinary (viewRuleType z) "Change to" "change" config z
             :: text "["
             :: autoSizeInput
                 (Tableau.refsToString (Zipper.zNode z).references)
@@ -432,6 +393,41 @@ viewNodeInputs additional z =
             :: additional
                 [ viewButtonsAppearanceControlls z ]
         )
+
+
+ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
+    let
+        item ruleTypeStr msg =
+            Dict.get ruleTypeStr config
+                |> Maybe.map (always <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr))
+
+        unaryItem extType =
+            item (unaryExtTypeToString extType) (unaryMsg extType z)
+
+        unaryWithSubstItem extType =
+            item (unaryWithSubstExtTypeToString extType) (unaryWithSubstMsg extType z)
+
+        binaryItem extType =
+            item (binaryExtTypeToString extType) (binaryMsg extType z)
+    in
+    menu cls label <|
+        List.filterMap unaryItem [ Alpha ]
+            ++ List.filterMap binaryItem [ Beta ]
+            ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
+            ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
+            ++ List.filterMap binaryItem [ Cut, ECDF, ECDT ]
+
+
+menuItem : Msg -> String -> Html Msg
+menuItem msg str =
+    li [] [ button [ onClick msg ] [ text str ] ]
+
+
+menu cls label content =
+    div [ class <| "onclick-menu " ++ cls, tabindex 0 ]
+        [ span [] [label, text " ▾"]
+        , ul [ class "onclick-menu-content" ] content
+        ]
 
 
 autoSizeInput : String -> List (Attribute Msg) -> Html Msg
@@ -461,23 +457,14 @@ viewRuleType z =
             Closed _ _ ->
                 text "C"
 
-            Alpha _ ->
-                text "α"
+            Unary extType _ ->
+                text (unaryExtTypeToString extType)
 
-            Beta _ _ ->
-                text "β"
+            Binary extType _ _ ->
+                text (binaryExtTypeToString extType)
 
-            Gamma _ _ ->
-                text "γ"
-
-            Delta _ _ ->
-                text "δ"
-
-            Refl _ ->
-                text "Reflexivity"
-
-            Leibnitz _ ->
-                text "Leibnitz"
+            UnaryWithSubst extType _ _ ->
+                text (unaryWithSubstExtTypeToString extType)
 
 
 viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
@@ -500,65 +487,41 @@ viewButtonsAppearanceControlls z =
                 [ icon ellipsisHorizontal ]
 
 
-viewChildren : Zipper.Zipper -> Html Msg
-viewChildren z =
+viewChildren : Config -> Zipper.Zipper -> Html Msg
+viewChildren config z =
     case (Zipper.zTableau z).ext of
-        Tableau.Open ->
+        Open ->
             viewOpen z
 
-        Tableau.Closed r1 r2 ->
+        Closed r1 r2 ->
             viewClosed z
 
-        Tableau.Alpha t ->
-            viewAlpha z
+        Unary _ _ ->
+            viewUnary config z
 
-        Tableau.Beta lt rt ->
-            viewBeta z
+        UnaryWithSubst _ _ _ ->
+            viewUnaryWithSubst config z
 
-        Tableau.Gamma t subs ->
-            viewGamma z
-
-        Tableau.Delta t subs ->
-            viewDelta z
-
-        Tableau.Refl t ->
-            viewRefl z
-
-        Tableau.Leibnitz t ->
-            viewLeibnitz z
+        Binary _ _ _ ->
+            viewBinary config z
 
 
-viewAlpha : Zipper.Zipper -> Html Msg
-viewAlpha z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
+viewUnary : Config -> Zipper.Zipper -> Html Msg
+viewUnary config z =
+    div [ class "alpha" ] [ viewNode config (Zipper.down z) ]
 
 
-viewBeta : Zipper.Zipper -> Html Msg
-viewBeta z =
+viewUnaryWithSubst : Config -> Zipper.Zipper -> Html Msg
+viewUnaryWithSubst config z =
+    div [ class "alpha", class "withSubstitution" ] [ viewSubsNode config (Zipper.down z) ]
+
+
+viewBinary : Config -> Zipper.Zipper -> Html Msg
+viewBinary config z =
     div [ class "beta" ]
-        [ viewNode (Zipper.left z)
-        , viewNode (Zipper.right z)
+        [ viewNode config (Zipper.left z)
+        , viewNode config (Zipper.right z)
         ]
-
-
-viewGamma : Zipper.Zipper -> Html Msg
-viewGamma z =
-    div [ class "gamma" ] [ viewSubsNode (Zipper.down z) ]
-
-
-viewDelta : Zipper.Zipper -> Html Msg
-viewDelta z =
-    div [ class "delta" ] [ viewSubsNode (Zipper.down z) ]
-
-
-viewRefl : Zipper.Zipper -> Html Msg
-viewRefl z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
-
-
-viewLeibnitz : Zipper.Zipper -> Html Msg
-viewLeibnitz z =
-    div [ class "alpha" ] [ viewNode (Zipper.down z) ]
 
 
 viewOpen : Zipper.Zipper -> Html Msg
@@ -571,8 +534,8 @@ viewClosed z =
     div [] []
 
 
-viewControls : Zipper.Zipper -> Html Msg
-viewControls (( t, _ ) as z) =
+viewControls : Config -> Zipper.Zipper -> Html Msg
+viewControls config (( t, _ ) as z) =
     div [ class "expandControls" ]
         (case t.ext of
             Tableau.Closed r1 r2 ->
@@ -606,7 +569,7 @@ viewControls (( t, _ ) as z) =
                     deleteMeButton =
                         if (z |> Zipper.up) /= z then
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
-                                Beta _ _ ->
+                                Binary _ _ _ ->
                                     case t.node.value of
                                         "" ->
                                             case t.ext of
@@ -624,7 +587,7 @@ viewControls (( t, _ ) as z) =
 
                         else
                             case t.ext of
-                                Alpha _ ->
+                                Unary Alpha _ ->
                                     button [ onClick (DeleteMe z) ] [ text "Delete node" ]
 
                                 Open ->
@@ -635,29 +598,18 @@ viewControls (( t, _ ) as z) =
 
                     switchBetasButton =
                         case t.ext of
-                            Beta _ _ ->
+                            Binary _ _ _ ->
                                 button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
 
                             _ ->
                                 div [] []
                 in
                 if t.node.gui.controlsShown then
-                    [ button [ class "button", onClick (ExpandAlpha z) ] [ text "Add α" ]
-                    , div [ class "onclick-menu add", tabindex 0 ]
-                        [ ul [ class "onclick-menu-content" ]
-                            [ li [] [ button [ onClick (ExpandAlpha z) ] [ text "Add α" ] ]
-                            , li [] [ button [ onClick (ExpandBeta z) ] [ text "Add β" ] ]
-                            , li [] [ button [ onClick (ExpandGamma z) ] [ text "Add γ" ] ]
-                            , li [] [ button [ onClick (ExpandDelta z) ] [ text "Add δ" ] ]
-                            , li [] [ button [ onClick (ExpandRefl z) ] [ text "Add Reflexiviy" ] ]
-                            , li [] [ button [ onClick (ExpandLeibnitz z) ] [ text "Add Leibnitz" ] ]
-                            ]
-                        ]
-                    , div [ class "onclick-menu del", tabindex 0 ]
-                        [ ul [ class "onclick-menu-content" ]
-                            [ li [] [ deleteMeButton ]
-                            , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
-                            ]
+                    [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
+                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary (text "Add") "Add" "add" config z
+                    , menu "del" (text "Delete") <|
+                        [ li [] [ deleteMeButton ]
+                        , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
                         ]
                     , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
                     , switchBetasButton
@@ -668,11 +620,11 @@ viewControls (( t, _ ) as z) =
         )
 
 
-singleNodeProblems : Zipper -> Html Msg
-singleNodeProblems z =
+singleNodeProblems : Config -> Zipper -> Html Msg
+singleNodeProblems config z =
     let
         errors =
-            Errors.errors <| Validation.isCorrectNode <| z
+            Errors.errors <| Validation.isCorrectNode config <| z
     in
     if List.isEmpty errors then
         div [ class "nodeProblems" ] []
@@ -685,11 +637,11 @@ singleNodeProblems z =
             )
 
 
-problems : Tableau -> Html Msg
-problems t =
+problems : Config -> Tableau -> Html Msg
+problems config t =
     let
         errors =
-            Errors.errors <| Validation.isCorrectTableau <| Zipper.zipper <| t
+            Errors.errors <| Validation.isCorrectTableau config <| Zipper.zipper <| t
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
@@ -770,8 +722,8 @@ jsonImportError jsonImport =
             div [] []
 
 
-verdict : Tableau -> Html msg
-verdict t =
+verdict : Config -> Tableau -> Html msg
+verdict config t =
     let
         ass =
             t |> Zipper.zipper |> Helper.assumptions
@@ -795,7 +747,7 @@ verdict t =
         div [ class "verdict" ]
             [ p []
                 [ text "This tableau "
-                , text (textVerdict <| Zipper.zipper t)
+                , text (textVerdict config <| Zipper.zipper t)
                 , text ":"
                 ]
             , p []
@@ -806,9 +758,9 @@ verdict t =
             ]
 
 
-textVerdict : Zipper -> String
-textVerdict t =
-    case Helper.isClosed t of
+textVerdict : Config -> Zipper -> String
+textVerdict config t =
+    case Helper.isClosed config t of
         Ok True ->
             "proves"
 

@@ -11,8 +11,8 @@ import Fuzz exposing (Fuzzer, int, list, string)
 import Tableau exposing (..)
 import Test exposing (..)
 import Validation
-import Validation.Common
-import Validation.Rules.Leibnitz
+import Validation.Common exposing(..)
+import Validation.Rules.Delta exposing (..)
 import Zipper exposing (..)
 
 
@@ -60,7 +60,7 @@ tableauWithAlpha =
         , gui = { controlsShown = False }
         }
     , ext =
-        Alpha
+        Unary Alpha
             { node =
                 { id = 1
                 , value = ""
@@ -87,7 +87,7 @@ zipperWithAplhaDown =
             }
       , ext = Open
       }
-    , [ AlphaCrumb
+    , [ UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -108,7 +108,7 @@ zipperWithAlphaDownBetaLeft =
             }
       , ext = Open
       }
-    , [ BetaLeftCrumb
+    , [ BinaryLeftCrumb Beta
             { id = 1
             , value = ""
             , references = []
@@ -124,7 +124,7 @@ zipperWithAlphaDownBetaLeft =
                 }
             , ext = Open
             }
-      , AlphaCrumb
+      , UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -145,14 +145,14 @@ zipperOnlyAlphaOfRightBeta =
             }
       , ext = Open
       }
-    , [ AlphaCrumb
+    , [ UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = []
             , formula = Formula.Parser.parseSigned ""
             , gui = { controlsShown = False }
             }
-      , BetaRightCrumb
+      , BinaryRightCrumb Beta
             { id = 1
             , value = ""
             , references = [{ str = "1", up = Just 0 }]
@@ -181,7 +181,7 @@ onlyAlphaOfRightBetaRenumbered =
         , gui = { controlsShown = False }
         }
     , ext =
-        Beta
+        Binary Beta
             { node =
                 { id = 2
                 , value = ""
@@ -199,7 +199,7 @@ onlyAlphaOfRightBetaRenumbered =
                 , gui = { controlsShown = False }
                 }
             , ext =
-                Alpha
+                Unary Alpha
                     { node =
                         { id = 4
                         , value = ""
@@ -218,7 +218,7 @@ zipperOnlyAlphaOfRightBetaRenumbered =
 
 
 zipperZWalkPostExample =
-    zipperExample |> extendAlpha |> down |> extendBeta |> left |> extendAlpha |> up |> right |> extendBeta |> left |> extendAlpha |> top |> topRenumbered |> zipper
+    zipperExample |> extendUnary Alpha |> down |> extendBinary Beta |> left |> extendUnary Alpha |> up |> right |> extendBinary Beta |> left |> extendUnary Alpha |> top |> topRenumbered |> zipper
 
 
 zipperZWalkPostResult =
@@ -231,7 +231,7 @@ zipperZWalkPostResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -240,7 +240,7 @@ zipperZWalkPostResult =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Beta
+                    Binary Beta
                         { node =
                             { id = 3
                             , value = ""
@@ -249,7 +249,7 @@ zipperZWalkPostResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = ""
@@ -268,7 +268,7 @@ zipperZWalkPostResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 6
                                     , value = ""
@@ -277,7 +277,7 @@ zipperZWalkPostResult =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Alpha
+                                    Unary Alpha
                                         { node =
                                             { id = 7
                                             , value = ""
@@ -316,7 +316,7 @@ testReferenceRewritingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -339,7 +339,7 @@ fixRefsTest =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -362,7 +362,7 @@ fixRefsTestResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -385,7 +385,7 @@ gammaExampleResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Gamma
+            UnaryWithSubst Gamma
                 { node =
                     { id = 1
                     , value = ""
@@ -395,7 +395,7 @@ gammaExampleResult =
                     }
                 , ext = Open
                 }
-                { term = "", var = "x" }
+                {str = "x->y", parsedSubst = Ok (Dict.fromList [("x", Var "y")])}
         }
 
 
@@ -409,7 +409,7 @@ getValueFromResult r =
             Nothing
 
 
-validateGammaSubstituteFunction =
+funInsteadOfVarZipper =
     zipper
         { node =
             { id = 1
@@ -419,7 +419,7 @@ validateGammaSubstituteFunction =
             , gui = { controlsShown = False }
             }
         , ext =
-            Gamma
+            UnaryWithSubst Gamma
                 { node =
                     { id = 2
                     , value = "T P(f(Diana))"
@@ -429,11 +429,11 @@ validateGammaSubstituteFunction =
                     }
                 , ext = Open
                 }
-                { term = "f(Diana)", var = "x" }
+                {str = "x -> f(Diana)", parsedSubst = Ok (Dict.fromList [("x", Fun "f" [Var "Diana"])])}
         }
 
 
-validateGammaNewVariableSimilarToExistingFreeAbove =
+newVariableSimilarToExistingFreeAboveZipper =
     zipper
         { node =
             { id = 1
@@ -443,7 +443,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
@@ -452,7 +452,7 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Gamma
+                    UnaryWithSubst Gamma
                         { node =
                             { id = 3
                             , value = "T \\exists p Z(p, f(k))"
@@ -462,12 +462,12 @@ validateGammaNewVariableSimilarToExistingFreeAbove =
                             }
                         , ext = Open
                         }
-                        { term = "k", var = "z" }
+                        {str = "z->k", parsedSubst = Ok (Dict.fromList [("z", Var "k")])}
                 }
         }
 
 
-validateGammaNewVariableSimilarToExistingBoundAbove =
+newVariableSimilarToExistingBoundAboveZipper =
     zipper
         { node =
             { id = 1
@@ -477,7 +477,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T \\forall z \\exists p Z(p, f(z))"
@@ -486,7 +486,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Gamma
+                    UnaryWithSubst Gamma
                         { node =
                             { id = 3
                             , value = "T P(z, k)"
@@ -496,7 +496,7 @@ validateGammaNewVariableSimilarToExistingBoundAbove =
                             }
                         , ext = Open
                         }
-                        { term = "z", var = "x" }
+                        {str = "x->z", parsedSubst = Ok (Dict.fromList [("x", Var "z")])}
                 }
         }
 
@@ -511,7 +511,7 @@ validateRenumberingAdding =
             , gui = { controlsShown = True }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (a /\\ (b \\/ c))"
@@ -520,7 +520,7 @@ validateRenumberingAdding =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (b \\/ c)"
@@ -529,7 +529,7 @@ validateRenumberingAdding =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 4
                                     , value = "T a"
@@ -563,7 +563,7 @@ validateRenumberingAddingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = ""
@@ -572,7 +572,7 @@ validateRenumberingAddingResult =
                     , gui = { controlsShown = True }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (a /\\ (b \\/ c))"
@@ -581,7 +581,7 @@ validateRenumberingAddingResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = "T (b \\/ c)"
@@ -590,7 +590,7 @@ validateRenumberingAddingResult =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Beta
+                                    Binary Beta
                                         { node =
                                             { id = 5
                                             , value = "T a"
@@ -625,7 +625,7 @@ validateRenumberingDeleting =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
@@ -634,7 +634,7 @@ validateRenumberingDeleting =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "Tb"
@@ -643,7 +643,7 @@ validateRenumberingDeleting =
                             , gui = { controlsShown = True }
                             }
                         , ext =
-                            Alpha
+                            Unary Alpha
                                 { node =
                                     { id = 4
                                     , value = "T (c\\/a)"
@@ -652,7 +652,7 @@ validateRenumberingDeleting =
                                     , gui = { controlsShown = False }
                                     }
                                 , ext =
-                                    Beta
+                                    Binary Beta
                                         { node =
                                             { id = 5
                                             , value = "Tc"
@@ -687,7 +687,7 @@ validateRenumberingDeletingResult =
             , gui = { controlsShown = False }
             }
         , ext =
-            Alpha
+            Unary Alpha
                 { node =
                     { id = 2
                     , value = "T (b/\\(c\\/a))"
@@ -696,7 +696,7 @@ validateRenumberingDeletingResult =
                     , gui = { controlsShown = False }
                     }
                 , ext =
-                    Alpha
+                    Unary Alpha
                         { node =
                             { id = 3
                             , value = "T (c\\/a)"
@@ -705,7 +705,7 @@ validateRenumberingDeletingResult =
                             , gui = { controlsShown = False }
                             }
                         , ext =
-                            Beta
+                            Binary Beta
                                 { node =
                                     { id = 4
                                     , value = "Tc"
@@ -733,104 +733,70 @@ suiteZipper : Test
 suiteZipper =
     describe "The Zipper module"
         [ test "compare simple zippers" (\() -> compareZippers (zipper tableauExample) zipperExample)
-        , test "compare extended alpha" (\() -> compareZippers (extendAlpha zipperExample) zipperWithAlpha)
-        , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendAlpha zipperExample)) zipperWithAplhaDown)
+        , test "compare extended alpha" (\() -> compareZippers (extendUnary Alpha zipperExample) zipperWithAlpha)
+        , test "compare extended alpha after going down once" (\() -> compareZippers (down (extendUnary Alpha zipperExample)) zipperWithAplhaDown)
         , test "compare zippers: extend alpha, go down, extend beta"
-            (\() -> compareZippers (left (extendBeta (down (extendAlpha zipperExample)))) zipperWithAlphaDownBetaLeft)
+            (\() -> compareZippers (left (extendBinary Beta (down (extendUnary Alpha zipperExample)))) zipperWithAlphaDownBetaLeft)
         , test "compare zippers, extend beta, go right, extend alpha, go down"
             (\() ->
                 compareZippers
-                    (zipperExample |> extendBeta |> right |> extendAlpha |> down)
+                    (zipperExample |> extendBinary Beta |> right |> extendUnary Alpha |> down)
                     zipperOnlyAlphaOfRightBeta
             )
         , test
             "renumber"
             (\() ->
                 compareZippers
-                    (zipperExample |> extendBeta |> right |> extendAlpha |> down |> top |> topRenumbered |> zipper)
+                    (zipperExample |> extendBinary Beta |> right |> extendUnary Alpha |> down |> top |> topRenumbered |> zipper)
                     zipperOnlyAlphaOfRightBetaRenumbered
             )
         , test "renumber another" (\() -> compareZippers zipperZWalkPostExample zipperZWalkPostResult)
         , test "reference rewriting"
             (\() ->
                 compareZippers testReferenceRewritingResult
-                    (testReferenceRewriting |> Zipper.extendAlpha |> Editor.top |> Zipper.renumber |> zipper)
+                    (testReferenceRewriting |> Zipper.extendUnary Alpha |> Editor.top |> Zipper.renumber |> zipper)
             )
         , test "reference rewriting 2" (\() -> compareZippers (fixRefs fixRefsTest) fixRefsTestResult)
         , test "gamma term test"
             (\() ->
                 compareZippers gammaExampleResult
-                    (zipperExample |> Zipper.extendGamma |> Zipper.changeVariable "x")
+                    (zipperExample |> Zipper.extendUnaryWithSubst Gamma |> Zipper.setSubstitution "x->y")
             )
-        , test "substitute function in gamma "
+        , test "function instead of variable "
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaSubstituteFunction
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Fun "f" [ Var "x" ])
-                            |> Term.toString
-                        )
-                        (validateGammaSubstituteFunction
+                Expect.err
+                    (checkNewVariables
+                        (funInsteadOfVarZipper
                             |> Zipper.down
                         )
                     )
-                    False
             )
-        , test "substitution in gamma - substitute for existing bound above"
+        , test "substitution in delta - substitute for existing bound above"
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaNewVariableSimilarToExistingBoundAbove
-                            |> Zipper.down
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Var "z")
-                            |> Term.toString
-                        )
-                        (validateGammaNewVariableSimilarToExistingBoundAbove
+                Expect.ok
+                    (checkNewVariables
+                        (newVariableSimilarToExistingBoundAboveZipper
                             |> Zipper.down
                             |> Zipper.down
                         )
                     )
-                    True
             )
-        , test "substitution in gamma - substitute for existing free above"
+        , test "substitution in delta - substitute for existing free above"
             (\() ->
-                Expect.equal
-                    (Validation.Common.isNewVariableValid
-                        (validateGammaNewVariableSimilarToExistingFreeAbove
-                            |> Zipper.down
-                            |> Zipper.zSubstitution
-                            |> Maybe.map Validation.Common.makeS
-                            |> Maybe.withDefault (Dict.fromList [])
-                            |> Dict.values
-                            |> List.head
-                            |> Maybe.withDefault (Var "k")
-                            |> Term.toString
-                        )
-                        (validateGammaNewVariableSimilarToExistingFreeAbove
+                Expect.err
+                    (checkNewVariables
+                        (newVariableSimilarToExistingFreeAboveZipper
                             |> Zipper.down
                             |> Zipper.down
                         )
                     )
-                    False
             )
         , test "renumbering justs when adding a node"
             (\() ->
                 Expect.equal
                     validateRenumberingAddingResult
                     (validateRenumberingAdding
-                        |> Zipper.extendAlpha
+                        |> Zipper.extendUnary Alpha
                         |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding
                         |> topRenumbered
                         |> zipper

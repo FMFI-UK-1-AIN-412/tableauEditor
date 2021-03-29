@@ -1,9 +1,9 @@
 module Validation exposing (..)
 
+import Config exposing (Config)
 import Dict
 import Errors
-import Formula exposing (Formula(..))
-import Formula.Parser
+import Formula exposing (Formula(..), toString)
 import Formula.Signed exposing (Signed(..))
 import Helpers.Parser
 import Parser
@@ -13,9 +13,23 @@ import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Validation.Rules.Alpha
 import Validation.Rules.Beta
+import Validation.Rules.Cut
+import Validation.Rules.DS
 import Validation.Rules.Delta
+import Validation.Rules.DeltaStar
+import Validation.Rules.ECDF
+import Validation.Rules.ECDT
+import Validation.Rules.ESFF
+import Validation.Rules.ESFT
+import Validation.Rules.ESTF
+import Validation.Rules.ESTT
 import Validation.Rules.Gamma
+import Validation.Rules.GammaStar
+import Validation.Rules.HS
 import Validation.Rules.Leibnitz
+import Validation.Rules.ModusPonens
+import Validation.Rules.ModusTolens
+import Validation.Rules.NCS
 import Validation.Rules.Reflexivity
 import Zipper
 
@@ -36,47 +50,66 @@ import Zipper
 --     ( lp ++ error [] (f z), z )
 
 
-isCorrectTableau : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectTableau z =
+isCorrectTableau : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectTableau config z =
     Errors.merge2 (always2 z)
-        (isCorrectNode z)
+        (isCorrectNode config z)
         (List.foldl
             (Errors.merge2 (always2 z))
             (Ok z)
-            (List.map isCorrectTableau (Zipper.children z))
+            (List.map (isCorrectTableau config) (Zipper.children z))
         )
 
 
 isValidNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidNode z =
-    Errors.merge3 (always3 z)
+    Errors.merge4 (always4 z)
         (isValidFormula z)
         (isValidNodeRef z)
+        (isValidSubstitution z)
         (areValidCloseRefs z)
 
 
-isCorrectNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectNode z =
+isCorrectNode : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectNode config z =
     isValidNode z
         |> Result.andThen
             (\_ ->
                 Errors.merge2 second
-                    (isCorrectRule z)
+                    (isCorrectRule config z)
                     (areCorrectCloseRefs z)
             )
 
 
 {-| Just for the formula dislplay -- don't check the ref for syntax
 -}
-isCorrectFormula : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
-isCorrectFormula z =
+isCorrectFormula : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectFormula config z =
     isValidFormula z
-        |> Result.andThen isCorrectRule
+        |> Result.andThen (isCorrectRule config)
 
 
 isValidFormula : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
+
+
+isValidSubstitution : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidSubstitution z =
+    if Zipper.up z == z then
+        Ok z
+
+    else
+        case Zipper.zSubstitution (Zipper.up z) of
+            Just subst ->
+                subst
+                    |> .parsedSubst
+                    |> Result.mapError (\_ -> syntaxProblem z "Wrong form of substitution")
+                    |> Result.map (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
+                    |> Result.map (always z)
+
+            Nothing ->
+                Ok z
 
 
 isValidNodeRef : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -102,11 +135,18 @@ areValidCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
             Errors.merge2 (always2 z)
-                (isValidRef "First close" r1 z)
-                (isValidRef "Second close" r2 z)
+                (isValidCloseRef "First close" r1 z)
+                (isValidCloseRef "Second close" r2 z)
 
         _ ->
             Ok z
+
+
+isValidCloseRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidCloseRef str r z =
+    r.up
+        |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
+        |> Result.map (always z)
 
 
 isValidRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
@@ -181,37 +221,112 @@ areCloseRefsComplementary r1 r2 z =
         |> Result.andThen (resultFromBool z (semanticsProblem z "Closing formulas are not complementary."))
 
 
+validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateUnary extType =
+    case extType of
+        Alpha ->
+            Validation.Rules.Alpha.validate
+
+        Refl ->
+            Validation.Rules.Reflexivity.validate
+
+        Leibnitz ->
+            Validation.Rules.Leibnitz.validate
+
+        MP ->
+            Validation.Rules.ModusPonens.validate
+
+        MT ->
+            Validation.Rules.ModusTolens.validate
+
+        HS ->
+            Validation.Rules.HS.validate
+
+        DS ->
+            Validation.Rules.DS.validate
+
+        NCS ->
+            Validation.Rules.NCS.validate
+
+        ESFF ->
+            Validation.Rules.ESFF.validate
+
+        ESFT ->
+            Validation.Rules.ESFT.validate
+
+        ESTF ->
+            Validation.Rules.ESTF.validate
+
+        ESTT ->
+            Validation.Rules.ESTT.validate
+
+
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
+validateUnaryWithSubst extType =
+    case extType of
+        Gamma ->
+            Validation.Rules.Gamma.validate
+
+        Delta ->
+            Validation.Rules.Delta.validate
+
+        GammaStar ->
+            Validation.Rules.GammaStar.validate
+
+        DeltaStar ->
+            Validation.Rules.DeltaStar.validate
+
+
+validateBinary : BinaryExtType -> Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateBinary extType =
+    case extType of
+        Beta ->
+            Validation.Rules.Beta.validate
+
+        Cut ->
+            Validation.Rules.Cut.validate
+
+        ECDF ->
+            Validation.Rules.ECDF.validate
+
+        ECDT ->
+            Validation.Rules.ECDT.validate
+
+
+validateRule rule validator config =
+    if Dict.get rule config |> Maybe.withDefault False then
+        validator
+
+    else
+        \z -> Err <| semanticsProblem z <| rule ++ " rule is forbidden in current configuration"
+
+
 isCorrectRule :
-    ( Tableau, Zipper.BreadCrumbs )
+    Config.Config
+    -> ( Tableau, Zipper.BreadCrumbs )
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
-isCorrectRule (( t, bs ) as z) =
+isCorrectRule config (( t, bs ) as z) =
     case bs of
-        (Zipper.AlphaCrumb _) :: _ ->
+        (Zipper.UnaryCrumb Alpha _) :: _ ->
             case t.node.references |> List.isEmpty of
                 True ->
                     -- This is a premise
                     Ok z
 
                 False ->
-                    Validation.Rules.Alpha.validate z
+                    validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
 
-        (Zipper.BetaLeftCrumb _ _) :: _ ->
-            Validation.Rules.Beta.validateLeft z
+        (Zipper.UnaryCrumb extType _) :: _ ->
+            validateRule (unaryExtTypeToString extType) (validateUnary extType) config z
 
-        (Zipper.BetaRightCrumb _ _) :: _ ->
-            Validation.Rules.Beta.validateRight z
+        (Zipper.UnaryCrumbWithSubst extType _ _) :: _ ->
+            validateRule (unaryWithSubstExtTypeToString extType) (validateUnaryWithSubst extType) config z
 
-        (Zipper.GammaCrumb _ _) :: _ ->
-            Validation.Rules.Gamma.validate z
+        (Zipper.BinaryLeftCrumb extType _ _) :: _ ->
+            validateRule (binaryExtTypeToString extType) (validateLeft (validateBinary extType)) config z
 
-        (Zipper.DeltaCrumb _ _) :: _ ->
-            Validation.Rules.Delta.validate z
-
-        (Zipper.ReflCrumb _) :: _ ->
-            Validation.Rules.Reflexivity.validate z
-
-        (Zipper.LeibnitzCrumb _) :: _ ->
-            Validation.Rules.Leibnitz.validate z
+        (Zipper.BinaryRightCrumb extType _ _) :: _ ->
+            validateRule (binaryExtTypeToString extType) (validateRight (validateBinary extType)) config z
 
         [] ->
             Ok z

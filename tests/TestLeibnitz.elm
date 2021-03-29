@@ -349,14 +349,14 @@ zipperWithEqsAndLeibnitz =
             }
       , ext = Open
       } 
-    , [ AlphaCrumb
+    , [ UnaryCrumb Alpha
             { id = 2
             , value = ""
             , references = []
             , formula = Formula.Parser.parseSigned "T a = a"
             , gui = { controlsShown = False }
             }
-      , AlphaCrumb
+      , UnaryCrumb Alpha
             { id = 1
             , value = ""
             , references = []
