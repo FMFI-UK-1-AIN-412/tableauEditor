@@ -57,18 +57,23 @@ default =
 
 
 toString : Config -> String
-toString config = 
+toString config =
     if config == basicPropositional then
         "Basic propositional"
+
     else if config == propositional then
         "Propositional"
+
     else if config == propositionalWithEquality then
         "Propositional with EQ"
+
     else if config == basicFol then
         "Basic FOL"
+
     else if config == fullFol then
         "Full FOL"
-    else 
+
+    else
         "unknown configuration"
 
 

@@ -276,7 +276,7 @@ simpleUpdate msg model =
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
 
             SetConfig new ->
-                {model | config = new}
+                { model | config = new }
 
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
@@ -402,8 +402,8 @@ viewNodeInputs additional config z =
 
 configMenu config =
     let
-        item cfg = 
-            menuItem (SetConfig cfg) (Config.toString cfg) 
+        item cfg =
+            menuItem (SetConfig cfg) (Config.toString cfg)
     in
     menu "change" (text <| Config.toString config) <|
         [ item Config.basicPropositional
@@ -444,7 +444,7 @@ menuItem msg str =
 
 menu cls label content =
     div [ class <| "onclick-menu " ++ cls, tabindex 0 ]
-        [ span [] [label, text " ▾"]
+        [ span [] [ label, text " ▾" ]
         , ul [ class "onclick-menu-content" ] content
         ]
 
