@@ -112,6 +112,7 @@ type Msg
     | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
     | ChangeToBinary Tableau.BinaryExtType Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
+    | SetConfig Config.Config
     | Undo
     | Redo
     | Prettify
@@ -274,6 +275,9 @@ simpleUpdate msg model =
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
 
+            SetConfig new ->
+                {model | config = new}
+
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
 
@@ -309,7 +313,8 @@ view ({ present } as model) =
     , body =
         [ div [ class "tableau" ]
             [ div [ class "actions" ]
-                [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+                [ configMenu present.config
+                , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
                 , button [ class "button", onClick Print ] [ text "Print" ]
                 , jsonExportControl present.tableau
                 , jsonImportControl present.jsonImport
@@ -393,6 +398,20 @@ viewNodeInputs additional config z =
             :: additional
                 [ viewButtonsAppearanceControlls z ]
         )
+
+
+configMenu config =
+    let
+        item cfg = 
+            menuItem (SetConfig cfg) (Config.toString cfg) 
+    in
+    menu "change" (text <| Config.toString config) <|
+        [ item Config.basicPropositional
+        , item Config.propositional
+        , item Config.propositionalWithEquality
+        , item Config.basicFol
+        , item Config.fullFol
+        ]
 
 
 ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =

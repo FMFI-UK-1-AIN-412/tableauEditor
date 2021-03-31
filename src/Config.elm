@@ -4,7 +4,9 @@ module Config exposing
     , basicPropositional
     , default
     , fullFol
-    , fullPropositional
+    , propositional
+    , propositionalWithEquality
+    , toString
     )
 
 import Dict exposing (Dict)
@@ -54,23 +56,51 @@ default =
     fullFol
 
 
+toString : Config -> String
+toString config = 
+    if config == basicPropositional then
+        "Basic propositional"
+    else if config == propositional then
+        "Propositional"
+    else if config == propositionalWithEquality then
+        "Propositional with EQ"
+    else if config == basicFol then
+        "Basic FOL"
+    else if config == fullFol then
+        "Full FOL"
+    else 
+        "unknown configuration"
+
+
 basicPropositional : Config
 basicPropositional =
     configFromRules basicPropositionalRules
 
 
-fullPropositional : Config
-fullPropositional =
+propositional : Config
+propositional =
     configFromRules <|
         basicPropositionalRules
             ++ extendedPropositionalRules
             ++ nonAnalyticPropositionalRules
 
 
+propositionalWithEquality : Config
+propositionalWithEquality =
+    configFromRules <|
+        basicPropositionalRules
+            ++ extendedPropositionalRules
+            ++ nonAnalyticPropositionalRules
+            ++ equalityRules
+
+
 basicFol : Config
 basicFol =
     configFromRules <|
         basicPropositionalRules
+            ++ extendedPropositionalRules
+            ++ nonAnalyticPropositionalRules
+            ++ equalityRules
             ++ basicQuantifierRules
 
 
