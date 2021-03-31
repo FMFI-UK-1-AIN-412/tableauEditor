@@ -99,15 +99,10 @@ assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second
-            ((Zipper.zFirstRef z).up
-                |> Maybe.andThen
-                    (\x ->
-                        if x == 0 then
-                            Just ()
-
-                        else
-                            Nothing
-                    )
+            (if List.isEmpty ( Zipper.zNode z |> .references ) then
+                Just ()
+            else
+                Nothing
             )
             (z
                 |> Zipper.zNode
