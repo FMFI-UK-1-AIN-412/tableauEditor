@@ -463,8 +463,8 @@ rulesTable4 =
                 [ Html.td [] [ text "example" ]
                 , binaryExample "(1) T(a↔b) [ ]" "(2) T(a∧b) [1]" "(3) F (a∨b) [1]"
                 , binaryExample "(1) F(a↔b) [ ]" "(2) F T (a∧¬b) [1]" "(3) F T (a∨¬b) [1]"
-                , linearExample "" "(1) (1) F ∀x∀y P(x,y) [ ] [ ]" "(2) F P(q,z) {x→q, y→z} [1]"
                 , linearExample "" "(1) T ∀x∀y P(x,y) [ ]" "(2) T P(g(k,z), q) {x→g(k,z) ,y→q} [1]"
+                , linearExample "" "(1) F ∀x∀y P(x,y) [ ]" "(2) F P(q,z) {x→q, y→z} [1]"
                 ]
             ]
         ]
