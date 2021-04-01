@@ -391,7 +391,7 @@ button.delete {
 	margin: 0px;
 }
 
-.rulesHelpTable  tr:nth-child(even){background-color: #def}
+.rulesHelpTable  td:nth-child(odd){background-color: #def}
 
 .rulesHelpTable th {
 	background-color: #6193a2;
@@ -415,9 +415,7 @@ button.delete {
 	padding: 0 0.5rem 0 0;
 	box-sizing: border-box;
 }
-.half + .half {
-	padding: 0 0 0 0.5rem;
-}
+
 .full {
 	clear: left;
 	width: 100%;
