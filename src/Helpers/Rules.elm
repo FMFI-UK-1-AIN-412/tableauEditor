@@ -505,50 +505,63 @@ ecdfItem config =
         config
 
 
-firstRuleColumn config =
-    div [ class "half" ]
+ruleColumn cls config content =
+    div [ class cls ]
         [ Html.table [ class "rulesHelpTable"] <|
             (Html.tr [] [Html.th [colspan 2] [text "Rule"], Html.th [] [text "Example"]]) ::
-            (List.concat <| List.filterMap (\a -> a config)
-            [alphaItem 
-            , betaItem 
-            , gammaItem 
-            , deltaItem 
-            , gammaStarItem 
-            , deltaStarItem 
-            , reflexivityItem 
-            , leibnitzItem 
-            , modusPonensItem 
-            , modusTolensItem] )
-            
+            (List.concat <| List.filterMap (\a -> a config) content)
         ]
 
 
-secondRuleColumn config =
-    div [ class "half" ]
-        [ Html.table [ class "rulesHelpTable"] <|
-            (Html.tr [] [Html.th [colspan 2] [text "Rule"], Html.th [] [text "Example"]]) ::
-            (List.concat <| List.filterMap (\a -> a config)
-            [hsItem
-            , dsItem
-            , ncsItem
-            , esffItem
-            , esftItem
-            , estfItem
-            , esttItem
-            , ecdtItem
-            , ecdfItem])
-        ]
+firstRuleColumn cls config =
+    ruleColumn cls config
+        [alphaItem 
+        , betaItem 
+        , gammaItem 
+        , deltaItem 
+        , gammaStarItem 
+        , deltaStarItem 
+        , reflexivityItem 
+        , leibnitzItem 
+        , modusPonensItem 
+        , modusTolensItem] 
+        
 
+secondRuleColumn cls config =
+    ruleColumn cls config
+        [hsItem
+        , dsItem
+        , ncsItem
+        , esffItem
+        , esftItem
+        , estfItem
+        , esttItem
+        , ecdtItem
+        , ecdfItem]
+    
 
 help config =
+    let
+        showSecondColumn = 
+            config /= Config.basicPropositional && config /= Config.basicFol
+        firstColumnClass = 
+            if showSecondColumn then
+                "half"
+            else
+                "full"
+        secondColumn = 
+            if showSecondColumn then
+                secondRuleColumn "half" config
+            else
+                text ""
+    in
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
         , symbolsTable
         , notesTable
         , h3 [class "full"] [ text "Applying rules" ]
-        , firstRuleColumn config
-        , secondRuleColumn config
+        , firstRuleColumn firstColumnClass config
+        , secondColumn
         ]
 
 
