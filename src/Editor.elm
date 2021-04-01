@@ -320,7 +320,7 @@ view ({ present } as model) =
             , viewNode present.config (Zipper.zipper present.tableau)
             , verdict present.config present.tableau
             , problems present.config present.tableau
-            , Rules.help
+            , Rules.help present.config
             ]
         ]
     }

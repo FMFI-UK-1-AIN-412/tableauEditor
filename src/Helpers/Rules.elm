@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Markdown
 import Term exposing (Term(..))
 import Tableau exposing (UnaryWithSubstExtType(..))
+import Config exposing (Config)
 
 
 fA =
@@ -342,241 +343,212 @@ sups txt =
     sup [] [ text txt ]
 
 
-ruleItem : String -> String -> List (Html msg) -> Html msg -> List (Html msg)
-ruleItem ruleName fullName formulas example = 
-    [ Html.tr []
-        [ Html.th [] [ text <| ruleName ++ " rule"  ++ fullName] 
-        , Html.th [] [ text "example" ]
+ruleItem : String -> List (Html msg) -> Html msg -> Dict.Dict String Bool -> Maybe (List (Html msg))
+ruleItem ruleName formulas example config = 
+    if Dict.get ruleName config |> Maybe.withDefault False then
+        Just
+        [ Html.tr [] 
+            [ Html.th [rowspan 2] [ text ruleName]
+            ]
+        , Html.tr []
+            [ Html.td [] [ div[] formulas]
+            , example
+            ]
         ]
-    , Html.tr []
-        [ Html.td [] [ div[] formulas]
-        , example
-        ]
-    ]
+    else
+        Nothing
 
-alphaItem : List (Html msg)
-alphaItem = 
+
+alphaItem config= 
     ruleItem 
         "α" 
-        ""
         (List.map renderAlpha alphas)
         (linearExample "(1) T(a∧b) [ ]" "(2) T a [1]" "(3) T b [1]")
+        config
 
-
-betaItem : List (Html msg)
-betaItem = 
+betaItem config= 
     ruleItem 
         "β" 
-        ""
         (List.map renderBeta betas)
         (binaryExample "(1) T(a∨b) [ ]" "(2) T a [1]" "(3) T b [1]")
+        config
 
-
-gammaItem : List (Html msg)
-gammaItem = 
+gammaItem config= 
     ruleItem 
         "γ" 
-        ""
         (List.map renderGamma gammas)
         (linearExample "" "(1) T ∀x P(x) [ ]" "(2) T P(g(k,y)) {x→g(k,y)} [1]")
+        config
 
-
-deltaItem : List (Html msg)
-deltaItem = 
+deltaItem config= 
     ruleItem 
         "δ" 
-        ""
         (List.map renderDelta deltas) 
         (linearExample "" "(1) F ∀x P(x) [ ]" "(2) F P(z) {x→z} [1]")
+        config
 
-
-gammaStarItem : List (Html msg)
-gammaStarItem = 
+gammaStarItem config= 
     ruleItem 
         "γ*" 
-        ""
         (List.map renderGammaDeltaStar [ ( "T", "∀" ), ( "F", "∃" ) ])
         (linearExample "" "(1) T ∀x∀y P(x,y) [ ]" "(2) T P(g(k,z), q) {x→g(k,z) ,y→q} [1]")
+        config
 
-
-deltaStarItem : List (Html msg)
-deltaStarItem = 
+deltaStarItem config= 
     ruleItem 
         "γ*" 
-        ""
         (List.map renderGammaDeltaStar [ ( "F", "∀" ), ( "T", "∃" ) ])
         (linearExample "" "(1) F ∀x∀y P(x,y) [ ]" "(2) F P(q,z) {x→q, y→z} [1]")
+        config
 
-
-reflexivityItem : List (Html msg)
-reflexivityItem = 
+reflexivityItem config= 
     ruleItem 
         "Reflexivity" 
-        ""
         (List.map renderUnary reflexivityFormulas)
         (linearExample "(1) T a≐a [ ]" "" "")
+        config
 
-
-leibnitzItem : List (Html msg)
-leibnitzItem = 
+leibnitzItem config= 
     ruleItem
         "Leibnitz"
-        ""
         ( [ table [ class "rule", class "withWhiteSpace" ] <|
                 [ tr [] [ td [] [ text "T t", subs "1", text "≐t", subs "2", text "  A", sups "+", text "{q→t", subs "1", text "}" ] ]
                 , tr [] [ td [] [ text "   A", sups "+", text "{q→t", subs "2", text "}" ] ]
                 ]
             ])
         (linearExample "(1) T x≐f(y) [ ]" "(2) T p(x) [ ]" "(3) T p(f(y)) [1,2]")
+        config
 
-
-cutItem : List (Html msg)
-cutItem = 
+cutItem config= 
     ruleItem 
         "Cut" 
-        ""
         (List.map renderBinary cutFormulas)
         (binaryExample "" "T a [ ]" "F a [ ]")
+        config
 
-
-modusPonensItem : List (Html msg)
-modusPonensItem = 
+modusPonensItem config= 
     ruleItem 
         "MP" 
-        " (Modus Ponens)"
         (List.map renderUnary mpFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) T a [ ]" "(3) T b [1,2]")
+        config
 
-
-modusTolensItem : List (Html msg)
-modusTolensItem = 
+modusTolensItem config= 
     ruleItem 
         "MT" 
-        " (Modus Tolens)"
         (List.map renderUnary mtFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) F b [ ]" "(3) F a [1,2]")
+        config
 
-
-hsItem : List (Html msg)
-hsItem = 
+hsItem config= 
     ruleItem 
         "HS" 
-        ""
         (List.map renderUnary hsFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) T(b→c) [ ]" "(3) T(a→c) [1,2]")
+        config
 
-
-dsItem : List (Html msg)
-dsItem = 
+dsItem config= 
     ruleItem 
         "DS" 
-        ""
         (List.map renderUnary dsFormulas)
         (linearExample "(1) T(a∨b) [ ]" "(2) F a [ ]" "(3) T b [1,2]")
+        config
 
-
-ncsItem : List (Html msg)
-ncsItem = 
+ncsItem config= 
     ruleItem 
         "NCS" 
-        ""
         (List.map renderUnary ncsFormulas)
         (linearExample "(1) F(a∧b) [ ]" "(2) T a [ ]" "(3) F b [1,2]")
+        config
 
-
-esttItem : List (Html msg)
-esttItem = 
+esttItem config= 
     ruleItem 
         "ESTT" 
-        ""
         (List.map renderUnary esttFormulas)
         (linearExample "(1) T(a↔b) [ ]" "(2) T b [ ]" "(3) T a [1,2]")
+        config
 
-
-estfItem : List (Html msg)
-estfItem = 
+estfItem config= 
     ruleItem 
         "ESTF" 
-        ""
         (List.map renderUnary estfFormulas)
         (linearExample "(1) T(a↔b) [ ]" "(2) F a [ ]" "(3) F b [1,2]")
+        config
 
-
-esftItem : List (Html msg)
-esftItem = 
+esftItem config= 
     ruleItem 
         "ESFT" 
-        ""
         (List.map renderUnary esftFormulas)
         (linearExample "(1) F(a↔b) [ ]" "(2) T a [ ]" "(3) F b [1,2]")
+        config
 
-
-esffItem : List (Html msg)
-esffItem = 
+esffItem config = 
     ruleItem 
         "ESFF" 
-        ""
         (List.map renderUnary esffFormulas)
         (linearExample "(1) F(a↔b) [ ]" "(2) F b [ ]" "(3) T a [1,2]")
+        config
 
-
-ecdtItem : List (Html msg)
-ecdtItem = 
+ecdtItem config = 
     ruleItem 
         "ECDT" 
-        ""
         (List.map renderBinary ecdtFormulas)
         (binaryExample "(1) T(a↔b) [ ]" "(2) T(a∧b) [1]" "(3) F (a∨b) [1]")
+        config
 
 
-ecdfItem : List (Html msg)
-ecdfItem = 
+ecdfItem config = 
     ruleItem 
         "ECDF" 
-        ""
         (List.map renderBinary ecdfFormulas)
         (binaryExample "(1) F(a↔b) [ ]" "(2) F T (a∧¬b) [1]" "(3) F T (a∨¬b) [1]")
+        config
 
 
-firstRuleColumn =
+firstRuleColumn config =
     div [ class "half" ]
-        [ Html.table [ class "rulesHelpTable", class "delete" ] <|
-            alphaItem
-            ++ betaItem
-            ++ gammaItem
-            ++ deltaItem
-            ++ gammaStarItem
-            ++ deltaStarItem
-            ++ reflexivityItem
-            ++ leibnitzItem
-            ++ modusPonensItem
-            ++ modusTolensItem
+        [ Html.table [ class "rulesHelpTable"] <|
+            (Html.tr [] [Html.th [colspan 2] [text "Rule"], Html.th [] [text "Example"]]) ::
+            (List.concat <| List.filterMap (\a -> a config)
+            [alphaItem 
+            , betaItem 
+            , gammaItem 
+            , deltaItem 
+            , gammaStarItem 
+            , deltaStarItem 
+            , reflexivityItem 
+            , leibnitzItem 
+            , modusPonensItem 
+            , modusTolensItem] )
+            
         ]
 
 
-secondRuleColumn =
+secondRuleColumn config =
     div [ class "half" ]
-        [ Html.table [ class "rulesHelpTable", class "delete" ] <|
-            hsItem
-            ++ dsItem
-            ++ ncsItem
-            ++ esffItem
-            ++ esftItem
-            ++ estfItem
-            ++ esttItem
-            ++ ecdtItem
-            ++ ecdfItem
+        [ Html.table [ class "rulesHelpTable"] <|
+            (Html.tr [] [Html.th [colspan 2] [text "Rule"], Html.th [] [text "Example"]]) ::
+            (List.concat <| List.filterMap (\a -> a config)
+            [hsItem
+            , dsItem
+            , ncsItem
+            , esffItem
+            , esftItem
+            , estfItem
+            , esttItem
+            , ecdtItem
+            , ecdfItem])
         ]
 
 
-help =
+help config =
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
         , symbolsTable
         , notesTable
         , h3 [class "full"] [ text "Applying rules" ]
-        , firstRuleColumn
-        , secondRuleColumn
+        , firstRuleColumn config
+        , secondRuleColumn config
         ]
 
 
