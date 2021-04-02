@@ -325,6 +325,7 @@ getRef z ref =
     { str = ref
     , up =
         ref
+            |> String.replace " " ""
             |> String.toInt
             |> Maybe.andThen (\a -> findAbove a z)
     }
