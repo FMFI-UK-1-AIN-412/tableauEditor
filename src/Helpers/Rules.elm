@@ -1,14 +1,14 @@
 module Helpers.Rules exposing (..)
 
+import Config exposing (Config)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
 import Html exposing (Attribute, Html, code, div, h2, h3, p, span, sub, sup, table, td, text, tr)
 import Html.Attributes exposing (..)
 import Markdown
-import Term exposing (Term(..))
 import Tableau exposing (UnaryWithSubstExtType(..))
-import Config exposing (Config)
+import Term exposing (Term(..))
 
 
 fA =
@@ -343,199 +343,220 @@ sups txt =
     sup [] [ text txt ]
 
 
-ruleItem ruleName formulas example config = 
+ruleItem ruleName formulas example config =
     if Dict.get ruleName config |> Maybe.withDefault False then
         Just <|
-        Html.table [ class "rulesHelpTable", class "ruleBox"] 
-            [ Html.tr [] 
-                [ Html.th [] [ text ruleName]
-                , Html.th [] [ text "example"]
+            Html.table [ class "rulesHelpTable", class "ruleBox" ]
+                [ Html.tr []
+                    [ Html.th [] [ text ruleName ]
+                    , Html.th [] [ text "example" ]
+                    ]
+                , Html.tr []
+                    [ Html.td [] [ div [] formulas ]
+                    , example
+                    ]
                 ]
-            , Html.tr []
-                [ Html.td [] [ div[] formulas]
-                , example
-                ]
-            ]
+
     else
         Nothing
-        
 
-alphaItem config= 
-    ruleItem 
-        "α" 
+
+alphaItem config =
+    ruleItem
+        "α"
         (List.map renderAlpha alphas)
         (linearExample "(1) T(a∧b) [ ]" "(2) T a [1]" "(3) T b [1]")
         config
 
-betaItem config= 
-    ruleItem 
-        "β" 
+
+betaItem config =
+    ruleItem
+        "β"
         (List.map renderBeta betas)
         (binaryExample "(1) T(a∨b) [ ]" "(2) T a [1]" "(3) T b [1]")
         config
 
-gammaItem config= 
-    ruleItem 
-        "γ" 
+
+gammaItem config =
+    ruleItem
+        "γ"
         (List.map renderGamma gammas)
         (linearExample "" "(1) T ∀x P(x) [ ]" "(2) T P(g(k,y)) {x→g(k,y)} [1]")
         config
 
-deltaItem config= 
-    ruleItem 
-        "δ" 
-        (List.map renderDelta deltas) 
+
+deltaItem config =
+    ruleItem
+        "δ"
+        (List.map renderDelta deltas)
         (linearExample "" "(1) F ∀x P(x) [ ]" "(2) F P(z) {x→z} [1]")
         config
 
-gammaStarItem config= 
-    ruleItem 
-        "γ*" 
+
+gammaStarItem config =
+    ruleItem
+        "γ*"
         (List.map renderGammaDeltaStar [ ( "T", "∀" ), ( "F", "∃" ) ])
         (linearExample "" "(1) T ∀x∀y P(x,y) [ ]" "(2) T P(g(k,z), q) {x→g(k,z) ,y→q} [1]")
         config
 
-deltaStarItem config= 
-    ruleItem 
-        "δ*" 
+
+deltaStarItem config =
+    ruleItem
+        "δ*"
         (List.map renderGammaDeltaStar [ ( "F", "∀" ), ( "T", "∃" ) ])
         (linearExample "" "(1) F ∀x∀y P(x,y) [ ]" "(2) F P(q,z) {x→q, y→z} [1]")
         config
 
-reflexivityItem config= 
-    ruleItem 
-        "Reflexivity" 
+
+reflexivityItem config =
+    ruleItem
+        "Reflexivity"
         (List.map renderUnary reflexivityFormulas)
         (linearExample "(1) T a≐a [ ]" "" "")
         config
 
-leibnitzItem config= 
+
+leibnitzItem config =
     ruleItem
         "Leibnitz"
-        ( [ table [ class "rule", class "withWhiteSpace" ] <|
-                [ tr [] [ td [] [ text "T t", subs "1", text "≐t", subs "2", text "  A", sups "+", text "{q→t", subs "1", text "}" ] ]
-                , tr [] [ td [] [ text "   A", sups "+", text "{q→t", subs "2", text "}" ] ]
-                ]
-            ])
+        [ table [ class "rule", class "withWhiteSpace" ] <|
+            [ tr [] [ td [] [ text "T t", subs "1", text "≐t", subs "2", text "  A", sups "+", text "{q→t", subs "1", text "}" ] ]
+            , tr [] [ td [] [ text "   A", sups "+", text "{q→t", subs "2", text "}" ] ]
+            ]
+        ]
         (linearExample "(1) T x≐f(y) [ ]" "(2) T p(x) [ ]" "(3) T p(f(y)) [1,2]")
         config
 
-cutItem config= 
-    ruleItem 
-        "Cut" 
+
+cutItem config =
+    ruleItem
+        "Cut"
         (List.map renderBinary cutFormulas)
         (binaryExample "" "T a [ ]" "F a [ ]")
         config
 
-modusPonensItem config= 
-    ruleItem 
-        "MP" 
+
+modusPonensItem config =
+    ruleItem
+        "MP"
         (List.map renderUnary mpFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) T a [ ]" "(3) T b [1,2]")
         config
 
-modusTolensItem config= 
-    ruleItem 
-        "MT" 
+
+modusTolensItem config =
+    ruleItem
+        "MT"
         (List.map renderUnary mtFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) F b [ ]" "(3) F a [1,2]")
         config
 
-hsItem config= 
-    ruleItem 
-        "HS" 
+
+hsItem config =
+    ruleItem
+        "HS"
         (List.map renderUnary hsFormulas)
         (linearExample "(1) T(a→b) [ ]" "(2) T(b→c) [ ]" "(3) T(a→c) [1,2]")
         config
 
-dsItem config= 
-    ruleItem 
-        "DS" 
+
+dsItem config =
+    ruleItem
+        "DS"
         (List.map renderUnary dsFormulas)
         (linearExample "(1) T(a∨b) [ ]" "(2) F a [ ]" "(3) T b [1,2]")
         config
 
-ncsItem config= 
-    ruleItem 
-        "NCS" 
+
+ncsItem config =
+    ruleItem
+        "NCS"
         (List.map renderUnary ncsFormulas)
         (linearExample "(1) F(a∧b) [ ]" "(2) T a [ ]" "(3) F b [1,2]")
         config
 
-esttItem config= 
-    ruleItem 
-        "ESTT" 
+
+esttItem config =
+    ruleItem
+        "ESTT"
         (List.map renderUnary esttFormulas)
         (linearExample "(1) T(a↔b) [ ]" "(2) T b [ ]" "(3) T a [1,2]")
         config
 
-estfItem config= 
-    ruleItem 
-        "ESTF" 
+
+estfItem config =
+    ruleItem
+        "ESTF"
         (List.map renderUnary estfFormulas)
         (linearExample "(1) T(a↔b) [ ]" "(2) F a [ ]" "(3) F b [1,2]")
         config
 
-esftItem config= 
-    ruleItem 
-        "ESFT" 
+
+esftItem config =
+    ruleItem
+        "ESFT"
         (List.map renderUnary esftFormulas)
         (linearExample "(1) F(a↔b) [ ]" "(2) T a [ ]" "(3) F b [1,2]")
         config
 
-esffItem config = 
-    ruleItem 
-        "ESFF" 
+
+esffItem config =
+    ruleItem
+        "ESFF"
         (List.map renderUnary esffFormulas)
         (linearExample "(1) F(a↔b) [ ]" "(2) F b [ ]" "(3) T a [1,2]")
         config
 
-ecdtItem config = 
-    ruleItem 
-        "ECDT" 
+
+ecdtItem config =
+    ruleItem
+        "ECDT"
         (List.map renderBinary ecdtFormulas)
         (binaryExample "(1) T(a↔b) [ ]" "(2) T(a∧b) [1]" "(3) F (a∨b) [1]")
         config
 
 
-ecdfItem config = 
-    ruleItem 
-        "ECDF" 
+ecdfItem config =
+    ruleItem
+        "ECDF"
         (List.map renderBinary ecdfFormulas)
         (binaryExample "(1) F(a↔b) [ ]" "(2) F T (a∧¬b) [1]" "(3) F T (a∨¬b) [1]")
         config
 
 
-ruleColumn config =
-    div [ class "rules-container" ] <| 
-            List.filterMap (\a -> a config)
-                [alphaItem 
-                , betaItem 
-                , gammaItem 
-                , deltaItem 
-                , gammaStarItem 
-                , deltaStarItem 
-                , reflexivityItem 
-                , leibnitzItem 
-                , modusPonensItem 
-                , modusTolensItem
-                , hsItem
-                , dsItem
-                , ncsItem
-                , esffItem
-                , esftItem
-                , estfItem
-                , esttItem
-                , ecdtItem
-                , ecdfItem]
-                
+rulesTable config =
+    div [ class "rules-container" ] <|
+        List.filterMap (\a -> a config)
+            [ alphaItem
+            , betaItem
+            , gammaItem
+            , deltaItem
+            , gammaStarItem
+            , deltaStarItem
+            , reflexivityItem
+            , leibnitzItem
+            , modusPonensItem
+            , modusTolensItem
+            , hsItem
+            , dsItem
+            , ncsItem
+            , esffItem
+            , esftItem
+            , estfItem
+            , esttItem
+            , ecdtItem
+            , ecdfItem
+            ]
+
+
 help config =
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
         , symbolsTable
         , notesTable
-        , h3 [class "full"] [ text "Applying rules" ]
-        , ruleColumn config
+        , h3 [ class "full" ] [ text "Applying rules" ]
+        , rulesTable config
         ]
 
 
