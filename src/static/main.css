@@ -377,7 +377,6 @@ button.delete {
 	border-collapse: collapse;
 	width: 100%;
 	box-sizing: border-box;
-	margin-bottom: 15px;
 }
 
 .rulesHelpTable th, td {
@@ -426,10 +425,25 @@ button.delete {
 	white-space: pre;
 }
 
+.rules-container{
+	display:flex;
+	flex-wrap: wrap;
+	width:100%;
+}
+
+.ruleBox{
+	width:50%;
+	table-layout: fixed;
+}
+
+
 @media only screen and (max-width: 1180px) {
 	.half {
 		width:100%;
 		padding: 0;
+	}
+	.ruleBox{
+		width: 100%;
 	}
 }
 

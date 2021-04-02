@@ -343,21 +343,22 @@ sups txt =
     sup [] [ text txt ]
 
 
-ruleItem : String -> List (Html msg) -> Html msg -> Dict.Dict String Bool -> Maybe (List (Html msg))
 ruleItem ruleName formulas example config = 
     if Dict.get ruleName config |> Maybe.withDefault False then
-        Just
-        [ Html.tr [] 
-            [ Html.th [rowspan 2] [ text ruleName]
+        Just <|
+        Html.table [ class "rulesHelpTable", class "ruleBox"] 
+            [ Html.tr [] 
+                [ Html.th [] [ text ruleName]
+                , Html.th [] [ text "example"]
+                ]
+            , Html.tr []
+                [ Html.td [] [ div[] formulas]
+                , example
+                ]
             ]
-        , Html.tr []
-            [ Html.td [] [ div[] formulas]
-            , example
-            ]
-        ]
     else
         Nothing
-
+        
 
 alphaItem config= 
     ruleItem 
@@ -396,7 +397,7 @@ gammaStarItem config=
 
 deltaStarItem config= 
     ruleItem 
-        "γ*" 
+        "δ*" 
         (List.map renderGammaDeltaStar [ ( "F", "∀" ), ( "T", "∃" ) ])
         (linearExample "" "(1) F ∀x∀y P(x,y) [ ]" "(2) F P(q,z) {x→q, y→z} [1]")
         config
@@ -505,63 +506,36 @@ ecdfItem config =
         config
 
 
-ruleColumn cls config content =
-    div [ class cls ]
-        [ Html.table [ class "rulesHelpTable"] <|
-            (Html.tr [] [Html.th [colspan 2] [text "Rule"], Html.th [] [text "Example"]]) ::
-            (List.concat <| List.filterMap (\a -> a config) content)
-        ]
-
-
-firstRuleColumn cls config =
-    ruleColumn cls config
-        [alphaItem 
-        , betaItem 
-        , gammaItem 
-        , deltaItem 
-        , gammaStarItem 
-        , deltaStarItem 
-        , reflexivityItem 
-        , leibnitzItem 
-        , modusPonensItem 
-        , modusTolensItem] 
-        
-
-secondRuleColumn cls config =
-    ruleColumn cls config
-        [hsItem
-        , dsItem
-        , ncsItem
-        , esffItem
-        , esftItem
-        , estfItem
-        , esttItem
-        , ecdtItem
-        , ecdfItem]
-    
-
+ruleColumn config =
+    div [ class "rules-container" ] <| 
+            List.filterMap (\a -> a config)
+                [alphaItem 
+                , betaItem 
+                , gammaItem 
+                , deltaItem 
+                , gammaStarItem 
+                , deltaStarItem 
+                , reflexivityItem 
+                , leibnitzItem 
+                , modusPonensItem 
+                , modusTolensItem
+                , hsItem
+                , dsItem
+                , ncsItem
+                , esffItem
+                , esftItem
+                , estfItem
+                , esttItem
+                , ecdtItem
+                , ecdfItem]
+                
 help config =
-    let
-        showSecondColumn = 
-            config /= Config.basicPropositional && config /= Config.basicFol
-        firstColumnClass = 
-            if showSecondColumn then
-                "half"
-            else
-                "full"
-        secondColumn = 
-            if showSecondColumn then
-                secondRuleColumn "half" config
-            else
-                text ""
-    in
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
         , symbolsTable
         , notesTable
         , h3 [class "full"] [ text "Applying rules" ]
-        , firstRuleColumn firstColumnClass config
-        , secondColumn
+        , ruleColumn config
         ]
 
 
