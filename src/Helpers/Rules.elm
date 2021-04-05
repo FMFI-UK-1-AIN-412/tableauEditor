@@ -225,7 +225,7 @@ symbolsTable =
                 [ Html.td [] [ text "Conjunction" ]
                 , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`&`, `/\\`, `∧`" ]
                 , Html.td [ rowspan 4 ]
-                    [ text "strictly binary, must be parentdesized" ]
+                    [ text "strictly binary, must be parenthesized" ]
                 ]
             , Html.tr []
                 [ Html.td [] [ text "Disjunction" ]
@@ -243,7 +243,7 @@ symbolsTable =
                 [ Html.td [] [ text "Universal quantifier" ]
                 , Html.td [] [ Markdown.toHtml [ class "symbols" ] "`∀`, `\\A`, `\\forall`, `\\a`" ]
                 , Html.td [ rowspan 2 ]
-                    [ text "takes a\u{00A0}variable and a formula" ]
+                    [ text "takes a variable and a formula" ]
                 ]
             , Html.tr []
                 [ Html.td [] [ text "Existential quantifier" ]
@@ -397,7 +397,7 @@ gammaStarItem config =
     ruleItem
         "γ*"
         (List.map renderGammaDeltaStar [ ( "T", "∀" ), ( "F", "∃" ) ])
-        (linearExample "" "(1) T ∀x∀y P(x,y) [ ]" "(2) T P(g(k,z), q) {x→g(k,z) ,y→q} [1]")
+        (linearExample "" "(1) T ∀x∀y P(x,y) [ ]" "(2) T P(g(k,z), q) {x→g(k,z), y→q} [1]")
         config
 
 
@@ -521,7 +521,7 @@ ecdfItem config =
     ruleItem
         "ECDF"
         (List.map renderBinary ecdfFormulas)
-        (binaryExample "(1) F(a↔b) [ ]" "(2) F T (a∧¬b) [1]" "(3) F T (a∨¬b) [1]")
+        (binaryExample "(1) F(a↔b) [ ]" "(2) T (a∧¬b) [1]" "(3) F (a∨¬b) [1]")
         config
 
 
@@ -538,9 +538,10 @@ rulesTable config =
             , leibnitzItem
             , modusPonensItem
             , modusTolensItem
-            , hsItem
             , dsItem
             , ncsItem
+            , cutItem
+            , hsItem
             , esffItem
             , esftItem
             , estfItem
