@@ -65,7 +65,7 @@ toString config =
         "Propositional"
 
     else if config == propositionalWithEquality then
-        "Propositional with EQ"
+        "Propositional with equality"
 
     else if config == basicFol then
         "Basic FOL"

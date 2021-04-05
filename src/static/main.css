@@ -109,9 +109,6 @@ body {
 	max-width: 97%;
 }
 
-.onclick-menu-content button{
-	margin: 0;
-}
 
 .button, .onclick-menu:before, .onclick-menu.change, .onclick-menu.add, .onclick-menu.del {
 	padding: 2px 10px;
@@ -165,10 +162,6 @@ body {
 .onclick-menu {
 	position: relative;
 	display: inline-block;
-}
-
-.onclick-menu:hover{
-	cursor: pointer;
 }
 
 .onclick-menu.change .onclick-menu-content {
@@ -275,6 +268,7 @@ Eye candy
 	font-size: .75rem;
 	width: 100%;
 	text-align: left;
+	margin: 0;
 }
 /*.onclick-menu-content button:hover {
 	background-color: hsl(210, 20%, 45%);
