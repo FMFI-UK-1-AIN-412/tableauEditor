@@ -132,18 +132,10 @@ rightSubtree t =
 
 strRefsToList : String -> List String
 strRefsToList str =
-    let
-        lst =
-            List.filter (\a -> a /= "") (String.split "," (String.replace " " "" str))
-    in
-    if String.right 1 str == "," then
-        List.append lst [ "" ]
-
-    else if String.left 1 str == "," then
-        "" :: lst
-
+    if String.isEmpty str then 
+        [] 
     else
-        lst
+        (String.split "," str)
 
 
 refsToString : List Ref -> String
