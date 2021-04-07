@@ -1,5 +1,6 @@
 module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
 
+import Config exposing (Config)
 import Json.Encode exposing (..)
 import Tableau exposing (..)
 
@@ -33,6 +34,12 @@ jsonSubstitution { str, parsedSubst } =
 encodeSubstitution : Tableau.Substitution -> List ( String, Value )
 encodeSubstitution s =
     [ ( "substitution", jsonSubstitution s ) ]
+
+
+jsonConfig : Config -> List ( String, Value )
+jsonConfig config =
+    [ ( "config", string <| Config.toString config )
+    ]
 
 
 encodeUnaryRule : Tableau -> String -> Tableau -> List ( String, Value )
@@ -85,9 +92,14 @@ jsonTableau t =
     object <| jsonTblList t
 
 
-encode : Int -> Tableau -> String
-encode ind t =
-    Json.Encode.encode ind (jsonTableau t) ++ "\n"
+jsonTableauAndConfig : Config -> Tableau -> Value
+jsonTableauAndConfig config t =
+    object <| jsonTblList t ++ jsonConfig config
+
+
+encode : Int -> Config -> Tableau -> String
+encode ind config t =
+    Json.Encode.encode ind (jsonTableauAndConfig config t) ++ "\n"
 
 
 

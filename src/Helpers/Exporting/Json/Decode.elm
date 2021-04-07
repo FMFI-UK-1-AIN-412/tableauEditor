@@ -1,5 +1,6 @@
 module Helpers.Exporting.Json.Decode exposing (decode, tableau)
 
+import Config exposing (Config)
 import Dict
 import Formula
 import Formula.Parser
@@ -47,6 +48,12 @@ substitution =
     map2 Tableau.Substitution
         (field "str" string)
         (map Formula.Parser.parseSubstitution (field "str" string))
+
+
+config : Decoder Config
+config =
+    map Config.fromString
+        (field "config" string)
 
 
 open : Decoder Tableau.Tableau
@@ -174,13 +181,16 @@ tableau =
         )
 
 
-decode : String -> Result Error Tableau.Tableau
+decode : String -> ( Result Error Config, Result Error Tableau )
 decode s =
     let
-        fn =
+        decodeTableau =
             decodeString tableau >> Result.map reRefTableau
+
+        decodeConfig =
+            decodeString config
     in
-    fn s
+    ( decodeConfig s, decodeTableau s )
 
 
 reRefTableau : Tableau.Tableau -> Tableau.Tableau

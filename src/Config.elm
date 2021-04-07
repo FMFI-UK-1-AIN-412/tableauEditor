@@ -1,6 +1,7 @@
 module Config exposing
     ( Config(..)
     , default
+    , fromString
     , getRuleSet
     , toString
     )
@@ -72,6 +73,28 @@ toString config =
 
         FullFol ->
             "Full FOL"
+
+
+fromString : String -> Config
+fromString str =
+    case str of
+        "Basic propositional" ->
+            BasicPropositional
+
+        "Propositional" ->
+            Propositional
+
+        "Propositional with equality" ->
+            PropositionalWithEquality
+
+        "Basic FOL" ->
+            BasicFol
+
+        "Full FOL" ->
+            FullFol
+
+        _ ->
+            default
 
 
 getRuleSet : Config -> RuleSet

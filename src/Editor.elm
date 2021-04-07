@@ -76,10 +76,10 @@ init mts =
 
                 Just ts ->
                     case Helpers.Exporting.Json.Decode.decode ts of
-                        Ok t ->
+                        ( _, Ok t ) ->
                             t
 
-                        Err _ ->
+                        ( _, Err _ ) ->
                             emptyT
     in
     ( UndoList.fresh
@@ -161,19 +161,33 @@ update msg ({ present } as model) =
 
         JsonRead contents ->
             case contents |> Helpers.Exporting.Json.Decode.decode of
-                Ok t ->
+                ( Ok cfg, Ok t ) ->
                     ( UndoList.new
-                        { present | jsonImport = None, tableau = t }
+                        { present | jsonImport = None, config = cfg, tableau = t }
                         model
                     , cache contents
                     )
 
-                Err e ->
+                ( Ok cfg, Err t ) ->
+                    ( UndoList.new
+                        { present | jsonImport = ImportErr (Json.Decode.errorToString t), config = cfg }
+                        model
+                    , cache contents
+                    )
+
+                ( Err cfg, Ok t ) ->
+                    ( UndoList.new
+                        { present | jsonImport = ImportErr (Json.Decode.errorToString cfg), tableau = t }
+                        model
+                    , cache contents
+                    )
+
+                ( Err cfg, Err t ) ->
                     ( { model
                         | present =
                             { present
                                 | jsonImport =
-                                    ImportErr (Json.Decode.errorToString e)
+                                    ImportErr (Json.Decode.errorToString t ++ "\n" ++ Json.Decode.errorToString cfg)
                             }
                       }
                     , Cmd.none
@@ -185,7 +199,7 @@ update msg ({ present } as model) =
                 "tableau.json"
                 "application/json"
               <|
-                Helpers.Exporting.Json.Encode.encode 2 present.tableau
+                Helpers.Exporting.Json.Encode.encode 2 present.config present.tableau
             )
 
         Undo ->
@@ -202,7 +216,7 @@ update msg ({ present } as model) =
 
         Cache ->
             ( model
-            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau)
+            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.config model.present.tableau)
             )
 
         _ ->
