@@ -280,9 +280,9 @@ notesTable =
                     ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ]
-                        "(**1**) **T** (A → B) [**1**]"
+                        "(**1**) **T** (A → B) [ ]"
                     , Markdown.toHtml [ class "symbols" ]
-                        "(**2**) **F** ¬(A ∧ ¬B) [**2**]"
+                        "(**2**) **F** ¬(A ∧ ¬B) [ ]"
                     ]
                 ]
             , Html.tr []
@@ -292,7 +292,7 @@ notesTable =
                     ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ] "**Incorrect** example: "
-                    , Markdown.toHtml [ class "symbols" ] "(1) T ∀x ∃**y** P(**x**,y) [1]"
+                    , Markdown.toHtml [ class "symbols" ] "(1) T ∀x ∃**y** P(**x**,y) [ ]"
                     , Markdown.toHtml [ class "symbols" ] "(2) T ∃y P(f(y),y) {x→**f(y)**}\u{00A0}[1]"
                     ]
                 ]
@@ -300,8 +300,8 @@ notesTable =
                 [ Html.td [] [ Markdown.toHtml [ class "symbols" ] "When applying a\u{00A0}δ\u{00A0}rule, substitute the bound variable with **a new** constant/variable, i.e., one which is not free (or, even better, does not occur at all) in any node above the current one." ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ] "**Incorrect** example: "
-                    , Markdown.toHtml [ class "symbols" ] "(1) T L(**p**) [1]"
-                    , Markdown.toHtml [ class "symbols" ] "(2) T ∃x ∀y P(x,y) [2]"
+                    , Markdown.toHtml [ class "symbols" ] "(1) T L(**p**) [ ]"
+                    , Markdown.toHtml [ class "symbols" ] "(2) T ∃x ∀y P(x,y) [ ]"
                     , Markdown.toHtml [ class "symbols" ] "(3) T ∀y P(**p**,y) {x→**p**} [2]"
                     ]
                 ]
@@ -349,7 +349,7 @@ ruleItem ruleName formulas example config =
             Html.table [ class "rulesHelpTable", class "ruleBox" ]
                 [ Html.tr []
                     [ Html.th [] [ text ruleName ]
-                    , Html.th [] [ text "example" ]
+                    , Html.th [] [ text "Example" ]
                     ]
                 , Html.tr []
                     [ Html.td [] [ div [] formulas ]

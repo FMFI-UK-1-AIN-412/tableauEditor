@@ -390,7 +390,13 @@ button.delete {
 	margin: 0px;
 }
 
-.rulesHelpTable  td:nth-child(odd){background-color: #def}
+.rulesHelpTable  tr:nth-child(odd){background-color: rgba(0, 0, 0, 0.05)}
+
+.rulesHelpTable td[rowspan] { background-color: white; }
+
+.rules-container > .rulesHelpTable tr{
+	background-color: white;
+}
 
 .rulesHelpTable th {
 	background-color: #6193a2;
