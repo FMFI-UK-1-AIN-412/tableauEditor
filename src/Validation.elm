@@ -294,7 +294,7 @@ validateBinary extType =
 
 
 validateRule rule validator config =
-    if Dict.get rule config |> Maybe.withDefault False then
+    if Set.member rule <| Config.getRuleSet config then
         validator
 
     else

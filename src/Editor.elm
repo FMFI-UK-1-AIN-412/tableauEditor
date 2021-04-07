@@ -3,7 +3,7 @@ port module Editor exposing (main, top, topRenumbered)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
-import Config exposing (Config)
+import Config exposing (Config(..))
 import Dict exposing (Dict)
 import Errors
 import File exposing (File)
@@ -22,6 +22,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
 import Json.Encode exposing (set)
+import Set
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
@@ -406,19 +407,22 @@ configMenu config =
             menuItem (SetConfig cfg) (Config.toString cfg)
     in
     menu "change" (text <| Config.toString config) <|
-        [ item Config.basicPropositional
-        , item Config.propositional
-        , item Config.propositionalWithEquality
-        , item Config.basicFol
-        , item Config.fullFol
+        [ item Config.BasicPropositional
+        , item Config.Propositional
+        , item Config.PropositionalWithEquality
+        , item Config.BasicFol
+        , item Config.FullFol
         ]
 
 
 ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
     let
         item ruleTypeStr msg =
-            Dict.get ruleTypeStr config
-                |> Maybe.map (always <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr))
+            if Set.member ruleTypeStr <| Config.getRuleSet config then
+                Just <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr)
+
+            else
+                Nothing
 
         unaryItem extType =
             item (unaryExtTypeToString extType) (unaryMsg extType z)
