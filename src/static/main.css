@@ -377,7 +377,6 @@ button.delete {
 	border-collapse: collapse;
 	width: 100%;
 	box-sizing: border-box;
-	margin-bottom: 15px;
 }
 
 .rulesHelpTable th, td {
@@ -391,7 +390,13 @@ button.delete {
 	margin: 0px;
 }
 
-.rulesHelpTable  tr:nth-child(even){background-color: #def}
+.rulesHelpTable  tr:nth-child(odd){background-color: rgba(0, 0, 0, 0.05)}
+
+.rulesHelpTable td[rowspan] { background-color: white; }
+
+.rules-container > .rulesHelpTable tr{
+	background-color: white;
+}
 
 .rulesHelpTable th {
 	background-color: #6193a2;
@@ -415,9 +420,7 @@ button.delete {
 	padding: 0 0.5rem 0 0;
 	box-sizing: border-box;
 }
-.half + .half {
-	padding: 0 0 0 0.5rem;
-}
+
 .full {
 	clear: left;
 	width: 100%;
@@ -428,10 +431,25 @@ button.delete {
 	white-space: pre;
 }
 
+.rules-container{
+	display:flex;
+	flex-wrap: wrap;
+	width:100%;
+}
+
+.ruleBox{
+	width:50%;
+	table-layout: fixed;
+}
+
+
 @media only screen and (max-width: 1180px) {
 	.half {
 		width:100%;
 		padding: 0;
+	}
+	.ruleBox{
+		width: 100%;
 	}
 }
 
