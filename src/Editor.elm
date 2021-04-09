@@ -3,7 +3,7 @@ port module Editor exposing (main, top, topRenumbered)
 --, FileReaderPortData, fileContentRead, fileSelected
 
 import Browser
-import Config exposing (Config(..))
+import Config exposing (Config)
 import Dict exposing (Dict)
 import Errors
 import File exposing (File)
@@ -69,23 +69,20 @@ init mts =
             , ext = Open
             }
 
-        initT =
+        (initCfg, initT) =
             case mts of
                 Nothing ->
-                    emptyT
+                    (Config.default, emptyT)
 
                 Just ts ->
-                    case Helpers.Exporting.Json.Decode.decode ts of
-                        ( _, Ok t ) ->
-                            t
-
-                        ( _, Err _ ) ->
-                            emptyT
+                    Helpers.Exporting.Json.Decode.decode ts 
+                    |> (\(cfg, t) -> 
+                        (cfg |> Result.withDefault Config.default, t |> Result.withDefault emptyT))
     in
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
-        , config = Config.default
+        , config = initCfg
         }
     , Cmd.none
     )
@@ -170,14 +167,15 @@ update msg ({ present } as model) =
 
                 ( Ok cfg, Err t ) ->
                     ( UndoList.new
-                        { present | jsonImport = ImportErr (Json.Decode.errorToString t), config = cfg }
+                        { present | jsonImport = ImportErr (Json.Decode.errorToString t) }
                         model
                     , cache contents
                     )
 
                 ( Err cfg, Ok t ) ->
                     ( UndoList.new
-                        { present | jsonImport = ImportErr (Json.Decode.errorToString cfg), tableau = t }
+                        { present | jsonImport = 
+                            ImportErr (Json.Decode.errorToString cfg ++ ". Keeping the last rule set configuration."), tableau = t }
                         model
                     , cache contents
                     )
