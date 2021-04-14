@@ -1,17 +1,24 @@
 module Config exposing
-    ( Config
-    , basicFol
-    , basicPropositional
+    ( Config(..)
     , default
-    , fullFol
-    , fullPropositional
+    , fromString
+    , getRuleSet
+    , toString
     )
 
-import Dict exposing (Dict)
+import Set exposing (Set)
 
 
-type alias Config =
-    Dict String Bool
+type Config
+    = BasicPropositional
+    | Propositional
+    | PropositionalWithEquality
+    | BasicFol
+    | FullFol
+
+
+type alias RuleSet =
+    Set String
 
 
 basicPropositionalRules : List String
@@ -44,39 +51,107 @@ extendedQuantifierRules =
     [ "γ*", "δ*" ]
 
 
-configFromRules : List String -> Config
-configFromRules =
-    Dict.fromList << List.map (\r -> ( r, True ))
-
-
 default : Config
 default =
-    fullFol
+    BasicPropositional
 
 
-basicPropositional : Config
-basicPropositional =
-    configFromRules basicPropositionalRules
+toString : Config -> String
+toString config =
+    case config of
+        BasicPropositional ->
+            "Basic propositional"
+
+        Propositional ->
+            "Propositional"
+
+        PropositionalWithEquality ->
+            "Propositional with equality"
+
+        BasicFol ->
+            "Basic FOL"
+
+        FullFol ->
+            "Full FOL"
 
 
-fullPropositional : Config
-fullPropositional =
-    configFromRules <|
+fromString : String -> Config
+fromString str =
+    case str of
+        "Basic propositional" ->
+            BasicPropositional
+
+        "Propositional" ->
+            Propositional
+
+        "Propositional with equality" ->
+            PropositionalWithEquality
+
+        "Basic FOL" ->
+            BasicFol
+
+        "Full FOL" ->
+            FullFol
+
+        _ ->
+            default
+
+
+getRuleSet : Config -> RuleSet
+getRuleSet config =
+    case config of
+        BasicPropositional ->
+            basicPropositionalRuleSet
+
+        Propositional ->
+            propositionalRuleSet
+
+        PropositionalWithEquality ->
+            propositionalWithEqualityRuleSet
+
+        BasicFol ->
+            basicFolRuleSet
+
+        FullFol ->
+            fullFolRuleSet
+
+
+basicPropositionalRuleSet : RuleSet
+basicPropositionalRuleSet =
+    Set.fromList <|
+        basicPropositionalRules
+
+
+propositionalRuleSet : RuleSet
+propositionalRuleSet =
+    Set.fromList <|
         basicPropositionalRules
             ++ extendedPropositionalRules
             ++ nonAnalyticPropositionalRules
 
 
-basicFol : Config
-basicFol =
-    configFromRules <|
+propositionalWithEqualityRuleSet : RuleSet
+propositionalWithEqualityRuleSet =
+    Set.fromList <|
         basicPropositionalRules
+            ++ extendedPropositionalRules
+            ++ nonAnalyticPropositionalRules
+            ++ equalityRules
+
+
+basicFolRuleSet : RuleSet
+basicFolRuleSet =
+    Set.fromList <|
+        basicPropositionalRules
+            ++ extendedPropositionalRules
+            ++ nonAnalyticPropositionalRules
+            ++ equalityRules
             ++ basicQuantifierRules
 
 
-fullFol : Config
-fullFol =
-    configFromRules <|
+fullFolRuleSet : RuleSet
+fullFolRuleSet =
+    Set.fromList <|
         basicPropositionalRules
             ++ extendedPropositionalRules
             ++ nonAnalyticPropositionalRules

@@ -22,6 +22,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
 import Json.Encode exposing (set)
+import Set
 import Tableau exposing (..)
 import Task
 import UndoList exposing (UndoList)
@@ -43,7 +44,7 @@ main =
 type JsonImport
     = None
     | InProgress String
-    | ImportErr String
+    | ImportErr String (List Json.Decode.Error)
 
 
 type alias Model =
@@ -68,23 +69,20 @@ init mts =
             , ext = Open
             }
 
-        initT =
+        (initCfg, initT) =
             case mts of
                 Nothing ->
-                    emptyT
+                    (Config.default, emptyT)
 
                 Just ts ->
-                    case Helpers.Exporting.Json.Decode.decode ts of
-                        Ok t ->
-                            t
-
-                        Err _ ->
-                            emptyT
+                    Helpers.Exporting.Json.Decode.decode ts 
+                    |> (\(cfg, t) -> 
+                        (cfg |> Result.withDefault Config.default, t |> Result.withDefault emptyT))
     in
     ( UndoList.fresh
         { tableau = initT
         , jsonImport = None
-        , config = Config.default
+        , config = initCfg
         }
     , Cmd.none
     )
@@ -112,6 +110,7 @@ type Msg
     | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
     | ChangeToBinary Tableau.BinaryExtType Zipper.Zipper
     | ChangeButtonsAppearance Zipper.Zipper
+    | SetConfig Config.Config
     | Undo
     | Redo
     | Prettify
@@ -159,19 +158,49 @@ update msg ({ present } as model) =
 
         JsonRead contents ->
             case contents |> Helpers.Exporting.Json.Decode.decode of
-                Ok t ->
+                ( Ok cfg, Ok t ) ->
                     ( UndoList.new
-                        { present | jsonImport = None, tableau = t }
+                        { present | jsonImport = None, config = cfg, tableau = t }
                         model
                     , cache contents
                     )
 
-                Err e ->
+                ( Err cfgErr, Ok t ) ->
+                    ( UndoList.new
+                        { present
+                        | jsonImport =
+                            ImportErr
+                                ("Failed to import rule set configuration. "
+                                    ++ "Keeping the last one.")
+                                [ cfgErr ]
+                        , tableau = t
+                        }
+                        model
+                    , cache contents
+                    )
+
+                ( Ok _, Err tErr ) ->
                     ( { model
                         | present =
                             { present
-                                | jsonImport =
-                                    ImportErr (Json.Decode.errorToString e)
+                            | jsonImport =
+                                ImportErr
+                                    "Failed to import tableau"
+                                    [ tErr ]
+                            }
+                      }
+                    , Cmd.none
+                    )
+
+                ( Err cfgErr, Err tErr ) ->
+                    ( { model
+                        | present =
+                            { present
+                            | jsonImport =
+                                ImportErr
+                                    ("Failed to import tableau and " ++
+                                        "rule set configuration")
+                                    [ tErr, cfgErr ]
                             }
                       }
                     , Cmd.none
@@ -183,7 +212,7 @@ update msg ({ present } as model) =
                 "tableau.json"
                 "application/json"
               <|
-                Helpers.Exporting.Json.Encode.encode 2 present.tableau
+                Helpers.Exporting.Json.Encode.encode 2 present.config present.tableau
             )
 
         Undo ->
@@ -200,7 +229,7 @@ update msg ({ present } as model) =
 
         Cache ->
             ( model
-            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.tableau)
+            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.config model.present.tableau)
             )
 
         _ ->
@@ -274,6 +303,9 @@ simpleUpdate msg model =
             ChangeButtonsAppearance z ->
                 { model | tableau = z |> Zipper.changeButtonAppearance |> top }
 
+            SetConfig new ->
+                { model | config = new }
+
             Prettify ->
                 { model | tableau = Zipper.prettify model.tableau }
 
@@ -309,7 +341,8 @@ view ({ present } as model) =
     , body =
         [ div [ class "tableau" ]
             [ div [ class "actions" ]
-                [ button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+                [ configMenu present.config
+                , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
                 , button [ class "button", onClick Print ] [ text "Print" ]
                 , jsonExportControl present.tableau
                 , jsonImportControl present.jsonImport
@@ -395,11 +428,28 @@ viewNodeInputs additional config z =
         )
 
 
+configMenu config =
+    let
+        item cfg =
+            menuItem (SetConfig cfg) (Config.toString cfg)
+    in
+    menu "change" (text <| Config.toString config) <|
+        [ item Config.BasicPropositional
+        , item Config.Propositional
+        , item Config.PropositionalWithEquality
+        , item Config.BasicFol
+        , item Config.FullFol
+        ]
+
+
 ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
     let
         item ruleTypeStr msg =
-            Dict.get ruleTypeStr config
-                |> Maybe.map (always <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr))
+            if Set.member ruleTypeStr <| Config.getRuleSet config then
+                Just <| menuItem msg (labelPrefix ++ " " ++ ruleTypeStr)
+
+            else
+                Nothing
 
         unaryItem extType =
             item (unaryExtTypeToString extType) (unaryMsg extType z)
@@ -425,7 +475,7 @@ menuItem msg str =
 
 menu cls label content =
     div [ class <| "onclick-menu " ++ cls, tabindex 0 ]
-        [ span [] [label, text " ▾"]
+        [ span [] [ label, text " ▾" ]
         , ul [ class "onclick-menu-content" ] content
         ]
 
@@ -713,10 +763,20 @@ jsonImportControl jsonImport =
 jsonImportError : JsonImport -> Html msg
 jsonImportError jsonImport =
     case jsonImport of
-        ImportErr e ->
-            p
-                [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ e ]
+        ImportErr msg ds ->
+            div [ class "jsonImportError" ]
+                <| List.singleton <| div []
+                    [ p [] [text <| "Import error: " ++ msg ]
+                    , details []
+                        ( summary [] [text "Error details"]
+                        :: List.map
+                            (p []
+                                << List.singleton
+                                << text
+                                << Json.Decode.errorToString)
+                            ds
+                        )
+                    ]
 
         _ ->
             div [] []
