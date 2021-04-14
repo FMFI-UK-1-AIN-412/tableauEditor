@@ -44,7 +44,7 @@ main =
 type JsonImport
     = None
     | InProgress String
-    | ImportErr String
+    | ImportErr String (List Json.Decode.Error)
 
 
 type alias Model =
@@ -165,27 +165,42 @@ update msg ({ present } as model) =
                     , cache contents
                     )
 
-                ( Ok cfg, Err t ) ->
+                ( Err cfgErr, Ok t ) ->
                     ( UndoList.new
-                        { present | jsonImport = ImportErr (Json.Decode.errorToString t) }
+                        { present
+                        | jsonImport =
+                            ImportErr
+                                ("Failed to import rule set configuration. "
+                                    ++ "Keeping the last one.")
+                                [ cfgErr ]
+                        , tableau = t
+                        }
                         model
                     , cache contents
                     )
 
-                ( Err cfg, Ok t ) ->
-                    ( UndoList.new
-                        { present | jsonImport = 
-                            ImportErr (Json.Decode.errorToString cfg ++ ". Keeping the last rule set configuration."), tableau = t }
-                        model
-                    , cache contents
-                    )
-
-                ( Err cfg, Err t ) ->
+                ( Ok _, Err tErr ) ->
                     ( { model
                         | present =
                             { present
-                                | jsonImport =
-                                    ImportErr (Json.Decode.errorToString t ++ "\n" ++ Json.Decode.errorToString cfg)
+                            | jsonImport =
+                                ImportErr
+                                    "Failed to import tableau"
+                                    [ tErr ]
+                            }
+                      }
+                    , Cmd.none
+                    )
+
+                ( Err cfgErr, Err tErr ) ->
+                    ( { model
+                        | present =
+                            { present
+                            | jsonImport =
+                                ImportErr
+                                    ("Failed to import tableau and " ++
+                                        "rule set configuration")
+                                    [ tErr, cfgErr ]
                             }
                       }
                     , Cmd.none
@@ -748,10 +763,20 @@ jsonImportControl jsonImport =
 jsonImportError : JsonImport -> Html msg
 jsonImportError jsonImport =
     case jsonImport of
-        ImportErr e ->
-            p
-                [ class "jsonImportError" ]
-                [ text <| "Error importing tableau: " ++ e ]
+        ImportErr msg ds ->
+            div [ class "jsonImportError" ]
+                <| List.singleton <| div []
+                    [ p [] [text <| "Import error: " ++ msg ]
+                    , details []
+                        ( summary [] [text "Error details"]
+                        :: List.map
+                            (p []
+                                << List.singleton
+                                << text
+                                << Json.Decode.errorToString)
+                            ds
+                        )
+                    ]
 
         _ ->
             div [] []
