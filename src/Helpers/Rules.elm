@@ -9,6 +9,7 @@ import Html.Attributes exposing (..)
 import Markdown
 import Tableau exposing (UnaryWithSubstExtType(..))
 import Term exposing (Term(..))
+import Set
 
 
 fA =
@@ -344,7 +345,7 @@ sups txt =
 
 
 ruleItem ruleName formulas example config =
-    if Dict.get ruleName config |> Maybe.withDefault False then
+    if Set.member ruleName <| Config.getRuleSet config then
         Just <|
             Html.table [ class "rulesHelpTable", class "ruleBox" ]
                 [ Html.tr []
@@ -551,6 +552,7 @@ rulesTable config =
             ]
 
 
+help : Config -> Html msg
 help config =
     div [ class "rulesHelp" ]
         [ h2 [] [ text "Help" ]
