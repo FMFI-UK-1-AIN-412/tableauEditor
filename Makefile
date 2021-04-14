@@ -17,7 +17,7 @@ build: $(STATIC_OUT) $(ELM_OUT)
 publish: build
 	rsync -av $(OUT_DIR)/ $(PUBLISH_URL)
 clean:
-	rm -r $(OUT_DIR)
+	-rm -r $(OUT_DIR)
 live:
 	elm-live --dir src -- $(ELM_MAIN) --output=$(basename $(ELM_MAIN)).js
 .PHONY: build publish clean live

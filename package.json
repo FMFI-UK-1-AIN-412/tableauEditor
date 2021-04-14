@@ -2,5 +2,12 @@
   "dependencies": {
     "elm": "^0.19.1-no-deps",
     "elm-live": "^2.7.5"
+  },
+  "scripts": {
+    "build": "make build",
+    "live": "make live",
+    "clean": "make clean",
+    "publish": "make publish",
+    "ghpublish": "make ghpublish"
   }
 }
