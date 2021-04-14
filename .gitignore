@@ -10,3 +10,4 @@ src/.DS_Store
 src/Editor.js
 yarn-error.log
 elm.js
+/build/
