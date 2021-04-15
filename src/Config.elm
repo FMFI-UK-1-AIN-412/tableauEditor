@@ -1,5 +1,6 @@
 module Config exposing
     ( Config(..)
+    , RuleSet
     , default
     , fromString
     , getRuleSet
