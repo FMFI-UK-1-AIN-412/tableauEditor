@@ -4,25 +4,21 @@
     <meta charSet="utf-8"/>
     <title>Tableau Editor</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.3/css/all.css">
-    <link rel="stylesheet" href="static/main.css?13d74b805ff305296f0e72f463311f13bb4c644c">
-    <script type="text/javascript" src="Editor.js?d5c95c8356e69bcfba6ded76b92a11b977b0852e"></script>
+    <link rel="stylesheet" href="static/main.css?0c8afa59295b046775fed12e0ba09d20dc10eb5a">
+    <script type="text/javascript" src="Editor.js?52c4d9b2fda21e3069760e2d77c7b08de0235cc9"></script>
   </head>
   <body>
-    <div id="main"></div>
-  </body>
-  <footer>
     <script type="text/javascript">
-        var cachedTableau = localStorage.getItem('tableauEditor');
-        var app = Elm.Editor.init({
-          flags: cachedTableau ? cachedTableau : null
-        });
-        app.ports.print.subscribe(function () {
-          window.print();
-        });
-        app.ports.cache.subscribe(function (tableau) {
-          localStorage.setItem('tableauEditor', tableau);
-        });
+      var cachedTableau = localStorage.getItem('tableauEditor');
+      var app = Elm.Editor.init({
+        flags: cachedTableau ? cachedTableau : null
+      });
+      app.ports.print.subscribe(function () {
+        window.print();
+      });
+      app.ports.cache.subscribe(function (tableau) {
+        localStorage.setItem('tableauEditor', tableau);
+      });
     </script>
-
-  </footer>
+  </body>
 </html>
