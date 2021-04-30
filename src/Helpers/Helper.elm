@@ -18,8 +18,8 @@ hasReference z =
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
     case Zipper.up z |> Zipper.zTableau |> .ext of
-        Unary Alpha _ ->
-            List.length (Zipper.zNode z).references == 0
+        Unary Splus _ ->
+            True
 
         _ ->
             Zipper.up z == z
@@ -99,7 +99,7 @@ assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second
-            (if z |> Zipper.zNode |> .references |> List.isEmpty then
+            (if z |> isPremise then
                 Just ()
             else
                 Nothing

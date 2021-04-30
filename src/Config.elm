@@ -24,7 +24,7 @@ type alias RuleSet =
 
 basicPropositionalRules : List String
 basicPropositionalRules =
-    [ "α", "β" ]
+    [ "S⁺", "α", "β" ]
 
 
 extendedPropositionalRules : List String

@@ -461,7 +461,7 @@ ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
             item (binaryExtTypeToString extType) (binaryMsg extType z)
     in
     menu cls label <|
-        List.filterMap unaryItem [ Alpha ]
+        List.filterMap unaryItem [ Splus, Alpha ]
             ++ List.filterMap binaryItem [ Beta ]
             ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
             ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
@@ -655,7 +655,7 @@ viewControls config (( t, _ ) as z) =
                                 div [] []
                 in
                 if t.node.gui.controlsShown then
-                    [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
+                    [ button [ class "button", onClick (ExpandUnary Splus z) ] [ text "Add S⁺" ]
                     , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary (text "Add") "Add" "add" config z
                     , menu "del" (text "Delete") <|
                         [ li [] [ deleteMeButton ]
