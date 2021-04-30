@@ -103,6 +103,9 @@ tblTypeDecoder typ =
         "closed" ->
             closed
 
+        "S⁺" ->
+            unaryRule Tableau.Splus
+
         "alpha" ->
             unaryRule Tableau.Alpha
 
