@@ -40,7 +40,7 @@ type alias Substitution =
 
 
 type UnaryExtType
-    = Splus
+    = Assumption
     | Alpha
     | Refl
     | Leibnitz
@@ -147,8 +147,8 @@ refsToString lst =
 unaryExtTypeToString : UnaryExtType -> String
 unaryExtTypeToString extType =
     case extType of
-        Splus ->
-            "S⁺"
+        Assumption ->
+            "assumption"
 
         Alpha ->
             "α"
@@ -222,8 +222,8 @@ binaryExtTypeToString extType =
 unaryExtTypeJsonStr : UnaryExtType -> String
 unaryExtTypeJsonStr extType =
     case extType of
-        Splus ->
-            "S⁺"
+        Assumption ->
+            "assumption"
             
         Alpha ->
             "alpha"

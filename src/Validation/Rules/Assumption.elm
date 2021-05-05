@@ -1,4 +1,4 @@
-module Validation.Rules.Splus exposing (..)
+module Validation.Rules.Assumption exposing (..)
 
 import Dict
 import Formula exposing (Formula(..))
@@ -75,7 +75,7 @@ validate : Zipper -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 0)
-            (semanticsProblem z "Formula from S⁺ can't have any references")
+            (semanticsProblem z "Assumption can't have any references")
         |> Result.andThen (\z1 -> checkFormula "Formula" z1)
         |> Result.andThen (\f -> checkFreeVarsUsedInDeltaAbove f z)
         |> Result.map (always z)

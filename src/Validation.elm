@@ -32,7 +32,7 @@ import Validation.Rules.ModusTolens
 import Validation.Rules.NCS
 import Validation.Rules.Reflexivity
 import Zipper
-import Validation.Rules.Splus
+import Validation.Rules.Assumption
 
 
 
@@ -225,8 +225,8 @@ areCloseRefsComplementary r1 r2 z =
 validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validateUnary extType =
     case extType of
-        Splus ->
-            Validation.Rules.Splus.validate
+        Assumption ->
+            Validation.Rules.Assumption.validate
 
         Alpha ->
             Validation.Rules.Alpha.validate

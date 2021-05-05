@@ -18,7 +18,7 @@ hasReference z =
 isPremise : Zipper.Zipper -> Bool
 isPremise z =
     case Zipper.up z |> Zipper.zTableau |> .ext of
-        Unary Splus _ ->
+        Unary Assumption _ ->
             True
 
         _ ->
