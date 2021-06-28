@@ -1,4 +1,3 @@
-
 STATIC_FILES = index.html static/main.css static/img/favicon.ico
 ELM_MAIN = src/Editor.elm
 ELM_FILES = $(wildcard src/*.elm)
@@ -36,8 +35,7 @@ $(OUT_DIR)/%: $(SRC_DIR)/%
 	cp -av $(SRC_DIR)/$* $@
 
 
-.PHONY: ghpublish commitGhPages
-ghpublish: GITR=$(shell git log -1 --oneline)
-ghpublish: GITB=$(shell git symbolic-ref HEAD | sed -e "s,refs/heads/,,")
+.PHONY: ghpublish
+ghpublish: export GITCMSG := $(shell git log -1 --oneline)
 ghpublish: build
-	npx gh-pages -d build -m "Build: $(GITR)"
+	npx gh-pages --dist build --message "Build: $${GITCMSG}" $(GHPAGESOPTS)
