@@ -289,16 +289,16 @@ button.delete {
 	color: gray;
 }
 
-.premise {
+.assumption {
 	background-color: #ddeeff;
 }
-.premise:focus.textInput {
+.assumption:focus.textInput {
 	background-color: #d2e8ff;
 }
-.premise:hover.textInput {
+.assumption:hover.textInput {
 	background-color: #c7e3ff;
 }
-.premise:active.textInput {
+.assumption:active.textInput {
 	background-color: #bddeff;
 }
 
