@@ -1,13 +1,16 @@
 {
-  "dependencies": {
-    "elm": "^0.19.1-no-deps",
-    "elm-live": "^2.7.5"
-  },
   "scripts": {
     "build": "make build",
     "live": "make live",
     "clean": "make clean",
     "publish": "make publish",
-    "ghpublish": "make ghpublish"
+    "ghpublish": "make ghpublish",
+    "predeploy": "make build",
+    "deploy": "make ghpublish"
+  },
+  "devDependencies": {
+    "elm": "^0.19.1-no-deps",
+    "elm-live": "^2.7.5",
+    "gh-pages": "^3.2.3"
   }
 }
