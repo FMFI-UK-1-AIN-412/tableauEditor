@@ -408,7 +408,7 @@ viewNodeInputs additional config z =
                 (Zipper.zNode z).value
                 [ classList
                     [ ( "textInputFormula", True )
-                    , ( "premise", Helper.isPremise z )
+                    , ( "assumption", Helper.isAssumption z )
                     ]
                 , class (errorsClass <| Validation.isCorrectFormula config z)
                 , type_ "text"
@@ -461,7 +461,7 @@ ruleMenu unaryMsg unaryWithSubstMsg binaryMsg label labelPrefix cls config z =
             item (binaryExtTypeToString extType) (binaryMsg extType z)
     in
     menu cls label <|
-        List.filterMap unaryItem [ Alpha ]
+        List.filterMap unaryItem [ Assumption, Alpha ]
             ++ List.filterMap binaryItem [ Beta ]
             ++ List.filterMap unaryWithSubstItem [ Gamma, Delta, GammaStar, DeltaStar ]
             ++ List.filterMap unaryItem [ Refl, Leibnitz, MP, MT, HS, DS, NCS, ESFF, ESFT, ESTF, ESTT ]
@@ -496,8 +496,8 @@ autoSizeInput val attrs =
 
 viewRuleType : Zipper.Zipper -> Html Msg
 viewRuleType z =
-    if Helper.isPremise z then
-        span [] [ var [] [ text "S" ], sup [] [ text "+" ] ]
+    if Helper.isAssumption z then
+        span [] [ var [] [ text "S" ], text "⁺" ]
 
     else
         case (Zipper.zTableau <| Zipper.up z).ext of
@@ -655,7 +655,7 @@ viewControls config (( t, _ ) as z) =
                                 div [] []
                 in
                 if t.node.gui.controlsShown then
-                    [ button [ class "button", onClick (ExpandUnary Alpha z) ] [ text "Add α" ]
+                    [ button [ class "button", onClick (ExpandUnary Assumption z) ] [ text "Add assumption" ]
                     , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary (text "Add") "Add" "add" config z
                     , menu "del" (text "Delete") <|
                         [ li [] [ deleteMeButton ]

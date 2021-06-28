@@ -32,6 +32,7 @@ import Validation.Rules.ModusTolens
 import Validation.Rules.NCS
 import Validation.Rules.Reflexivity
 import Zipper
+import Validation.Rules.Assumption
 
 
 
@@ -224,6 +225,9 @@ areCloseRefsComplementary r1 r2 z =
 validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
 validateUnary extType =
     case extType of
+        Assumption ->
+            Validation.Rules.Assumption.validate
+
         Alpha ->
             Validation.Rules.Alpha.validate
 
@@ -308,13 +312,7 @@ isCorrectRule :
 isCorrectRule config (( t, bs ) as z) =
     case bs of
         (Zipper.UnaryCrumb Alpha _) :: _ ->
-            case t.node.references |> List.isEmpty of
-                True ->
-                    -- This is a premise
-                    Ok z
-
-                False ->
-                    validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
+            validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
 
         (Zipper.UnaryCrumb extType _) :: _ ->
             validateRule (unaryExtTypeToString extType) (validateUnary extType) config z
