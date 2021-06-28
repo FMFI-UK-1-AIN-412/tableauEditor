@@ -23,6 +23,9 @@ getNewFormula f1 f2 =
             if b == c then
                 Ok (T (Impl a d))
 
+            else if d == a then
+                Ok (T (Impl c b))
+
             else
                 Err refStructureErr
 
