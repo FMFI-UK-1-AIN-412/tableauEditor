@@ -408,7 +408,7 @@ viewNodeInputs additional config z =
                 (Zipper.zNode z).value
                 [ classList
                     [ ( "textInputFormula", True )
-                    , ( "premise", Helper.isPremise z )
+                    , ( "assumption", Helper.isAssumption z )
                     ]
                 , class (errorsClass <| Validation.isCorrectFormula config z)
                 , type_ "text"
@@ -496,7 +496,7 @@ autoSizeInput val attrs =
 
 viewRuleType : Zipper.Zipper -> Html Msg
 viewRuleType z =
-    if Helper.isPremise z then
+    if Helper.isAssumption z then
         span [] [ var [] [ text "S" ], text "⁺" ]
 
     else

@@ -15,8 +15,8 @@ hasReference z =
     List.isEmpty (Zipper.zNode z).references && ((Zipper.zNode z).value /= "")
 
 
-isPremise : Zipper.Zipper -> Bool
-isPremise z =
+isAssumption : Zipper.Zipper -> Bool
+isAssumption z =
     case Zipper.up z |> Zipper.zTableau |> .ext of
         Unary Assumption _ ->
             True
@@ -99,7 +99,7 @@ assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
     (++)
         (Maybe.map2 second
-            (if z |> isPremise then
+            (if z |> isAssumption then
                 Just ()
             else
                 Nothing
