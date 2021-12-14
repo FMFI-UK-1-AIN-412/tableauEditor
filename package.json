@@ -9,8 +9,8 @@
     "deploy": "make ghpublish"
   },
   "devDependencies": {
-    "elm": "^0.19.1-no-deps",
-    "elm-live": "^2.7.5",
+    "elm": "^0.19.1-5",
+    "elm-live": "^4.0.2",
     "gh-pages": "^3.2.3"
   }
 }
