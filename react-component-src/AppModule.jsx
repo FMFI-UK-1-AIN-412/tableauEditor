@@ -3,8 +3,15 @@ import ElmComponent from 'react-elm-components'
 const Elm = require('./elm-editor.js').Elm;
 
 function AppModule() {
+  const rootElement = useRef(null);
+  useEffect(() => {
+    Elm.Editor.init({
+      node: rootElement.current,
+      flags: null
+    });
+  })
   return (
-    <ElmComponent src={Elm.Editor} flags={null} />
+    <div ref={rootElement}></div>
   )
 }
 
