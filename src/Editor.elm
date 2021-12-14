@@ -33,7 +33,7 @@ import Zipper exposing (..)
 
 main : Program (Maybe String) Model Msg
 main =
-    Browser.document
+    Browser.element
         { init = init
         , update = update
         , view = view
@@ -335,29 +335,24 @@ simpleUpdate msg model =
         )
 
 
-view : Model -> Browser.Document Msg
+view : Model -> Html Msg
 view ({ present } as model) =
-    { title = "Tableau Editor"
-    , body =
-        [ div [ class "tableau" ]
-            [ div [ class "actions" ]
-                [ configMenu present.config
-                , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-                , button [ class "button", onClick Print ] [ text "Print" ]
-                , jsonExportControl present.tableau
-                , jsonImportControl present.jsonImport
-                , button [ class "button", onClick Undo ] [ text "Undo" ]
-                , button [ class "button", onClick Redo ] [ text "Redo" ]
-                ]
-            , jsonImportError present.jsonImport
-            , viewNode present.config (Zipper.zipper present.tableau)
-            , verdict present.config present.tableau
-            , problems present.config present.tableau
-            , Rules.help present.config
-            ]
+    div [ class "tableau" ]
+      [ div [ class "actions" ]
+        [ configMenu present.config
+        , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+        , button [ class "button", onClick Print ] [ text "Print" ]
+        , jsonExportControl present.tableau
+        , jsonImportControl present.jsonImport
+        , button [ class "button", onClick Undo ] [ text "Undo" ]
+        , button [ class "button", onClick Redo ] [ text "Redo" ]
         ]
-    }
-
+        , jsonImportError present.jsonImport
+        , viewNode present.config (Zipper.zipper present.tableau)
+        , verdict present.config present.tableau
+        , problems present.config present.tableau
+        , Rules.help present.config
+      ]
 
 viewNode : Config -> Zipper.Zipper -> Html Msg
 viewNode config z =
