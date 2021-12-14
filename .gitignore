@@ -11,3 +11,4 @@ src/Editor.js
 yarn-error.log
 elm.js
 /build/
+module-dist/code

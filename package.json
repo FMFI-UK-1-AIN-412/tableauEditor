@@ -1,4 +1,8 @@
 {
+  "name": "tableaueditor",
+  "version": "1.0.0",
+  "main": "module-dist/code/module.js",
+  "types": "module-dist/types/module.d.ts",
   "scripts": {
     "build": "make build",
     "live": "make live",
@@ -6,11 +10,18 @@
     "publish": "make publish",
     "ghpublish": "make ghpublish",
     "predeploy": "make build",
-    "deploy": "make ghpublish"
+    "deploy": "make ghpublish",
+    "build-module": "npx elm make src/Editor.elm --output module-dist/code/elm-editor.js && npx babel react-component-src/ --out-dir module-dist/code",
+    "prepare": "npm run build-module"
   },
   "devDependencies": {
+    "@babel/cli": "^7.16.0",
+    "@babel/preset-react": "^7.16.5",
     "elm": "^0.19.1-5",
     "elm-live": "^4.0.2",
     "gh-pages": "^3.2.3"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2"
   }
 }
