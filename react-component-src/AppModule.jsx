@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import '../../src/static/main.css'
 const Elm = require('./elm-editor.js').Elm;
 
 function AppModule() {
