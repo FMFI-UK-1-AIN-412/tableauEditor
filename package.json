@@ -19,7 +19,11 @@
     "@babel/preset-react": "^7.16.5",
     "elm": "^0.19.1-5",
     "elm-live": "^4.0.2",
+    "react-elm-components": "^1.1.0",
     "gh-pages": "^3.2.3"
+  },
+  "dependencies": {
+    "react-elm-components": "^1.1.0"
   },
   "peerDependencies": {
     "react": "^17.0.2"

@@ -1,2 +1,2 @@
-import AppModule from './AppModule';
-export { AppModule };
+import { prepare, AppComponent } from './AppModule';
+export default { prepare, AppComponent };
