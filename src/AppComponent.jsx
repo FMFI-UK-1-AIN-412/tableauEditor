@@ -28,7 +28,7 @@ function AppComponent(props) {
   );
 }
 
-export {
+export default {
   prepare,
   AppComponent
 }
