@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ElmComponent from 'react-elm-components'
 import '../../src/static/main.css'
+import '../../src/static/font-awesome-import.css'
 const Elm = require('./elm-editor.js').Elm;
 
 function prepare(initialState) {
