@@ -1,5 +1,6 @@
 interface AppProps {
   instance: any,
+  isEdited: boolean,
   onStateChange: () => void
 }
 
