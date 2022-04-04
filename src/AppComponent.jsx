@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ElmComponent from 'react-elm-components'
-import '../../src/static/main.css'
-import '../../src/static/font-awesome-import.css'
+import './static/css/main.iso.css';
+import './static/css/all.iso.css';
 const Elm = require('./elm-editor.js').Elm;
 
 function prepare(initialState) {
@@ -25,7 +25,9 @@ function AppComponent(props) {
     })
   };
   return (
-    <ElmComponent src={Elm.Editor} flags={instance.initialState} ports={setupPorts}/>
+    <div className="tableaueditor-Obry4K9MqH">
+      <ElmComponent src={Elm.Editor} flags={instance.initialState} ports={setupPorts}/>
+    </div>
   );
 }
 
