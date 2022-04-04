@@ -11,14 +11,13 @@
     "ghpublish": "make ghpublish",
     "predeploy": "make build",
     "deploy": "make ghpublish",
-    "build-module": "npx del-cli lib/dist && npx elm make src/Editor.elm --output lib/dist/elm-editor.js && npx babel --extensions '.jsx' src --out-dir lib/dist && npx copyfiles -u 3 src/static/webfonts/* lib/dist/static/webfonts && npx isolate-css-cli -p tableaueditor-Obry4K9MqH -c -o lib/dist/static/css -u 2 src/static",
+    "build-module": "node buildModule.js",
     "prepare": "npm run build-module"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
     "@babel/preset-react": "^7.16.5",
     "copyfiles": "^2.4.1",
-    "del-cli": "^4.0.1",
     "elm": "^0.19.1-5",
     "elm-live": "^4.0.2",
     "gh-pages": "^3.2.3",
