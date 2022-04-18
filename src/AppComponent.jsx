@@ -26,7 +26,7 @@ function AppComponent(props) {
   };
   return (
     <div className="tableaueditor-Obry4K9MqH">
-      <ElmComponent src={Elm.Editor} flags={instance.initialState} ports={setupPorts}/>
+      <ElmComponent src={Elm.MainEmbeddable} flags={instance.initialState} ports={setupPorts}/>
     </div>
   );
 }

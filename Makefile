@@ -1,5 +1,5 @@
 STATIC_FILES = index.html static/main.css static/img/favicon.ico
-ELM_MAIN = src/Editor.elm
+ELM_MAIN = src/Main.elm
 ELM_FILES = $(wildcard src/*.elm)
 
 PUBLISH_URL = dai.fmph.uniba.sk:/home/webmaster/dai/courses/lpi/folTableauEditor
