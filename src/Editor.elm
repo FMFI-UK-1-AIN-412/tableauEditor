@@ -235,7 +235,6 @@ update msg ({ present } as model) =
 
 
 simpleUpdate msg model =
-    Debug.log "model"
         (case msg of
             ChangeText z new ->
                 { model | tableau = z |> Zipper.setFormula new |> top }

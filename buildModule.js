@@ -18,7 +18,7 @@ function cmd(command) {
         recursive: true,
     });
     // compile elm app
-    await cmd("npx elm make src/MainEmbeddable.elm --output lib/dist/elm-editor.js");
+    await cmd("npx elm make src/MainEmbeddable.elm --optimize --output lib/dist/elm-editor.js");
     // compile react component
     await cmd("npx babel --extensions '.jsx' src --out-dir lib/dist");
     // isolate css files
