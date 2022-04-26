@@ -1,8 +1,28 @@
 {
-  "name": "tableaueditor",
+  "name": "@fmfi-uk-1-ain-412/tableaueditor",
   "version": "1.0.0",
   "main": "lib/dist/AppComponent.js",
   "types": "lib/types/types.d.ts",
+  "author": "",
+  "contributors": [
+    {
+      "name": "Alexandra Nyitraiová"
+    },
+    {
+      "name": "Ján Kľuka",
+      "email": "jan.kluka@fmph.uniba.sk"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Jozef Šiška",
+      "email": "jozef.siska@fmph.uniba.sk"
+    },
+    {
+      "name": "Ján Kľuka",
+      "email": "jan.kluka@fmph.uniba.sk"
+    }
+  ],
   "scripts": {
     "build": "make build",
     "live": "make live",
@@ -17,17 +37,30 @@
   "devDependencies": {
     "@babel/cli": "^7.16.0",
     "@babel/preset-react": "^7.16.5",
+    "@fmfi-uk-1-ain-412/isolate-css": "^0.1.0",
     "copyfiles": "^2.4.1",
     "elm": "^0.19.1-5",
     "elm-live": "^4.0.2",
-    "gh-pages": "^3.2.3",
-    "react-elm-components": "^1.1.0"
+    "gh-pages": "^3.2.3"
   },
   "dependencies": {
-    "isolate-css": "github:4zzz/isolate-css#700fe4daff852468cc7f0afc2041018acfd6393f",
     "react-elm-components": "^1.1.0"
   },
   "peerDependencies": {
     "react": "^17.0.2"
-  }
+  },
+  "description": "In this repository is maintained the code to my bachelor thesis. A live version is available at https://fmfi-uk-1-ain-412.github.io/tableauEditor/ .",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/4zzz/tableauEditor.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/4zzz/tableauEditor/issues"
+  },
+  "homepage": "https://github.com/4zzz/tableauEditor#readme"
 }
