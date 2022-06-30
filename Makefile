@@ -1,5 +1,5 @@
 STATIC_FILES = index.html static/main.css static/img/favicon.ico
-ELM_MAIN = src/Editor.elm
+ELM_MAIN = src/Main.elm
 ELM_FILES = $(wildcard src/*.elm)
 
 PUBLISH_URL = dai.fmph.uniba.sk:/home/webmaster/dai/courses/lpi/folTableauEditor
@@ -22,7 +22,7 @@ live:
 .PHONY: build publish clean live
 
 
-$(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/static/main.css $(OUT_DIR)/Editor.js
+$(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/static/main.css $(OUT_DIR)/Main.js
 	mkdir -p $(OUT_DIR)
 	sed -e 's,src="[^"]*",src="$(notdir $(ELM_OUT))?'"$$(sha1sum $(ELM_OUT) | grep -o '^[0-9a-f]\+')"'",; s,href="static/main\.css",href="static/main.css?'"$$(sha1sum $(OUT_DIR)/static/main.css | grep -o '^[0-9a-f]\+')"'",' $< >$@
 

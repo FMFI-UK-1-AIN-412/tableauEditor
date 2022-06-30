@@ -1,6 +1,5 @@
 module Zipper exposing (..)
 
-import Debug exposing (log)
 import Formula
 import Formula.Parser
 import Formula.Signed

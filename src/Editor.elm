@@ -1,4 +1,4 @@
-port module Editor exposing (main, top, topRenumbered)
+port module Editor exposing (init, update, view, viewEmbeddable, subscriptions, Msg, Model, top, topRenumbered)
 
 --, FileReaderPortData, fileContentRead, fileSelected
 
@@ -29,16 +29,6 @@ import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
-
-
-main : Program (Maybe String) Model Msg
-main =
-    Browser.document
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }
 
 
 type JsonImport
@@ -245,7 +235,6 @@ update msg ({ present } as model) =
 
 
 simpleUpdate msg model =
-    Debug.log "model"
         (case msg of
             ChangeText z new ->
                 { model | tableau = z |> Zipper.setFormula new |> top }
@@ -357,6 +346,25 @@ view ({ present } as model) =
             ]
         ]
     }
+
+viewEmbeddable : Model -> Html Msg
+viewEmbeddable ({ present } as model) =
+    div [ class "tableau" ]
+      [ div [ class "actions" ]
+        [ configMenu present.config
+        , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+        , button [ class "button", onClick Print ] [ text "Print" ]
+        , jsonExportControl present.tableau
+        , jsonImportControl present.jsonImport
+        , button [ class "button", onClick Undo ] [ text "Undo" ]
+        , button [ class "button", onClick Redo ] [ text "Redo" ]
+        ]
+        , jsonImportError present.jsonImport
+        , viewNode present.config (Zipper.zipper present.tableau)
+        , verdict present.config present.tableau
+        , problems present.config present.tableau
+        , Rules.help present.config
+      ]
 
 
 viewNode : Config -> Zipper.Zipper -> Html Msg

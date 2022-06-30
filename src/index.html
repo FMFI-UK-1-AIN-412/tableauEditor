@@ -8,9 +8,11 @@
     <script type="text/javascript" src="Editor.js"></script>
   </head>
   <body>
+    <div id="app-root"></div>
     <script type="text/javascript">
       var cachedTableau = localStorage.getItem('tableauEditor');
-      var app = Elm.Editor.init({
+      var app = Elm.Main.init({
+        node: document.getElementById('app-root'),
         flags: cachedTableau ? cachedTableau : null
       });
       app.ports.print.subscribe(function () {
