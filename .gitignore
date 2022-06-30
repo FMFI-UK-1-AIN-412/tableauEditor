@@ -6,7 +6,7 @@ yarn.lock
 .idea/
 .DS_Store
 src/.DS_Store
-src/Editor.js
+src/Main.js
 yarn-error.log
 elm.js
 /build/
