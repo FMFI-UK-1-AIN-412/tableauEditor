@@ -1,6 +1,6 @@
 {
   "name": "@fmfi-uk-1-ain-412/tableaueditor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "lib/dist/AppComponent.js",
   "types": "lib/types/types.d.ts",
   "author": "",
@@ -56,11 +56,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/4zzz/tableauEditor.git"
+    "url": "git+https://github.com/FMFI-UK-1-AIN-412/tableauEditor.git"
   },
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/4zzz/tableauEditor/issues"
+    "url": "https://github.com/FMFI-UK-1-AIN-412/tableauEditor/issues"
   },
-  "homepage": "https://github.com/4zzz/tableauEditor#readme"
+  "homepage": "https://fmfi-uk-1-ain-412.github.io/tableauEditor"
 }
