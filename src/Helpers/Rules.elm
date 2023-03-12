@@ -1,15 +1,29 @@
-module Helpers.Rules exposing (..)
+module Helpers.Rules exposing (help, signedMap)
 
 import Config exposing (Config)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Html exposing (Attribute, Html, code, div, h2, h3, p, span, sub, sup, table, td, text, tr)
+import Html
+    exposing
+        ( Html
+        , details
+        , div
+        , h2
+        , h3
+        , sub
+        , summary
+        , sup
+        , table
+        , td
+        , text
+        , tr
+        )
 import Html.Attributes exposing (..)
 import Markdown
+import Set
 import Tableau exposing (UnaryWithSubstExtType(..))
 import Term exposing (Term(..))
-import Set
 
 
 fA =
@@ -554,8 +568,8 @@ rulesTable config =
 
 help : Config -> Html msg
 help config =
-    div [ class "rulesHelp" ]
-        [ h2 [] [ text "Help" ]
+    details [ class "rulesHelp" ]
+        [ summary [] [ h2 [] [ text "Help" ] ]
         , symbolsTable
         , notesTable
         , h3 [ class "full" ] [ text "Applying rules" ]

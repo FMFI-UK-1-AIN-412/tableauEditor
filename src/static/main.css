@@ -341,7 +341,7 @@ button.delete {
 }
 
 .rulesHelp {
-	font-size: smaller;
+	font-size: 0.875rem;
 }
 .rulesHelp:after {
 	content: ' ';
@@ -413,9 +413,11 @@ button.delete {
 	min-width: initial;
 }
 
-.rulesHelp > h2 {
-	padding: 0 10px;
+.rulesHelp > summary > h2 {
+	display: inline-block;
+	margin: 0;
 }
+
 .half {
 	width: 50%;
 	float: left;
