@@ -458,23 +458,26 @@ button.delete {
 }
 
 /**
- * Print style.
+ * Print style and view mode when embedded and not edited
  * Hide everything except the tableau.
  */
 
 @media print {
-	body > div > *:not(.formula):not(.verdict):not(.problems),
-	.onclick-menu, .nodeProblems, .button
-	{
+	.viewMode .tableau .actions,
+	.viewMode .tableau .rulesHelp,
+	.viewMode .onclick-menu,
+	.viewMode .button,
+	.viewMode .nodeProblems {
 		display: none;
 	}
 	.closed {
 		display: inline-block;
 	}
 	.textInput {
-		border-bottom: none;
+		border-bottom-style: none;
 	}
-	.textInput.syntaxProblem, .textInput.semanticsProblem {
+	.textInput.syntaxProblem,
+	.textInput.semanticsProblem {
 		border-bottom-style: dashed;
 		border-bottom-width: 1px;
 	}
@@ -482,6 +485,25 @@ button.delete {
 	body {
 		-webkit-print-color-adjust: exact;
 	}
+}
+
+.viewMode .tableau .actions,
+.viewMode .tableau .rulesHelp,
+.viewMode .onclick-menu,
+.viewMode .button,
+.viewMode .nodeProblems {
+	display: none;
+}
+.viewMode .closed {
+	display: inline-block;
+}
+.viewMode .textInput {
+	border-bottom-style: none;
+}
+.viewMode .textInput.syntaxProblem,
+.viewMode .textInput.semanticsProblem {
+	border-bottom-style: dashed;
+	border-bottom-width: 1px;
 }
 
 /* vim: set sw=2 ts=2 sts=2 et : */
