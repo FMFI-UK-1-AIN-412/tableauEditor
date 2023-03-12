@@ -7,9 +7,17 @@ const Elm = require('./elm-editor.js').Elm;
 function prepare(initialState) {
   const instance = {
     initialState,
-    state: null
+    state: null,
+    triggerStateUpdate: null
   };
-  const getState = (instance) => instance.state;
+  const getState = (instance) => {
+    if (instance.triggerStateUpdate) {
+      console.log("State before triggering update", instance.state);
+      instance.triggerStateUpdate();
+      console.log("State after triggering update", instance.state);
+    }
+    return instance.state;
+  }
   return {
     instance: instance,
     getState,
@@ -19,13 +27,19 @@ function prepare(initialState) {
 function AppComponent(props) {
   const instance = props.instance;
   const setupPorts = (ports) => {
-    ports.cache.subscribe( (state) => {
-      instance.state = state;
+    ports.onChange.subscribe( () => {
       props.onStateChange();
+    });
+    ports.onStore.subscribe( (state) => {
+      instance.state = state;
     })
+    instance.triggerStateUpdate = () =>
+      ports.storeTrigger.send(null);
   };
   return (
-    <div className="tableaueditor-Obry4K9MqH">
+    <div className={`tableaueditor-Obry4K9MqH${
+      props.isEdited ? '' : ' viewMode'
+    }`}>
       <ElmComponent src={Elm.MainEmbeddable} flags={instance.initialState} ports={setupPorts}/>
     </div>
   );
