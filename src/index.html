@@ -22,7 +22,7 @@
       app.ports.onPrint.subscribe(function () {
         window.print();
       });
-      var storeInterval = 10000;
+      var storeInterval = 5000;
       var storeTimeout = null;
       app.ports.onStore.subscribe(function (tableau) {
         // console.log("Storing the tableau and clearing the timeout");
@@ -37,7 +37,7 @@
               // console.log("Triggering store");
               app.ports.storeTrigger.send(null);
             },
-            10000
+            storeInterval
           );
           // console.log("Set timeout", storeTimeout);
         }
