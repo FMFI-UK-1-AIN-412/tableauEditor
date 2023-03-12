@@ -37,16 +37,19 @@ type JsonImport
     | ImportErr String (List Json.Decode.Error)
 
 
+type alias State =
+    { tableau : Tableau
+    , jsonImport : JsonImport
+    , config : Config
+    }
+
+
 type alias Model =
-    UndoList
-        { tableau : Tableau
-        , jsonImport : JsonImport
-        , config : Config
-        }
+    UndoList State
 
 
-init : Maybe String -> ( Model, Cmd msg )
-init mts =
+init : Maybe Json.Decode.Value -> ( Model, Cmd msg )
+init mtv =
     let
         emptyT =
             { node =
@@ -60,12 +63,12 @@ init mts =
             }
 
         (initCfg, initT) =
-            case mts of
+            case mtv of
                 Nothing ->
                     (Config.default, emptyT)
 
-                Just ts ->
-                    Helpers.Exporting.Json.Decode.decode ts 
+                Just tv ->
+                    Helpers.Exporting.Json.Decode.decodeValue tv
                     |> (\(cfg, t) -> 
                         (cfg |> Result.withDefault Config.default, t |> Result.withDefault emptyT))
     in
@@ -80,7 +83,7 @@ init mts =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    storeTrigger (\_ -> Store)
 
 
 type Msg
@@ -109,13 +112,19 @@ type Msg
     | JsonRead String
     | Export
     | Print
-    | Cache
+    | Store
 
 
-port print : () -> Cmd msg
+port onPrint : () -> Cmd msg
 
 
-port cache : String -> Cmd msg
+port onStore : Json.Encode.Value -> Cmd msg
+
+
+port onChange : () -> Cmd msg
+
+
+port storeTrigger : (() -> msg) -> Sub msg
 
 
 top : Zipper.Zipper -> Tableau
@@ -147,52 +156,71 @@ update msg ({ present } as model) =
             )
 
         JsonRead contents ->
-            case contents |> Helpers.Exporting.Json.Decode.decode of
-                ( Ok cfg, Ok t ) ->
-                    ( UndoList.new
-                        { present | jsonImport = None, config = cfg, tableau = t }
-                        model
-                    , cache contents
-                    )
+            case contents |> Json.Decode.decodeString Json.Decode.value of
+                Ok value ->
+                    case value |> Helpers.Exporting.Json.Decode.decodeValue of
+                        ( Ok cfg, Ok t ) ->
+                            ( UndoList.new
+                                { present
+                                | jsonImport = None
+                                , config = cfg
+                                , tableau = t }
+                                model
+                            , onChange ()
+                            )
 
-                ( Err cfgErr, Ok t ) ->
-                    ( UndoList.new
-                        { present
-                        | jsonImport =
-                            ImportErr
-                                ("Failed to import rule set configuration. "
-                                    ++ "Keeping the last one.")
-                                [ cfgErr ]
-                        , tableau = t
-                        }
-                        model
-                    , cache contents
-                    )
+                        ( Err cfgErr, Ok t ) ->
+                            ( UndoList.new
+                                { present
+                                | jsonImport =
+                                    ImportErr
+                                        ("Failed to import rule set configuration. "
+                                            ++ "Keeping the last one.")
+                                        [ cfgErr ]
+                                , tableau = t
+                                }
+                                model
+                            , onChange ()
+                            )
 
-                ( Ok _, Err tErr ) ->
+                        ( Ok _, Err tErr ) ->
+                            ( { model
+                                | present =
+                                    { present
+                                    | jsonImport =
+                                        ImportErr
+                                            "Failed to import tableau"
+                                            [ tErr ]
+                                    }
+                            }
+                            , Cmd.none
+                            )
+
+                        ( Err cfgErr, Err tErr ) ->
+                            ( { model
+                                | present =
+                                    { present
+                                    | jsonImport =
+                                        ImportErr
+                                            ("Failed to import tableau and " ++
+                                                "rule set configuration")
+                                            [ tErr, cfgErr ]
+                                    }
+                            }
+                            , Cmd.none
+                            )
+
+                Err err ->
                     ( { model
                         | present =
                             { present
                             | jsonImport =
                                 ImportErr
-                                    "Failed to import tableau"
-                                    [ tErr ]
+                                    ("Failed to import file, " ++
+                                        "its content is not valid JSON")
+                                    [ err ]
                             }
-                      }
-                    , Cmd.none
-                    )
-
-                ( Err cfgErr, Err tErr ) ->
-                    ( { model
-                        | present =
-                            { present
-                            | jsonImport =
-                                ImportErr
-                                    ("Failed to import tableau and " ++
-                                        "rule set configuration")
-                                    [ tErr, cfgErr ]
-                            }
-                      }
+                    }
                     , Cmd.none
                     )
 
@@ -202,38 +230,41 @@ update msg ({ present } as model) =
                 "tableau.json"
                 "application/json"
               <|
-                Helpers.Exporting.Json.Encode.encode 2 present.config present.tableau
+                Helpers.Exporting.Json.Encode.encodeString 2 present.config present.tableau
             )
 
         Undo ->
             ( UndoList.undo
                 { model | present = { present | jsonImport = None } }
-            , Cmd.none
+            , onChange ()
             )
 
         Redo ->
             ( UndoList.redo model, Cmd.none )
 
         Print ->
-            ( model, print () )
+            ( model, onPrint () )
 
-        Cache ->
+        Store ->
             ( model
-            , cache (Helpers.Exporting.Json.Encode.encode 0 model.present.config model.present.tableau)
+            , onStore <| Helpers.Exporting.Json.Encode.encodeValue
+                model.present.config
+                model.present.tableau
             )
 
         _ ->
             let
-                presentSansImport =
+                presentWithoutImport =
                     { present | jsonImport = None }
             in
             ( UndoList.new
-                (simpleUpdate msg presentSansImport)
-                { model | present = presentSansImport }
-            , Cmd.none
+                (simpleUpdate msg presentWithoutImport)
+                { model | present = presentWithoutImport }
+            , onChange ()
             )
 
 
+simpleUpdate : Msg -> State -> State
 simpleUpdate msg model =
         (case msg of
             ChangeText z new ->
@@ -319,13 +350,13 @@ simpleUpdate msg model =
             Print ->
                 model
 
-            Cache ->
+            Store ->
                 model
         )
 
 
 view : Model -> Browser.Document Msg
-view ({ present } as model) =
+view ({ present }) =
     { title = "Tableau Editor"
     , body =
         [ div [ class "tableau" ]
@@ -496,7 +527,7 @@ autoSizeInput val attrs =
             :: value val
             -- :: size (String.length val + 1)
             :: size ((String.length val * 5 + 9) // 6)
-            :: onBlur Cache
+            :: onBlur Store
             :: attrs
         )
         []

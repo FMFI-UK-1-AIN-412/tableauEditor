@@ -1,4 +1,4 @@
-module Helpers.Exporting.Json.Encode exposing (encode, jsonTableau)
+module Helpers.Exporting.Json.Encode exposing (encodeString, encodeValue, jsonTableau)
 
 import Config exposing (Config)
 import Json.Encode exposing (..)
@@ -97,9 +97,14 @@ jsonTableauAndConfig config t =
     object <| jsonTblList t ++ jsonConfig config
 
 
-encode : Int -> Config -> Tableau -> String
-encode ind config t =
+encodeString : Int -> Config -> Tableau -> String
+encodeString ind config t =
     Json.Encode.encode ind (jsonTableauAndConfig config t) ++ "\n"
+
+
+encodeValue : Config -> Tableau -> Value
+encodeValue config t =
+    jsonTableauAndConfig config t
 
 
 

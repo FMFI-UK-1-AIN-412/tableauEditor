@@ -10,16 +10,37 @@
   <body>
     <div id="app-root"></div>
     <script type="text/javascript">
-      var cachedTableau = localStorage.getItem('tableauEditor');
+      var storedTableauJSON = localStorage.getItem('tableauEditor');
+      var storedTableau = null;
+      try {
+        storedTableau = JSON.parse(storedTableauJSON);
+      } catch (_) {
+      }
       var app = Elm.Main.init({
-        node: document.getElementById('app-root'),
-        flags: cachedTableau ? cachedTableau : null
+        flags: storedTableau
       });
-      app.ports.print.subscribe(function () {
+      app.ports.onPrint.subscribe(function () {
         window.print();
       });
-      app.ports.cache.subscribe(function (tableau) {
-        localStorage.setItem('tableauEditor', tableau);
+      var storeInterval = 10000;
+      var storeTimeout = null;
+      app.ports.onStore.subscribe(function (tableau) {
+        // console.log("Storing the tableau and clearing the timeout");
+        localStorage.setItem('tableauEditor', JSON.stringify(tableau));
+        clearTimeout(storeTimeout);
+        storeTimeout = null;
+      });
+      app.ports.onChange.subscribe(function () {
+        // console.log("Change notification");
+        if (storeTimeout === null) {
+          storeTimeout = setTimeout(function () {
+              // console.log("Triggering store");
+              app.ports.storeTrigger.send(null);
+            },
+            10000
+          );
+          // console.log("Set timeout", storeTimeout);
+        }
       });
     </script>
   </body>

@@ -1,10 +1,23 @@
-module Helpers.Exporting.Json.Decode exposing (decode, tableau)
+module Helpers.Exporting.Json.Decode exposing (decodeString, decodeValue)
 
 import Config exposing (Config)
-import Dict
-import Formula
 import Formula.Parser
-import Json.Decode exposing (..)
+import Json.Decode as D exposing
+    ( Decoder
+    , Error
+    , Value
+    , andThen
+    , fail
+    , field
+    , index
+    , int
+    , lazy
+    , list
+    , map
+    , map2
+    , map5
+    , string
+    , succeed)
 import Tableau exposing (Tableau)
 import Zipper
 
@@ -76,7 +89,7 @@ unaryRule extType =
     map2
         Tableau.Tableau
         (field "node" node)
-        (map (Tableau.Unary extType) (field "child" (Json.Decode.lazy (\_ -> tableau))))
+        (map (Tableau.Unary extType) (field "child" (lazy (\_ -> tableau))))
 
 
 unaryRuleWithSubst : Tableau.UnaryWithSubstExtType -> Decoder Tableau.Tableau
@@ -184,16 +197,32 @@ tableau =
         )
 
 
-decode : String -> ( Result Error Config, Result Error Tableau )
-decode s =
+{- Elm's type system is too weak to allow a functional that would take
+   D.decodeString or D.decodeValue as argument (Haskell's forall is missing).
+-}
+decodeString : (String -> ( Result Error Config, Result Error Tableau ))
+decodeString s =
     let
         decodeTableau =
-            decodeString tableau >> Result.map reRefTableau
+            D.decodeString tableau >> Result.map reRefTableau
 
         decodeConfig =
-            decodeString config
+            D.decodeString config
     in
     ( decodeConfig s, decodeTableau s )
+
+
+
+decodeValue : (Value -> ( Result Error Config, Result Error Tableau ))
+decodeValue v =
+    let
+        decodeTableau =
+            D.decodeValue tableau >> Result.map reRefTableau
+
+        decodeConfig =
+            D.decodeValue config
+    in
+    ( decodeConfig v, decodeTableau v )
 
 
 reRefTableau : Tableau.Tableau -> Tableau.Tableau
