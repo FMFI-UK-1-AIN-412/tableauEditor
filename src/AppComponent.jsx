@@ -48,10 +48,10 @@ function AppComponent(props) {
       ports.storeTrigger.send(null);
   };
   return (
-    <div className={`tableaueditor-Obry4K9MqH${
-      props.isEdited ? '' : ' viewMode'
-    }`}>
-      <ElmComponent src={Elm.MainEmbeddable} flags={instance.initialState} ports={setupPorts}/>
+    <div className='tableaueditor-Obry4K9MqH'>
+      <div className={props.isEdited ? '' : 'viewMode'}>
+        <ElmComponent src={Elm.MainEmbeddable} flags={instance.initialState} ports={setupPorts}/>
+      </div>
     </div>
   );
 }
