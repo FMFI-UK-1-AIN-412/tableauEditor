@@ -4,6 +4,7 @@ tmp/
 dist/
 yarn.lock
 .idea/
+.vscode/
 .DS_Store
 src/.DS_Store
 src/Main.js
