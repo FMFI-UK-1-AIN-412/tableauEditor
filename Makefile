@@ -28,7 +28,7 @@ $(OUT_DIR)/index.html: $(SRC_DIR)/index.html $(OUT_DIR)/static/main.css $(ELM_OU
 
 $(ELM_OUT): elm.json $(wildcard $(SRC_DIR)/*.elm) $(wildcard $(SRC_DIR)/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*.elm) $(wildcard $(SRC_DIR)/*/*/*/*.elm)
 	mkdir -p $(OUT_DIR)
-	elm make $(ELM_MAIN) --output=$@
+	elm make $(ELM_MAIN) --optimize --output=$@
 
 $(OUT_DIR)/%: $(SRC_DIR)/%
 	mkdir -p $(dir $@)
