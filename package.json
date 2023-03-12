@@ -1,12 +1,19 @@
 {
   "name": "@fmfi-uk-1-ain-412/tableaueditor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "lib/dist/AppComponent.js",
   "types": "lib/types/types.d.ts",
   "author": "",
   "contributors": [
     {
+      "name": "Jozef Šiška",
+      "email": "jozef.siska@fmph.uniba.sk"
+    },
+    {
       "name": "Alexandra Nyitraiová"
+    },
+    {
+      "name": "Matej Komlóssy"
     },
     {
       "name": "Matej Mok"
