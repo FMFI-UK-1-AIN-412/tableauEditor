@@ -5990,7 +5990,7 @@ var $elm$parser$Parser$Advanced$fromState = F2(
 		return A2(
 			$elm$parser$Parser$Advanced$AddRight,
 			$elm$parser$Parser$Advanced$Empty,
-			A4($elm$parser$Parser$Advanced$DeadEnd, s.bS, s.bi, x, s.d));
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.bS, s.bi, x, s.c));
 	});
 var $elm$parser$Parser$Advanced$end = function (x) {
 	return function (s) {
@@ -6086,7 +6086,7 @@ var $elm$parser$Parser$Advanced$run = F2(
 	function (_v0, src) {
 		var parse = _v0;
 		var _v1 = parse(
-			{bi: 1, d: _List_Nil, e: 1, b: 0, bS: 1, a: src});
+			{bi: 1, c: _List_Nil, e: 1, b: 0, bS: 1, a: src});
 		if (!_v1.$) {
 			var value = _v1.b;
 			return $elm$core$Result$Ok(value);
@@ -6253,7 +6253,7 @@ var $elm$parser$Parser$Advanced$varHelp = F7(
 		while (true) {
 			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, src);
 			if (_Utils_eq(newOffset, -1)) {
-				return {bi: col, d: context, e: indent, b: offset, bS: row, a: src};
+				return {bi: col, c: context, e: indent, b: offset, bS: row, a: src};
 			} else {
 				if (_Utils_eq(newOffset, -2)) {
 					var $temp$isGood = isGood,
@@ -6300,7 +6300,7 @@ var $elm$parser$Parser$Advanced$variable = function (i) {
 				false,
 				A2($elm$parser$Parser$Advanced$fromState, s, i.g));
 		} else {
-			var s1 = _Utils_eq(firstOffset, -2) ? A7($elm$parser$Parser$Advanced$varHelp, i.bx, s.b + 1, s.bS + 1, 1, s.a, s.e, s.d) : A7($elm$parser$Parser$Advanced$varHelp, i.bx, firstOffset, s.bS, s.bi + 1, s.a, s.e, s.d);
+			var s1 = _Utils_eq(firstOffset, -2) ? A7($elm$parser$Parser$Advanced$varHelp, i.bx, s.b + 1, s.bS + 1, 1, s.a, s.e, s.c) : A7($elm$parser$Parser$Advanced$varHelp, i.bx, firstOffset, s.bS, s.bi + 1, s.a, s.e, s.c);
 			var name = A3($elm$core$String$slice, s.b, s1.b, s.a);
 			return A2($elm$core$Set$member, name, i.bQ) ? A2(
 				$elm$parser$Parser$Advanced$Bad,
@@ -6612,7 +6612,7 @@ var $elm$parser$Parser$Advanced$token = function (_v0) {
 			$elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{bi: newCol, d: s.d, e: s.e, b: newOffset, bS: newRow, a: s.a});
+			{bi: newCol, c: s.c, e: s.e, b: newOffset, bS: newRow, a: s.a});
 	};
 };
 var $elm$parser$Parser$Advanced$sequence = function (i) {
@@ -6677,7 +6677,7 @@ var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
 					$elm$parser$Parser$Advanced$Good,
 					_Utils_cmp(s0.b, offset) < 0,
 					0,
-					{bi: col, d: s0.d, e: s0.e, b: offset, bS: row, a: s0.a});
+					{bi: col, c: s0.c, e: s0.e, b: offset, bS: row, a: s0.a});
 			} else {
 				if (_Utils_eq(newOffset, -2)) {
 					var $temp$isGood = isGood,
@@ -7026,7 +7026,7 @@ var $elm$parser$Parser$Advanced$keyword = function (_v0) {
 			$elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{bi: newCol, d: s.d, e: s.e, b: newOffset, bS: newRow, a: s.a});
+			{bi: newCol, c: s.c, e: s.e, b: newOffset, bS: newRow, a: s.a});
 	};
 };
 var $elm$parser$Parser$keyword = function (kwd) {
@@ -7429,7 +7429,7 @@ var $author$project$Helpers$Exporting$Json$Decode$decodeValue = function (v) {
 var $author$project$Tableau$defGUI = {ax: true};
 var $elm_community$undo_redo$UndoList$UndoList = F3(
 	function (past, present, future) {
-		return {l: future, j: past, A: present};
+		return {l: future, j: past, C: present};
 	});
 var $elm_community$undo_redo$UndoList$fresh = function (state) {
 	return A3($elm_community$undo_redo$UndoList$UndoList, _List_Nil, state, _List_Nil);
@@ -7475,7 +7475,7 @@ var $author$project$Editor$init = function (mtv) {
 	var initT = _v0.b;
 	return _Utils_Tuple2(
 		$elm_community$undo_redo$UndoList$fresh(
-			{o: initCfg, r: $author$project$Editor$None, c: initT}),
+			{y: initCfg, v: $author$project$Editor$None, d: initT}),
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$json$Json$Decode$null = _Json_decodeNull;
@@ -7798,7 +7798,7 @@ var $elm$file$File$name = _File_name;
 var $elm_community$undo_redo$UndoList$new = F2(
 	function (event, _v0) {
 		var past = _v0.j;
-		var present = _v0.A;
+		var present = _v0.C;
 		return A3(
 			$elm_community$undo_redo$UndoList$UndoList,
 			A2($elm$core$List$cons, present, past),
@@ -7819,7 +7819,7 @@ var $author$project$Editor$onPrint = _Platform_outgoingPort(
 var $author$project$Editor$onStore = _Platform_outgoingPort('onStore', $elm$core$Basics$identity);
 var $elm_community$undo_redo$UndoList$redo = function (_v0) {
 	var past = _v0.j;
-	var present = _v0.A;
+	var present = _v0.C;
 	var future = _v0.l;
 	if (!future.b) {
 		return A3($elm_community$undo_redo$UndoList$UndoList, past, present, future);
@@ -8778,7 +8778,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							A2($author$project$Zipper$setFormula, _new, z))
 					});
 			case 7:
@@ -8787,7 +8787,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2(
 								$author$project$Zipper$renumberJustInReferences,
 								$author$project$Zipper$renumberJustInRefWhenExpanding,
@@ -8799,7 +8799,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2(
 								$author$project$Zipper$renumberJustInReferences,
 								$author$project$Zipper$renumberJustInRefWhenExpanding,
@@ -8811,7 +8811,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2(
 								$author$project$Zipper$renumberJustInReferences,
 								$author$project$Zipper$renumberJustInRefWhenExpanding,
@@ -8823,7 +8823,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							A2($author$project$Zipper$setRefs, _new, z))
 					});
 			case 2:
@@ -8831,7 +8831,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							$author$project$Zipper$delete(z))
 					});
 			case 3:
@@ -8842,7 +8842,7 @@ var $author$project$Editor$simpleUpdate = F2(
 					$author$project$Zipper$up(z))) ? _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2(
 								$author$project$Zipper$renumberJustInReferences,
 								$author$project$Zipper$renumberJustInRefWhenDeleting,
@@ -8850,7 +8850,7 @@ var $author$project$Editor$simpleUpdate = F2(
 					}) : _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							$author$project$Zipper$deleteMe(z))
 					});
 			case 4:
@@ -8858,7 +8858,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							$author$project$Zipper$makeClosed(z))
 					});
 			case 5:
@@ -8868,7 +8868,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							A3($author$project$Zipper$setClosed, which, ref, z))
 					});
 			case 6:
@@ -8876,7 +8876,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							$author$project$Zipper$makeOpen(z))
 					});
 			case 10:
@@ -8885,7 +8885,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							A2($author$project$Zipper$setSubstitution, newSubst, z))
 					});
 			case 11:
@@ -8893,7 +8893,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							$author$project$Zipper$switchBetas(z))
 					});
 			case 12:
@@ -8902,7 +8902,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2($author$project$Zipper$changeToUnaryRule, extType, z))
 					});
 			case 13:
@@ -8911,7 +8911,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2($author$project$Zipper$changeToUnaryRuleWithSubst, extType, z))
 					});
 			case 14:
@@ -8920,7 +8920,7 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$topRenumbered(
+						d: $author$project$Editor$topRenumbered(
 							A2($author$project$Zipper$changeToBinaryRule, extType, z))
 					});
 			case 15:
@@ -8928,19 +8928,19 @@ var $author$project$Editor$simpleUpdate = F2(
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Editor$top(
+						d: $author$project$Editor$top(
 							$author$project$Zipper$changeButtonAppearance(z))
 					});
 			case 16:
 				var _new = msg.a;
 				return _Utils_update(
 					model,
-					{o: _new});
+					{y: _new});
 			case 19:
 				return _Utils_update(
 					model,
 					{
-						c: $author$project$Zipper$prettify(model.c)
+						d: $author$project$Zipper$prettify(model.d)
 					});
 			case 20:
 				return model;
@@ -8970,7 +8970,7 @@ var $elm$file$File$Download$string = F3(
 var $elm$file$File$toString = _File_toString;
 var $elm_community$undo_redo$UndoList$undo = function (_v0) {
 	var past = _v0.j;
-	var present = _v0.A;
+	var present = _v0.C;
 	var future = _v0.l;
 	if (!past.b) {
 		return A3($elm_community$undo_redo$UndoList$UndoList, past, present, future);
@@ -8987,7 +8987,7 @@ var $elm_community$undo_redo$UndoList$undo = function (_v0) {
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Editor$update = F2(
 	function (msg, model) {
-		var present = model.A;
+		var present = model.C;
 		switch (msg.$) {
 			case 20:
 				return _Utils_Tuple2(
@@ -9003,10 +9003,10 @@ var $author$project$Editor$update = F2(
 					_Utils_update(
 						model,
 						{
-							A: _Utils_update(
+							C: _Utils_update(
 								present,
 								{
-									r: $author$project$Editor$InProgress(
+									v: $author$project$Editor$InProgress(
 										$elm$file$File$name(file))
 								})
 						}),
@@ -9029,7 +9029,7 @@ var $author$project$Editor$update = F2(
 									$elm_community$undo_redo$UndoList$new,
 									_Utils_update(
 										present,
-										{o: cfg, r: $author$project$Editor$None, c: t}),
+										{y: cfg, v: $author$project$Editor$None, d: t}),
 									model),
 								$author$project$Editor$onChange(0));
 						} else {
@@ -9038,10 +9038,10 @@ var $author$project$Editor$update = F2(
 								_Utils_update(
 									model,
 									{
-										A: _Utils_update(
+										C: _Utils_update(
 											present,
 											{
-												r: A2(
+												v: A2(
 													$author$project$Editor$ImportErr,
 													'Failed to import tableau',
 													_List_fromArray(
@@ -9060,12 +9060,12 @@ var $author$project$Editor$update = F2(
 									_Utils_update(
 										present,
 										{
-											r: A2(
+											v: A2(
 												$author$project$Editor$ImportErr,
 												'Failed to import rule set configuration. ' + 'Keeping the last one.',
 												_List_fromArray(
 													[cfgErr])),
-											c: t
+											d: t
 										}),
 									model),
 								$author$project$Editor$onChange(0));
@@ -9076,10 +9076,10 @@ var $author$project$Editor$update = F2(
 								_Utils_update(
 									model,
 									{
-										A: _Utils_update(
+										C: _Utils_update(
 											present,
 											{
-												r: A2(
+												v: A2(
 													$author$project$Editor$ImportErr,
 													'Failed to import tableau and ' + 'rule set configuration',
 													_List_fromArray(
@@ -9095,10 +9095,10 @@ var $author$project$Editor$update = F2(
 						_Utils_update(
 							model,
 							{
-								A: _Utils_update(
+								C: _Utils_update(
 									present,
 									{
-										r: A2(
+										v: A2(
 											$author$project$Editor$ImportErr,
 											'Failed to import file, ' + 'its content is not valid JSON',
 											_List_fromArray(
@@ -9114,16 +9114,16 @@ var $author$project$Editor$update = F2(
 						$elm$file$File$Download$string,
 						'tableau.json',
 						'application/json',
-						A3($author$project$Helpers$Exporting$Json$Encode$encodeString, 2, present.o, present.c)));
+						A3($author$project$Helpers$Exporting$Json$Encode$encodeString, 2, present.y, present.d)));
 			case 17:
 				return _Utils_Tuple2(
 					$elm_community$undo_redo$UndoList$undo(
 						_Utils_update(
 							model,
 							{
-								A: _Utils_update(
+								C: _Utils_update(
 									present,
-									{r: $author$project$Editor$None})
+									{v: $author$project$Editor$None})
 							})),
 					$author$project$Editor$onChange(0));
 			case 18:
@@ -9138,18 +9138,18 @@ var $author$project$Editor$update = F2(
 				return _Utils_Tuple2(
 					model,
 					$author$project$Editor$onStore(
-						A2($author$project$Helpers$Exporting$Json$Encode$encodeValue, model.A.o, model.A.c)));
+						A2($author$project$Helpers$Exporting$Json$Encode$encodeValue, model.C.y, model.C.d)));
 			default:
 				var presentWithoutImport = _Utils_update(
 					present,
-					{r: $author$project$Editor$None});
+					{v: $author$project$Editor$None});
 				return _Utils_Tuple2(
 					A2(
 						$elm_community$undo_redo$UndoList$new,
 						A2($author$project$Editor$simpleUpdate, msg, presentWithoutImport),
 						_Utils_update(
 							model,
-							{A: presentWithoutImport})),
+							{C: presentWithoutImport})),
 					$author$project$Editor$onChange(0));
 		}
 	});
@@ -9177,8 +9177,6 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		'tabIndex',
 		$elm$core$String$fromInt(n));
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Editor$menu = F3(
 	function (cls, label, content) {
@@ -9195,10 +9193,7 @@ var $author$project$Editor$menu = F3(
 					$elm$html$Html$span,
 					_List_Nil,
 					_List_fromArray(
-						[
-							label,
-							$elm$html$Html$text(' ▾')
-						])),
+						[label])),
 					A2(
 					$elm$html$Html$ul,
 					_List_fromArray(
@@ -9226,6 +9221,8 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Editor$menuItem = F2(
 	function (msg, str) {
 		return A2(
@@ -9361,7 +9358,7 @@ var $author$project$Helpers$Rules$notesTable = A2(
 										[
 											$elm$html$Html$Attributes$class('symbols')
 										]),
-									'**T** \\forall x P(x)'),
+									'**T** ∀ x P(x)'),
 									A2(
 									$elm_explorations$markdown$Markdown$toHtml,
 									_List_fromArray(
@@ -11546,8 +11543,6 @@ var $author$project$Helpers$Rules$help = function (config) {
 								$elm$html$Html$text('Help')
 							]))
 					])),
-				$author$project$Helpers$Rules$symbolsTable,
-				$author$project$Helpers$Rules$notesTable,
 				A2(
 				$elm$html$Html$h3,
 				_List_fromArray(
@@ -11558,7 +11553,9 @@ var $author$project$Helpers$Rules$help = function (config) {
 					[
 						$elm$html$Html$text('Applying rules')
 					])),
-				$author$project$Helpers$Rules$rulesTable(config)
+				$author$project$Helpers$Rules$rulesTable(config),
+				$author$project$Helpers$Rules$symbolsTable,
+				$author$project$Helpers$Rules$notesTable
 			]));
 };
 var $author$project$Editor$Export = {$: 23};
@@ -15836,24 +15833,49 @@ var $author$project$Editor$viewControls = F2(
 					var switchBetasButton = function () {
 						var _v6 = t.D;
 						if (_v6.$ === 4) {
-							return A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button'),
-										$elm$html$Html$Events$onClick(
-										$author$project$Editor$SwitchBetas(z)),
-										$elm$html$Html$Attributes$title('Swap branches')
-									]),
-								_List_fromArray(
-									[
-										$frandibar$elm_font_awesome_5$FontAwesome$icon($frandibar$elm_font_awesome_5$FontAwesome$exchangeAlt)
-									]));
+							return _List_fromArray(
+								[
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('button'),
+											$elm$html$Html$Events$onClick(
+											$author$project$Editor$SwitchBetas(z)),
+											$elm$html$Html$Attributes$title('Swap branches')
+										]),
+									_List_fromArray(
+										[
+											$frandibar$elm_font_awesome_5$FontAwesome$icon($frandibar$elm_font_awesome_5$FontAwesome$exchangeAlt)
+										]))
+								]);
 						} else {
-							return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+							return _List_Nil;
 						}
 					}();
-					var deleteMeButton = function () {
+					var addDeleteMeItem = function (items) {
+						return A2(
+							$elm$core$List$cons,
+							A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick(
+												$author$project$Editor$DeleteMe(z))
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Delete node')
+											]))
+									])),
+							items);
+					};
+					var addOptionalDeleteMeItem = function (items) {
 						if (!_Utils_eq(
 							$author$project$Zipper$up(z),
 							z)) {
@@ -15864,35 +15886,15 @@ var $author$project$Editor$viewControls = F2(
 								if (_v2 === '') {
 									var _v3 = t.D;
 									if (!_v3.$) {
-										return A2(
-											$elm$html$Html$button,
-											_List_fromArray(
-												[
-													$elm$html$Html$Events$onClick(
-													$author$project$Editor$DeleteMe(z))
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Delete node')
-												]));
+										return addDeleteMeItem(items);
 									} else {
-										return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+										return items;
 									}
 								} else {
-									return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+									return items;
 								}
 							} else {
-								return A2(
-									$elm$html$Html$button,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Editor$DeleteMe(z))
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Delete node')
-										]));
+								return addDeleteMeItem(items);
 							}
 						} else {
 							var _v4 = t.D;
@@ -15902,42 +15904,22 @@ var $author$project$Editor$viewControls = F2(
 									case 2:
 										if (_v4.a === 1) {
 											var _v5 = _v4.a;
-											return A2(
-												$elm$html$Html$button,
-												_List_fromArray(
-													[
-														$elm$html$Html$Events$onClick(
-														$author$project$Editor$DeleteMe(z))
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Delete node')
-													]));
+											return addDeleteMeItem(items);
 										} else {
 											break _v4$2;
 										}
 									case 0:
-										return A2(
-											$elm$html$Html$button,
-											_List_fromArray(
-												[
-													$elm$html$Html$Events$onClick(
-													$author$project$Editor$DeleteMe(z))
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Delete node')
-												]));
+										return addDeleteMeItem(items);
 									default:
 										break _v4$2;
 								}
 							}
-							return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+							return items;
 						}
-					}();
-					return t.ab.af.ax ? _List_fromArray(
-						[
-							A2(
+					};
+					return t.ab.af.ax ? A2(
+						$elm$core$List$cons,
+						A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
@@ -15949,59 +15931,60 @@ var $author$project$Editor$viewControls = F2(
 								[
 									$elm$html$Html$text('Add assumption')
 								])),
+						A2(
+							$elm$core$List$cons,
 							A8(
-							$author$project$Editor$ruleMenu,
-							$author$project$Editor$ExpandUnary,
-							$author$project$Editor$ExpandUnaryWithSubst,
-							$author$project$Editor$ExpandBinary,
-							$elm$html$Html$text('Add'),
-							'Add',
-							'add',
-							config,
-							z),
-							A3(
-							$author$project$Editor$menu,
-							'del',
-							$elm$html$Html$text('Delete'),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$li,
-									_List_Nil,
-									_List_fromArray(
-										[deleteMeButton])),
-									A2(
-									$elm$html$Html$li,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$button,
-											_List_fromArray(
-												[
-													$elm$html$Html$Events$onClick(
-													$author$project$Editor$Delete(z))
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Delete subtree')
-												]))
-										]))
-								])),
+								$author$project$Editor$ruleMenu,
+								$author$project$Editor$ExpandUnary,
+								$author$project$Editor$ExpandUnaryWithSubst,
+								$author$project$Editor$ExpandBinary,
+								$elm$html$Html$text('Add'),
+								'Add',
+								'add',
+								config,
+								z),
 							A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('button'),
-									$elm$html$Html$Events$onClick(
-									$author$project$Editor$MakeClosed(z))
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Close')
-								])),
-							switchBetasButton
-						]) : _List_Nil;
+								$elm$core$List$cons,
+								A3(
+									$author$project$Editor$menu,
+									'del',
+									$elm$html$Html$text('Delete'),
+									addOptionalDeleteMeItem(
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$li,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Events$onClick(
+																$author$project$Editor$Delete(z))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Delete subtree')
+															]))
+													]))
+											]))),
+								A2(
+									$elm$core$List$cons,
+									A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('button'),
+												$elm$html$Html$Events$onClick(
+												$author$project$Editor$MakeClosed(z))
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Close')
+											])),
+									switchBetasButton)))) : _List_Nil;
 				}
 			}());
 	});
@@ -16363,11 +16346,73 @@ var $author$project$Editor$viewUnaryWithSubst = F2(
 					$author$project$Zipper$down(z))
 				]));
 	});
-var $author$project$Editor$view = function (_v0) {
-	var present = _v0.A;
-	return {
-		be: _List_fromArray(
+var $author$project$Editor$viewEmbeddable = function (_v0) {
+	var present = _v0.C;
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
 			[
+				$elm$html$Html$Attributes$class('tableauEditor')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('actions')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Editor$configMenu(present.y),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick($author$project$Editor$Prettify)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Prettify formulas')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick($author$project$Editor$Print)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Print')
+							])),
+						$author$project$Editor$jsonExportControl(present.d),
+						$author$project$Editor$jsonImportControl(present.v),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick($author$project$Editor$Undo)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Undo')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('button'),
+								$elm$html$Html$Events$onClick($author$project$Editor$Redo)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Redo')
+							]))
+					])),
+				$author$project$Editor$jsonImportError(present.v),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
@@ -16377,70 +16422,20 @@ var $author$project$Editor$view = function (_v0) {
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('actions')
-							]),
-						_List_fromArray(
-							[
-								$author$project$Editor$configMenu(present.o),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button'),
-										$elm$html$Html$Events$onClick($author$project$Editor$Prettify)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Prettify formulas')
-									])),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button'),
-										$elm$html$Html$Events$onClick($author$project$Editor$Print)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Print')
-									])),
-								$author$project$Editor$jsonExportControl(present.c),
-								$author$project$Editor$jsonImportControl(present.r),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button'),
-										$elm$html$Html$Events$onClick($author$project$Editor$Undo)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Undo')
-									])),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button'),
-										$elm$html$Html$Events$onClick($author$project$Editor$Redo)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Redo')
-									]))
-							])),
-						$author$project$Editor$jsonImportError(present.r),
-						A2(
 						$author$project$Editor$viewNode,
-						present.o,
-						$author$project$Zipper$zipper(present.c)),
-						A2($author$project$Editor$verdict, present.o, present.c),
-						A2($author$project$Editor$problems, present.o, present.c),
-						$author$project$Helpers$Rules$help(present.o)
-					]))
+						present.y,
+						$author$project$Zipper$zipper(present.d))
+					])),
+				A2($author$project$Editor$verdict, present.y, present.d),
+				A2($author$project$Editor$problems, present.y, present.d),
+				$author$project$Helpers$Rules$help(present.y)
+			]));
+};
+var $author$project$Editor$view = function (model) {
+	return {
+		be: _List_fromArray(
+			[
+				$author$project$Editor$viewEmbeddable(model)
 			]),
 		bY: 'Tableau Editor'
 	};
