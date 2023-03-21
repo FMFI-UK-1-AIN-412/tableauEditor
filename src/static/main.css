@@ -1,10 +1,17 @@
 body {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
+
+.tableauEditor {
+	width: 100%;
+}
+
+.tableauEditor * {
+	box-sizing: border-box;
+}
+
 .tableau {
 	width: 100%;
-	border-spacing: 0;
-	border-collapse: collapse;
 }
 
 .formula {
@@ -92,12 +99,7 @@ body {
 
 .expandControls {
 	text-align: center;
-	margin-bottom: 0.125em;
 	margin-bottom: 0.125rem;
-}
-
-.actions button {
-	margin: 0 0.5em;
 }
 
 .actions {
@@ -105,34 +107,67 @@ body {
 	justify-content: flex-end;
 }
 
+.inputGroup .onclick-menu,
+.inputGroup button {
+	margin: 0 0.125rem;
+}
+
+.actions > button,
+.actions > .onclick-menu,
+.expandControls > button,
+.expandControls > .onclick-menu {
+	margin: 0 0.25rem;
+}
+
+.actions > button:first-child,
+.actions > .onclick-menu:first-child,
+.expandControls > button:first-child,
+.expandControls > .onclick-menu:first-child,
+.inputGroup .onclick-menu:first-child,
+.inputGroup button:first-child {
+	margin-left: 0;
+}
+
+.actions > button:last-child,
+.actions > .onclick-menu:last-child,
+.expandControls > button:last-child,
+.expandControls > .onclick-menu:last-child,
+.inputGroup .onclick-menu:last-child,
+.inputGroup button:last-child {
+	margin-right: 0;
+}
+
 .problems {
 	max-width: 97%;
 }
 
 
-.button, .onclick-menu:before, .onclick-menu.change, .onclick-menu.add, .onclick-menu.del {
-	padding: 2px 10px;
+.button,
+.onclick-menu {
+	padding: 0.125rem 0.5rem;
 	background-color: #fff;
-	border-radius: 20px;
+	border-radius: 1.5rem;
 	border: thin solid lightgray;
 	font-size: .75rem;
 }
-.button:focus, .onclick-menu:focus:before, .onclick-menu.change:focus, .onclick-menu.add:focus, .onclick-menu.del:focus {
+.button:focus,
+.onclick-menu:focus {
 	background-color: rgba(0, 0, 0, 0.05);
 	border-color: #16a;
 }
-.button:hover, .onclick-menu:hover:before {
+.button:hover {
 	background-color: rgba(0, 0, 0, 0.075);
 	border-color: #ccc;
 }
-.onclick-menu-content button:hover, .onclick-menu-content button:focus {
+.onclick-menu-content button:hover,
+.onclick-menu-content button:focus {
 	background-color: rgba(0, 0, 0, 0.075);
 }
 .button.active {
 	background-color: rgba(0, 0, 0, 0.1);
 	border-color: #bbb;
 }
-.button:active, .onclick-menu:active:before {
+.button:active {
 	background-color: rgba(0, 0, 0, 0.1);
 	border-color: #16a;
 }
@@ -164,15 +199,6 @@ body {
 	display: inline-block;
 }
 
-.onclick-menu.change .onclick-menu-content {
-	left: auto;
-	right: -2em;
-}
-
-.onclick-menu.add {
-	margin-left: 5px;
-}
-
 .onclick-menu:focus {
 	pointer-events: none;
 }
@@ -190,7 +216,12 @@ body {
 	opacity: 0;
 	visibility: hidden;
 	transition: visibility 0.25s, opacity 0.1s;
-	left: -1em;
+	left: -0.5625rem;
+}
+
+.onclick-menu.change .onclick-menu-content {
+	left: auto;
+	right: -0.5625rem;
 }
 
 .onclick-menu.no-pointer-events {
@@ -215,39 +246,33 @@ Eye candy
 ( colors courtesy of https://kuler.adobe.com/try-color-theme-3350110 )
 */
 .onclick-menu {
-	font: caption-small;
-	font: 400 11px system-ui;
-	font: -moz-button;
-	padding: 0;
-	margin: 0;
 	outline: 0;
-	margin-right: 0.3em;
 	text-align: left;
 }
 .onclick-menu-content {
 	background-color:white /* #364656 */;
 	width: auto;
 
-	margin-top: 5px;
+	margin-top: 0.25rem;
 	margin-left: 0;
-	padding: .25em 0;
-	border-radius: .25em;
-	border: thin solid lightgray;
+	padding: .25rem 0;
+	border-radius: .25rem;
+	border: 0.0625rem solid lightgray;
 }
 
-/* arrow for the expanding part */
-/*.onclick-menu-content:before {
+/* caret */
+.onclick-menu::after {
 	content: "";
 	width: 0;
-	height: 0;
+	height: 0.2ex;
+	display: inline-block;
+	margin-left: 0.33333em;
 
-	border-bottom: 10px solid #364656;
-	border-left: 10px solid transparent;
-	border-right: 10px solid transparent;
-
-	position: absolute;
-	top: -10px;
-}*/
+	border-top: 0.8ex solid #364656;
+	border-left: 0.5ex solid transparent;
+	border-right: 0.5ex solid transparent;
+	border-bottom: 0 solid transparent;
+}
 
 .onclick-menu-content li {
 	color: black /* #f2f5e9 */;
@@ -264,7 +289,7 @@ Eye candy
 	outline: 0;
 	cursor: pointer;
 	line-height: 2em;
-	padding: 0 2em;
+	padding: 0 1rem;
 	font-size: .75rem;
 	width: 100%;
 	text-align: left;
@@ -463,11 +488,20 @@ button.delete {
  */
 
 @media print {
-	.viewMode .tableau .actions,
-	.viewMode .tableau .rulesHelp,
-	.viewMode .onclick-menu,
-	.viewMode .button,
-	.viewMode .nodeProblems {
+	.tableauEditor .actions,
+	.tableauEditor .rulesHelp,
+	.onclick-menu,
+	.onclick-menu-content,
+	.button,
+	.nodeProblems {
+		display: none;
+	}
+	.onclick-menu.change {
+		display: inline-block;
+		border: none;
+		padding: 0;
+	}
+	.onclick-menu::after {
 		display: none;
 	}
 	.closed {
@@ -487,11 +521,21 @@ button.delete {
 	}
 }
 
-.viewMode .tableau .actions,
-.viewMode .tableau .rulesHelp,
+.viewMode .actions,
+.viewMode .rulesHelp,
 .viewMode .onclick-menu,
+.viewMode .onclick-menu-content,
 .viewMode .button,
 .viewMode .nodeProblems {
+	display: none;
+}
+.viewMode .onclick-menu.change {
+	display: block;
+	border: none;
+	margin: 0;
+	padding: 0 0.25rem;
+}
+.viewMode .onclick-menu::after {
 	display: none;
 }
 .viewMode .closed {

@@ -359,7 +359,7 @@ view : Model -> Browser.Document Msg
 view ({ present }) =
     { title = "Tableau Editor"
     , body =
-        [ div [ class "tableau" ]
+        [ div [ class "tableauEditor" ]
             [ div [ class "actions" ]
                 [ configMenu present.config
                 , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
@@ -370,7 +370,10 @@ view ({ present }) =
                 , button [ class "button", onClick Redo ] [ text "Redo" ]
                 ]
             , jsonImportError present.jsonImport
-            , viewNode present.config (Zipper.zipper present.tableau)
+            , div [ class "tableau" ]
+                [ viewNode present.config
+                    (Zipper.zipper present.tableau)
+                ]
             , verdict present.config present.tableau
             , problems present.config present.tableau
             , Rules.help present.config
@@ -379,8 +382,8 @@ view ({ present }) =
     }
 
 viewEmbeddable : Model -> Html Msg
-viewEmbeddable ({ present } as model) =
-    div [ class "tableau" ]
+viewEmbeddable ({ present }) =
+    div [ class "tableauEditor" ]
       [ div [ class "actions" ]
         [ configMenu present.config
         , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
@@ -391,7 +394,8 @@ viewEmbeddable ({ present } as model) =
         , button [ class "button", onClick Redo ] [ text "Redo" ]
         ]
         , jsonImportError present.jsonImport
-        , viewNode present.config (Zipper.zipper present.tableau)
+        , div [ class "tableau" ]
+            [ viewNode present.config (Zipper.zipper present.tableau) ]
         , verdict present.config present.tableau
         , problems present.config present.tableau
         , Rules.help present.config
@@ -514,7 +518,7 @@ menuItem msg str =
 
 menu cls label content =
     div [ class <| "onclick-menu " ++ cls, tabindex 0 ]
-        [ span [] [ label, text " ▾" ]
+        [ span [] [ label ]
         , ul [ class "onclick-menu-content" ] content
         ]
 
