@@ -356,50 +356,30 @@ simpleUpdate msg model =
 
 
 view : Model -> Browser.Document Msg
-view ({ present }) =
+view (model) =
     { title = "Tableau Editor"
-    , body =
-        [ div [ class "tableauEditor" ]
-            [ div [ class "actions" ]
-                [ configMenu present.config
-                , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-                , button [ class "button", onClick Print ] [ text "Print" ]
-                , jsonExportControl present.tableau
-                , jsonImportControl present.jsonImport
-                , button [ class "button", onClick Undo ] [ text "Undo" ]
-                , button [ class "button", onClick Redo ] [ text "Redo" ]
-                ]
-            , jsonImportError present.jsonImport
-            , div [ class "tableau" ]
-                [ viewNode present.config
-                    (Zipper.zipper present.tableau)
-                ]
-            , verdict present.config present.tableau
-            , problems present.config present.tableau
-            , Rules.help present.config
-            ]
-        ]
+    , body = [ viewEmbeddable model ]
     }
 
 viewEmbeddable : Model -> Html Msg
 viewEmbeddable ({ present }) =
     div [ class "tableauEditor" ]
-      [ div [ class "actions" ]
-        [ configMenu present.config
-        , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
-        , button [ class "button", onClick Print ] [ text "Print" ]
-        , jsonExportControl present.tableau
-        , jsonImportControl present.jsonImport
-        , button [ class "button", onClick Undo ] [ text "Undo" ]
-        , button [ class "button", onClick Redo ] [ text "Redo" ]
-        ]
+        [ div [ class "actions" ]
+            [ configMenu present.config
+            , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
+            , button [ class "button", onClick Print ] [ text "Print" ]
+            , jsonExportControl present.tableau
+            , jsonImportControl present.jsonImport
+            , button [ class "button", onClick Undo ] [ text "Undo" ]
+            , button [ class "button", onClick Redo ] [ text "Redo" ]
+            ]
         , jsonImportError present.jsonImport
         , div [ class "tableau" ]
             [ viewNode present.config (Zipper.zipper present.tableau) ]
         , verdict present.config present.tableau
         , problems present.config present.tableau
         , Rules.help present.config
-      ]
+        ]
 
 
 viewNode : Config -> Zipper.Zipper -> Html Msg
@@ -659,7 +639,14 @@ viewControls config (( t, _ ) as z) =
 
             _ ->
                 let
-                    deleteMeButton =
+                    addDeleteMeItem items =
+                        li [] [
+                            button [ onClick (DeleteMe z) ]
+                                [ text "Delete node" ]
+                        ]
+                        :: items
+
+                    addOptionalDeleteMeItem items =
                         if (z |> Zipper.up) /= z then
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
                                 Binary _ _ _ ->
@@ -667,46 +654,58 @@ viewControls config (( t, _ ) as z) =
                                         "" ->
                                             case t.ext of
                                                 Open ->
-                                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                                    addDeleteMeItem items
 
                                                 _ ->
-                                                    div [] []
+                                                    items
 
                                         _ ->
-                                            div [] []
+                                            items
 
                                 _ ->
-                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                    addDeleteMeItem items
 
                         else
                             case t.ext of
                                 Unary Alpha _ ->
-                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                    addDeleteMeItem items
 
                                 Open ->
-                                    button [ onClick (DeleteMe z) ] [ text "Delete node" ]
+                                    addDeleteMeItem items
 
                                 _ ->
-                                    div [] []
+                                    items
 
                     switchBetasButton =
                         case t.ext of
                             Binary _ _ _ ->
-                                button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
+                                [
+                                    button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
+                                ]
 
                             _ ->
-                                div [] []
+                                []
                 in
                 if t.node.gui.controlsShown then
-                    [ button [ class "button", onClick (ExpandUnary Assumption z) ] [ text "Add assumption" ]
-                    , ruleMenu ExpandUnary ExpandUnaryWithSubst ExpandBinary (text "Add") "Add" "add" config z
-                    , menu "del" (text "Delete") <|
-                        [ li [] [ deleteMeButton ]
-                        , li [] [ button [ onClick (Delete z) ] [ text "Delete subtree" ] ]
-                        ]
-                    , button [ class "button", onClick (MakeClosed z) ] [ text "Close" ]
-                    , switchBetasButton
-                    ]
+                    ( button
+                        [ class "button"
+                        , onClick (ExpandUnary Assumption z) ]
+                        [ text "Add assumption" ]
+                    :: ruleMenu
+                        ExpandUnary ExpandUnaryWithSubst ExpandBinary
+                        (text "Add") "Add" "add" config z
+                    :: menu "del" (text "Delete")
+                        (addOptionalDeleteMeItem
+                            [ li []
+                                [ button [ onClick (Delete z) ]
+                                    [ text "Delete subtree" ]
+                                ]
+                            ]
+                        )
+                    :: button [ class "button", onClick (MakeClosed z) ]
+                        [ text "Close" ]
+                    :: switchBetasButton
+                    )
 
                 else
                     []
