@@ -464,6 +464,7 @@ button.delete {
 	display:flex;
 	flex-wrap: wrap;
 	width:100%;
+	align-items: start;
 }
 
 .ruleBox{

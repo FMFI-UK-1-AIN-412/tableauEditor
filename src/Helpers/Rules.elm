@@ -283,7 +283,7 @@ notesTable =
                     ]
                 , Html.td []
                     [ Markdown.toHtml [ class "symbols" ]
-                        "**T** \\forall x P(x)"
+                        "**T** ∀ x P(x)"
                     , Markdown.toHtml [ class "symbols" ]
                         "**F** ∃x ∀y (K(x,q) ∧ G(y,x))"
                     ]
@@ -570,10 +570,10 @@ help : Config -> Html msg
 help config =
     details [ class "rulesHelp" ]
         [ summary [] [ h2 [] [ text "Help" ] ]
-        , symbolsTable
-        , notesTable
         , h3 [ class "full" ] [ text "Applying rules" ]
         , rulesTable config
+        , symbolsTable
+        , notesTable
         ]
 
 
