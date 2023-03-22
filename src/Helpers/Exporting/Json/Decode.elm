@@ -19,7 +19,7 @@ import Json.Decode as D exposing
     , string
     , succeed)
 import Tableau exposing (Tableau)
-import Zipper
+import Zipper exposing (Zipper)
 
 
 
@@ -69,52 +69,52 @@ config =
         (field "config" string)
 
 
-open : Decoder Tableau.Tableau
+open : Decoder Tableau
 open =
-    map2 Tableau.Tableau
+    map2 Tableau
         (field "node" node)
         (succeed Tableau.Open)
 
 
-closed : Decoder Tableau.Tableau
+closed : Decoder Tableau
 closed =
     map2
-        Tableau.Tableau
+        Tableau
         (field "node" node)
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
-openComplete : Decoder Tableau.Tableau
+openComplete : Decoder Tableau
 openComplete =
-    map2 Tableau.Tableau
+    map2 Tableau
         (field "node" node)
         (succeed Tableau.OpenComplete)
 
 
-unaryRule : Tableau.UnaryExtType -> Decoder Tableau.Tableau
+unaryRule : Tableau.UnaryExtType -> Decoder Tableau
 unaryRule extType =
     map2
-        Tableau.Tableau
+        Tableau
         (field "node" node)
         (map (Tableau.Unary extType) (field "child" (lazy (\_ -> tableau))))
 
 
-unaryRuleWithSubst : Tableau.UnaryWithSubstExtType -> Decoder Tableau.Tableau
+unaryRuleWithSubst : Tableau.UnaryWithSubstExtType -> Decoder Tableau
 unaryRuleWithSubst extType =
     map2
-        Tableau.Tableau
+        Tableau
         (field "node" node)
         (map2 (Tableau.UnaryWithSubst extType) (field "child" (lazy (\_ -> tableau))) (field "substitution" substitution))
 
 
-binaryRule : Tableau.BinaryExtType -> Decoder Tableau.Tableau
+binaryRule : Tableau.BinaryExtType -> Decoder Tableau
 binaryRule extType =
-    map2 Tableau.Tableau
+    map2 Tableau
         (field "node" node)
         (map2 (Tableau.Binary extType) (field "leftChild" (lazy (\_ -> tableau))) (field "rightChild" (lazy (\_ -> tableau))))
 
 
-tblTypeDecoder : String -> Decoder Tableau.Tableau
+tblTypeDecoder : String -> Decoder Tableau
 tblTypeDecoder typ =
     case typ of
         "open" ->
@@ -198,7 +198,7 @@ tblTypeDecoder typ =
 -- (in addition to the calls in alpha / beta)
 
 
-tableau : Decoder Tableau.Tableau
+tableau : Decoder Tableau
 tableau =
     lazy
         (\_ ->
@@ -235,7 +235,7 @@ decodeValue v =
     ( decodeConfig v, decodeTableau v )
 
 
-reRefTableau : Tableau.Tableau -> Tableau.Tableau
+reRefTableau : Tableau -> Tableau
 reRefTableau t =
     t
         |> Zipper.zipper
@@ -243,7 +243,7 @@ reRefTableau t =
         |> Zipper.zTableau
 
 
-reRef : Zipper.Zipper -> Zipper.Zipper
+reRef : Zipper -> Zipper
 reRef z =
     z
         |> Zipper.setRefs (z |> Zipper.zNode |> .references |> List.map .str |> String.join ",")
@@ -251,7 +251,7 @@ reRef z =
             (\t ->
                 case t.ext of
                     Tableau.Closed r1 r2 ->
-                        Tableau.Tableau t.node (Tableau.Closed (r1.str |> Zipper.getRef z) (r2.str |> Zipper.getRef z))
+                        Tableau t.node (Tableau.Closed (r1.str |> Zipper.getRef z) (r2.str |> Zipper.getRef z))
 
                     _ ->
                         t

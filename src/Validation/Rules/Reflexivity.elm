@@ -5,10 +5,10 @@ import Formula.Signed exposing (Signed(..))
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
-isRefl : Zipper.Zipper -> Bool
+isRefl : Zipper -> Bool
 isRefl z =
     case (Zipper.zNode z).formula of
         Ok (T (EqAtom lt rt)) ->
@@ -22,7 +22,7 @@ isRefl z =
             False
 
 
-validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate : Zipper -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (\a -> List.length (Zipper.zNode z).references == 0)

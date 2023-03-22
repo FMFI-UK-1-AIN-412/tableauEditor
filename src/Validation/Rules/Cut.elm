@@ -5,7 +5,7 @@ import Formula.Signed exposing (Signed(..))
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
 areUniform : Signed Formula -> Signed Formula -> Bool
@@ -13,7 +13,7 @@ areUniform f1 f2 =
     Formula.Signed.getFormula f1 == Formula.Signed.getFormula f2
 
 
-checkStructure : Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkStructure : Signed Formula -> Signed Formula -> Zipper -> Result (List Problem) Zipper
 checkStructure f1 f2 z =
     not (haveSameSign f1 f2)
         |> resultFromBool z (semanticsProblem z "Both Cut formulas have the same sign")
@@ -25,9 +25,9 @@ checkStructure f1 f2 z =
 
 
 validate :
-    Zipper.Zipper
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 validate this other =
     let
         ft =

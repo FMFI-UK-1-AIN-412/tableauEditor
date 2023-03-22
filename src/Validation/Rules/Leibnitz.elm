@@ -7,7 +7,7 @@ import Helpers.Rules exposing (signedMap)
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
 templateVar =
@@ -230,7 +230,7 @@ applyFunToSigned function sf =
             function formula |> Result.map (\f -> F f)
 
 
-mapNotSubstitutableError : String -> Zipper.Zipper -> List Problem
+mapNotSubstitutableError : String -> Zipper -> List Problem
 mapNotSubstitutableError err z =
     semanticsProblem z
         (String.replace "[]" "[] in 2nd referenced formula" err)
@@ -240,8 +240,8 @@ checkSubst :
     Term.Substitution
     -> Result (List Problem) (Signed Formula)
     -> Signed Formula
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 checkSubst σ replaced currentF z =
     case replaced of
         Err problem ->
@@ -260,8 +260,8 @@ checkSubst σ replaced currentF z =
 checkSubsts :
     Signed Formula
     -> Signed Formula
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 checkSubsts refEq refF z =
     let
         lt =
@@ -287,7 +287,7 @@ checkSubsts refEq refF z =
         |> Result.andThen (checkSubst σ2 replaced currentF)
 
 
-validate : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate : Zipper -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 2)

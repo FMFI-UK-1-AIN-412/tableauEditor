@@ -5,12 +5,12 @@ import Formula.Signed exposing (Signed(..))
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
 validate :
-    Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    Zipper
+    -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 1)

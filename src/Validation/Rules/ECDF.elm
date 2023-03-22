@@ -5,10 +5,10 @@ import Formula.Signed exposing (Signed(..))
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
-getECDFChildren : Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula))
+getECDFChildren : Signed Formula -> Zipper -> Result (List Problem) (List (Signed Formula))
 getECDFChildren f z =
     case f of
         F (Equiv a b) ->
@@ -18,6 +18,6 @@ getECDFChildren f z =
             Err (semanticsProblem z "Referenced formula is not ECDF")
 
 
-validate : Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate : Zipper -> Zipper -> Result (List Problem) Zipper
 validate this other =
     validate2RefBinary "ECDF" getECDFChildren this other

@@ -26,7 +26,7 @@ isDelta ( t, bs ) =
             False
 
 
-isUsedInDeltaAbove : String -> Zipper.Zipper -> Bool
+isUsedInDeltaAbove : String -> Zipper -> Bool
 isUsedInDeltaAbove var z =
     let
         parsedF =

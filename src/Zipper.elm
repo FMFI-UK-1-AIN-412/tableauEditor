@@ -1,9 +1,8 @@
 module Zipper exposing (..)
 
-import Formula
+import Formula exposing (Formula)
 import Formula.Parser
-import Formula.Signed
-import Html exposing (table)
+import Formula.Signed exposing (Signed)
 import Tableau exposing (..)
 
 
@@ -155,6 +154,39 @@ zSubstitution (( t, bs ) as z) =
         _ ->
             Nothing
 
+
+hasReference : Zipper -> Bool
+hasReference z =
+    List.isEmpty (zNode z).references && ((zNode z).value /= "")
+
+
+isAssumption : Zipper -> Bool
+isAssumption z =
+    case up z |> zTableau |> .ext of
+        Unary Assumption _ ->
+            True
+
+        _ ->
+            up z == z
+
+
+assumptions : Zipper -> List (Signed Formula)
+assumptions z =
+    (Maybe.map2 (\_ y -> y)
+        (if z |> isAssumption then
+            Just ()
+        else
+            Nothing
+        )
+        (z
+            |> zNode
+            |> .formula
+            |> Result.toMaybe
+        )
+        |> Maybe.map List.singleton
+        |> Maybe.withDefault []
+    )
+    ++ (List.concatMap assumptions (children z))
 
 
 -- "Aplikuje" funkciu f na kazdy vrchol v zipperi

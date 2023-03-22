@@ -33,7 +33,7 @@ import Validation.Rules.ModusPonens
 import Validation.Rules.ModusTolens
 import Validation.Rules.NCS
 import Validation.Rules.Reflexivity
-import Zipper
+import Zipper exposing (Zipper)
 
 
 
@@ -44,15 +44,15 @@ import Zipper
 --             x
 --         Ok _ ->
 --             def
--- (<++) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> List Problem) -> ( List Problem, Zipper.Zipper )
+-- (<++) : ( List Problem, Zipper ) -> (Zipper -> List Problem) -> ( List Problem, Zipper )
 -- (<++) ( lp, z ) f =
 --     ( lp ++ f z, z )
--- (<++?) : ( List Problem, Zipper.Zipper ) -> (Zipper.Zipper -> Result (List Problem) a) -> ( List Problem, Zipper.Zipper )
+-- (<++?) : ( List Problem, Zipper ) -> (Zipper -> Result (List Problem) a) -> ( List Problem, Zipper )
 -- (<++?) ( lp, z ) f =
 --     ( lp ++ error [] (f z), z )
 
 
-isCorrectTableau : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectTableau : Config -> Zipper -> Result (List Problem) Zipper
 isCorrectTableau config z =
     Errors.merge2 (always2 z)
         (isCorrectNode config z)
@@ -63,7 +63,7 @@ isCorrectTableau config z =
         )
 
 
-isValidNode : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidNode : Zipper -> Result (List Problem) Zipper
 isValidNode z =
     Errors.merge4 (always4 z)
         (isValidFormula z)
@@ -72,7 +72,7 @@ isValidNode z =
         (areValidCloseRefs z)
 
 
-isCorrectNode : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectNode : Config -> Zipper -> Result (List Problem) Zipper
 isCorrectNode config z =
     isValidNode z
         |> Result.andThen
@@ -89,18 +89,18 @@ isCorrectNode config z =
 
 {-| Just for the formula dislplay -- don't check the ref for syntax
 -}
-isCorrectFormula : Config -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isCorrectFormula : Config -> Zipper -> Result (List Problem) Zipper
 isCorrectFormula config z =
     isValidFormula z
         |> Result.andThen (isCorrectRule config)
 
 
-isValidFormula : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidFormula : Zipper -> Result (List Problem) Zipper
 isValidFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z) |> Result.map (always z)
 
 
-isValidSubstitution : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidSubstitution : Zipper -> Result (List Problem) Zipper
 isValidSubstitution z =
     if Zipper.up z == z then
         Ok z
@@ -118,7 +118,7 @@ isValidSubstitution z =
                 Ok z
 
 
-isValidNodeRef : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidNodeRef : Zipper -> Result (List Problem) Zipper
 isValidNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
@@ -136,7 +136,7 @@ isValidNodeRef z =
             Err (syntaxProblem z "There are too many references.")
 
 
-areValidCloseRefs : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+areValidCloseRefs : Zipper -> Result (List Problem) Zipper
 areValidCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -148,14 +148,14 @@ areValidCloseRefs z =
             Ok z
 
 
-isValidCloseRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidCloseRef : String -> Ref -> Zipper -> Result (List Problem) Zipper
 isValidCloseRef str r z =
     r.up
         |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
         |> Result.map (always z)
 
 
-isValidRef : String -> Ref -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isValidRef : String -> Ref -> Zipper -> Result (List Problem) Zipper
 isValidRef str r z =
     r.up
         |> Result.fromMaybe (syntaxProblem z (str ++ " reference is invalid."))
@@ -167,8 +167,8 @@ isValidRef str r z =
 
 
 areCorrectCloseRefs :
-    Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    Zipper
+    -> Result (List Problem) Zipper
 areCorrectCloseRefs z =
     case (Zipper.zTableau z).ext of
         Closed r1 r2 ->
@@ -178,17 +178,17 @@ areCorrectCloseRefs z =
             Ok z
 
 
-parseProblem : Zipper.Zipper -> List Parser.DeadEnd -> List Problem
+parseProblem : Zipper -> List Parser.DeadEnd -> List Problem
 parseProblem z =
     Helpers.Parser.deadEndsToString >> syntaxProblem z
 
 
-validateFormula : Zipper.Zipper -> Result (List Problem) (Signed Formula)
+validateFormula : Zipper -> Result (List Problem) (Signed Formula)
 validateFormula z =
     z |> Zipper.zNode |> .formula |> Result.mapError (parseProblem z)
 
 
-validateRef : String -> Ref -> Zipper.Zipper -> List Problem
+validateRef : String -> Ref -> Zipper -> List Problem
 validateRef str r z =
     case r.up of
         Nothing ->
@@ -198,7 +198,7 @@ validateRef str r z =
             []
 
 
-validateNodeRef : Zipper.Zipper -> List Problem
+validateNodeRef : Zipper -> List Problem
 validateNodeRef z =
     case List.length (Zipper.zNode z).references of
         0 ->
@@ -218,8 +218,8 @@ validateNodeRef z =
 areCloseRefsComplementary :
     Ref
     -> Ref
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 areCloseRefsComplementary r1 r2 z =
     Errors.merge2 Formula.Signed.isComplementary
         (checkReffedFormula "First close" r1 z)
@@ -228,8 +228,8 @@ areCloseRefsComplementary r1 r2 z =
 
 
 isBranchOpenComplete :
-    Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    Zipper
+    -> Result (List Problem) Zipper
 isBranchOpenComplete z =
     case (Zipper.zTableau z).ext of
         OpenComplete ->
@@ -247,14 +247,14 @@ isBranchOpenComplete z =
             Ok z
 
 
-isBranchOpen : Branch -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isBranchOpen : Branch -> Zipper -> Result (List Problem) Zipper
 isBranchOpen b z =
     resultFromBool z
         (semanticsProblem z "Branch is not open")
         (Branch.isOpen b)
 
 
-isBranchComplete : Branch -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isBranchComplete : Branch -> Zipper -> Result (List Problem) Zipper
 isBranchComplete b z =
     resultFromBool b
         (semanticsProblem z
@@ -267,7 +267,7 @@ isBranchComplete b z =
         )
 
 
-validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateUnary : UnaryExtType -> Zipper -> Result (List Problem) Zipper
 validateUnary extType =
     case extType of
         Assumption ->
@@ -310,7 +310,7 @@ validateUnary extType =
             Validation.Rules.ESTT.validate
 
 
-validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper.Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validateUnaryWithSubst extType =
     case extType of
         Gamma ->
@@ -326,7 +326,7 @@ validateUnaryWithSubst extType =
             Validation.Rules.DeltaStar.validate
 
 
-validateBinary : BinaryExtType -> Zipper.Zipper -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validateBinary : BinaryExtType -> Zipper -> Zipper -> Result (List Problem) Zipper
 validateBinary extType =
     case extType of
         Beta ->
@@ -374,6 +374,34 @@ isCorrectRule config (( t, bs ) as z) =
         [] ->
             Ok z
 
+
+isClosed : Config -> Zipper -> Result (List Problem) Bool
+isClosed config z =
+    case (Zipper.zTableau z).ext of
+        Unary _ _ ->
+            Errors.merge2 second
+                (isCorrectNode config z)
+                (isClosed config (Zipper.down z))
+
+        UnaryWithSubst _ _ _ ->
+            Errors.merge2 second
+                (isCorrectNode config z)
+                (isClosed config (Zipper.down z))
+
+        Binary _ _ _ ->
+            Errors.merge3 (\_ b c -> b && c)
+                (isCorrectNode config z)
+                (isClosed config (Zipper.left z))
+                (isClosed config (Zipper.right z))
+
+        Open ->
+            isCorrectNode config z |> Result.map (always False)
+
+        Closed r1 r2 ->
+            isCorrectNode config z |> Result.map (always True)
+
+        OpenComplete ->
+            isCorrectNode config z |> Result.map (always False)
 
 
 {- vim: set sw=2 ts=2 sts=2 et :s -}

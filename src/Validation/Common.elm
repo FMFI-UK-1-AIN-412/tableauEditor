@@ -8,7 +8,7 @@ import Formula.Signed exposing (Signed(..))
 import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
-import Zipper
+import Zipper exposing (Zipper)
 
 
 type ProblemType
@@ -19,23 +19,23 @@ type ProblemType
 type alias Problem =
     { typ : ProblemType
     , msg : String
-    , zip : Zipper.Zipper
+    , zip : Zipper
     }
 
 
-syntaxProblem : Zipper.Zipper -> String -> List Problem
+syntaxProblem : Zipper -> String -> List Problem
 syntaxProblem z s =
     [ { typ = Syntax, msg = s, zip = z } ]
 
 
-semanticsProblem : Zipper.Zipper -> String -> List Problem
+semanticsProblem : Zipper -> String -> List Problem
 semanticsProblem z s =
     [ { typ = Semantics, msg = s, zip = z } ]
 
 
 checkFormula :
     String
-    -> Zipper.Zipper
+    -> Zipper
     -> Result (List Problem) (Signed Formula)
 checkFormula str z =
     z
@@ -44,7 +44,7 @@ checkFormula str z =
         |> Result.mapError (\_ -> semanticsProblem z (str ++ " is invalid."))
 
 
-checkReffedFormula : String -> Tableau.Ref -> Zipper.Zipper -> Result (List Problem) (Signed Formula)
+checkReffedFormula : String -> Tableau.Ref -> Zipper -> Result (List Problem) (Signed Formula)
 checkReffedFormula str r z =
     z
         |> Zipper.getReffed r
@@ -52,7 +52,7 @@ checkReffedFormula str r z =
         |> Result.andThen (checkFormula (str ++ " referenced formula"))
 
 
-getReffedSignedFormula : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> Result (List Problem) (Signed Formula)
+getReffedSignedFormula : (Zipper -> Ref) -> Zipper -> Result (List Problem) (Signed Formula)
 getReffedSignedFormula extractRef z =
     case Zipper.getReffed (extractRef z) z of
         Just rz ->
@@ -117,12 +117,12 @@ always2 r _ _ =
     r
 
 
-implicitSubst : Term.Substitution -> Zipper.Zipper -> Term.Substitution
+implicitSubst : Term.Substitution -> Zipper -> Term.Substitution
 implicitSubst subst z =
     unsubstitutedVars subst z |> List.map (\x -> ( Term.toString x, x )) |> Dict.fromList
 
 
-getParsedSubst : Zipper.Zipper -> Term.Substitution
+getParsedSubst : Zipper -> Term.Substitution
 getParsedSubst z =
     (z |> Zipper.up)
         |> Zipper.zSubstitution
@@ -132,7 +132,7 @@ getParsedSubst z =
         |> (\parsedS -> Dict.union parsedS (implicitSubst parsedS z))
 
 
-getTermsToString : Zipper.Zipper -> String
+getTermsToString : Zipper -> String
 getTermsToString z =
     z
         |> getParsedSubst
@@ -140,7 +140,7 @@ getTermsToString z =
         |> (\ts -> String.join "," (List.map Term.toString ts))
 
 
-getVarsToString : Zipper.Zipper -> String
+getVarsToString : Zipper -> String
 getVarsToString z =
     z |> getParsedSubst |> Dict.keys |> String.join ","
 
@@ -217,7 +217,7 @@ isSubstituable substitution new original =
     removeSign substitution original
 
 
-getReffedId : (Zipper.Zipper -> Ref) -> Zipper.Zipper -> String
+getReffedId : (Zipper -> Ref) -> Zipper -> String
 getReffedId extractRef z =
     String.fromInt
         (Zipper.getReffed (extractRef z) z
@@ -226,12 +226,12 @@ getReffedId extractRef z =
         )
 
 
-hasNumberOfRefs : Int -> Zipper.Zipper -> Bool
+hasNumberOfRefs : Int -> Zipper -> Bool
 hasNumberOfRefs n z =
     List.length (Zipper.zNode z).references == n
 
 
-numberOfSubstPairs : Zipper.Zipper -> Int
+numberOfSubstPairs : Zipper -> Int
 numberOfSubstPairs z =
     z |> getParsedSubst |> Dict.size
 
@@ -249,7 +249,7 @@ checkFormulas err f1 f2 getNewFormula z =
         |> Result.andThen (resultFromBool z (semanticsProblem z err))
 
 
-validate2RefUnary : String -> (Signed Formula -> Signed Formula -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper) -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+validate2RefUnary : String -> (Signed Formula -> Signed Formula -> Zipper -> Result (List Problem) Zipper) -> Zipper -> Result (List Problem) Zipper
 validate2RefUnary ruleName check z =
     z
         |> checkPredicate (hasNumberOfRefs 2)
@@ -272,10 +272,10 @@ validate2RefUnary ruleName check z =
 
 validate2RefBinary :
     String
-    -> (Signed Formula -> Zipper.Zipper -> Result (List Problem) (List (Signed Formula)))
-    -> Zipper.Zipper
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> (Signed Formula -> Zipper -> Result (List Problem) (List (Signed Formula)))
+    -> Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 validate2RefBinary ruleName getChildren this other =
     let
         ft =
@@ -309,9 +309,9 @@ validate2RefBinary ruleName getChildren this other =
 
 childrenHaveSameRef :
     String
-    -> Zipper.Zipper
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 childrenHaveSameRef ruleName this other =
     let
         -- The invalid refs will be reported already
@@ -330,28 +330,28 @@ childrenHaveSameRef ruleName this other =
 
 
 validateLeft :
-    (Zipper.Zipper
-     -> Zipper.Zipper
-     -> Result (List Problem) Zipper.Zipper
+    (Zipper
+     -> Zipper
+     -> Result (List Problem) Zipper
     )
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 validateLeft validate z =
     validate z (z |> Zipper.up |> Zipper.right)
 
 
 validateRight :
-    (Zipper.Zipper
-     -> Zipper.Zipper
-     -> Result (List Problem) Zipper.Zipper
+    (Zipper
+     -> Zipper
+     -> Result (List Problem) Zipper
     )
-    -> Zipper.Zipper
-    -> Result (List Problem) Zipper.Zipper
+    -> Zipper
+    -> Result (List Problem) Zipper
 validateRight validate z =
     validate z (z |> Zipper.up |> Zipper.left)
 
 
-unsubstitutedVars : Term.Substitution -> Zipper.Zipper -> List Term
+unsubstitutedVars : Term.Substitution -> Zipper -> List Term
 unsubstitutedVars subst z =
     let
         newF =
@@ -489,7 +489,7 @@ forbiddenVarsErrStr lst =
         ++ "' can't be substituted for"
 
 
-checkSubstitutedVars : List Term -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkSubstitutedVars : List Term -> Term.Substitution -> Zipper -> Result (List Problem) Zipper
 checkSubstitutedVars allowedVars subst z =
     let
         allowed =
@@ -506,7 +506,7 @@ checkSubstitutedVars allowedVars subst z =
             Err <| semanticsProblem z (forbiddenVarsErrStr lst)
 
 
-unaryWithSubstCheck : String -> Signed Formula -> Signed Formula -> Term.Substitution -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+unaryWithSubstCheck : String -> Signed Formula -> Signed Formula -> Term.Substitution -> Zipper -> Result (List Problem) Zipper
 unaryWithSubstCheck ruleName refF newF subst z =
     let
         referenced =
@@ -569,7 +569,7 @@ isFunction term =
             True
 
 
-checkNewVariables : Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+checkNewVariables : Zipper -> Result (List Problem) Zipper
 checkNewVariables z =
     let
         parsedS =
@@ -599,7 +599,7 @@ areDistinct vars z =
     |> resultFromBool z (semanticsProblem z "Substituted variables must be distinct")
 
 
-isSimilarAbove : String -> Zipper.Zipper -> Bool
+isSimilarAbove : String -> Zipper -> Bool
 isSimilarAbove var z =
     let
         parsedF =

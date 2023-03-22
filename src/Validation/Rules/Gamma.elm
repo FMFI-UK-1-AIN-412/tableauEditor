@@ -8,11 +8,11 @@ import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
-import Zipper
+import Zipper exposing (Zipper)
 
 
 validate :
-    Zipper.Zipper
+    Zipper
     -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
 validate z =
     z

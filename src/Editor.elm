@@ -15,7 +15,6 @@ import Formula.Parser
 import Formula.Signed exposing (Signed(..))
 import Helpers.Exporting.Json.Decode
 import Helpers.Exporting.Json.Encode
-import Helpers.Helper as Helper
 import Helpers.Rules as Rules exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -88,23 +87,23 @@ subscriptions _ =
 
 
 type Msg
-    = ChangeText Zipper.Zipper String
-    | ChangeRef Zipper.Zipper String
-    | Delete Zipper.Zipper
-    | DeleteMe Zipper.Zipper
-    | MakeClosed Zipper.Zipper
-    | SetClosed Int Zipper.Zipper String
-    | MakeOpen Zipper.Zipper
-    | MakeOpenComplete Zipper.Zipper
-    | ExpandUnary Tableau.UnaryExtType Zipper.Zipper
-    | ExpandUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
-    | ExpandBinary Tableau.BinaryExtType Zipper.Zipper
-    | ChangeSubst Zipper.Zipper String
-    | SwitchBetas Zipper.Zipper
-    | ChangeToUnary Tableau.UnaryExtType Zipper.Zipper
-    | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
-    | ChangeToBinary Tableau.BinaryExtType Zipper.Zipper
-    | ChangeButtonsAppearance Zipper.Zipper
+    = ChangeText Zipper String
+    | ChangeRef Zipper String
+    | Delete Zipper
+    | DeleteMe Zipper
+    | MakeClosed Zipper
+    | SetClosed Int Zipper String
+    | MakeOpen Zipper
+    | MakeOpenComplete Zipper
+    | ExpandUnary Tableau.UnaryExtType Zipper
+    | ExpandUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper
+    | ExpandBinary Tableau.BinaryExtType Zipper
+    | ChangeSubst Zipper String
+    | SwitchBetas Zipper
+    | ChangeToUnary Tableau.UnaryExtType Zipper
+    | ChangeToUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper
+    | ChangeToBinary Tableau.BinaryExtType Zipper
+    | ChangeButtonsAppearance Zipper
     | SetConfig Config.Config
     | Undo
     | Redo
@@ -129,12 +128,12 @@ port onChange : () -> Cmd msg
 port storeTrigger : (() -> msg) -> Sub msg
 
 
-top : Zipper.Zipper -> Tableau
+top : Zipper -> Tableau
 top =
     Zipper.top >> Zipper.zTableau
 
 
-topRenumbered : Zipper.Zipper -> Tableau
+topRenumbered : Zipper -> Tableau
 topRenumbered =
     top >> Zipper.renumber
 
@@ -387,7 +386,7 @@ viewEmbeddable ({ present }) =
         ]
 
 
-viewNode : Config -> Zipper.Zipper -> Html Msg
+viewNode : Config -> Zipper -> Html Msg
 viewNode config z =
     div
         [ class "formula" ]
@@ -398,7 +397,7 @@ viewNode config z =
         ]
 
 
-viewSubsNode : Config -> Zipper.Zipper -> Html Msg
+viewSubsNode : Config -> Zipper -> Html Msg
 viewSubsNode config z =
     div [ class "formula" ]
         [ viewNodeInputs
@@ -408,7 +407,7 @@ viewSubsNode config z =
                         (z |> up |> Zipper.zSubstitution |> Maybe.map .str |> Maybe.withDefault "")
                         [ classList
                             [ ( "textInput textInputSubst", True )
-                            , ( "semanticsProblem", Helper.hasReference z )
+                            , ( "semanticsProblem", hasReference z )
                             ]
                         , onInput <| ChangeSubst z
                         , placeholder "a↦b,.."
@@ -427,7 +426,7 @@ viewSubsNode config z =
 viewNodeInputs :
     (List (Html Msg) -> List (Html Msg))
     -> Config
-    -> Zipper.Zipper
+    -> Zipper
     -> Html Msg
 viewNodeInputs additional config z =
     div [ class "inputGroup" ]
@@ -436,7 +435,7 @@ viewNodeInputs additional config z =
                 (Zipper.zNode z).value
                 [ classList
                     [ ( "textInputFormula", True )
-                    , ( "assumption", Helper.isAssumption z )
+                    , ( "assumption", isAssumption z )
                     ]
                 , class (errorsClass <| Validation.isCorrectFormula config z)
                 , type_ "text"
@@ -522,9 +521,9 @@ autoSizeInput val attrs =
         []
 
 
-viewRuleType : Zipper.Zipper -> Html Msg
+viewRuleType : Zipper -> Html Msg
 viewRuleType z =
-    if Helper.isAssumption z then
+    if isAssumption z then
         span [] [ var [] [ text "S" ], text "⁺" ]
 
     else
@@ -548,7 +547,7 @@ viewRuleType z =
                 text (unaryWithSubstExtTypeToString extType)
 
 
-viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
+viewButtonsAppearanceControlls : Zipper -> Html Msg
 viewButtonsAppearanceControlls z =
     case (Zipper.zTableau z).ext of
         Closed _ _ ->
@@ -571,7 +570,7 @@ viewButtonsAppearanceControlls z =
                 [ icon ellipsisHorizontal ]
 
 
-viewChildren : Config -> Zipper.Zipper -> Html Msg
+viewChildren : Config -> Zipper -> Html Msg
 viewChildren config z =
     case (Zipper.zTableau z).ext of
         Open ->
@@ -593,17 +592,17 @@ viewChildren config z =
             viewBinary config z
 
 
-viewUnary : Config -> Zipper.Zipper -> Html Msg
+viewUnary : Config -> Zipper -> Html Msg
 viewUnary config z =
     div [ class "alpha" ] [ viewNode config (Zipper.down z) ]
 
 
-viewUnaryWithSubst : Config -> Zipper.Zipper -> Html Msg
+viewUnaryWithSubst : Config -> Zipper -> Html Msg
 viewUnaryWithSubst config z =
     div [ class "alpha", class "withSubstitution" ] [ viewSubsNode config (Zipper.down z) ]
 
 
-viewBinary : Config -> Zipper.Zipper -> Html Msg
+viewBinary : Config -> Zipper -> Html Msg
 viewBinary config z =
     div [ class "beta" ]
         [ viewNode config (Zipper.left z)
@@ -616,7 +615,7 @@ viewLeaf =
     div [] []
 
 
-viewControls : Config -> Zipper.Zipper -> Html Msg
+viewControls : Config -> Zipper -> Html Msg
 viewControls config (( t, _ ) as z) =
     div [ class "expandControls" ]
         (case t.ext of
@@ -707,7 +706,7 @@ viewControls config (( t, _ ) as z) =
         )
 
 
-controlsClosed : Ref -> Ref -> Zipper.Zipper -> List (Html Msg)
+controlsClosed : Ref -> Ref -> Zipper -> List (Html Msg)
 controlsClosed r1 r2 z =
     let
         compl =
@@ -735,7 +734,7 @@ controlsClosed r1 r2 z =
     ]
 
 
-controlsOpenComplete : Zipper.Zipper -> List (Html Msg)
+controlsOpenComplete : Zipper -> List (Html Msg)
 controlsOpenComplete z =
     let
         cls =
@@ -746,7 +745,7 @@ controlsOpenComplete z =
     ]
 
 
-makeOpenButton : String -> Zipper.Zipper -> Html Msg
+makeOpenButton : String -> Zipper -> Html Msg
 makeOpenButton currentState z =
     button
         [ class "button"
@@ -871,7 +870,7 @@ verdict : Config -> Tableau -> Html msg
 verdict config t =
     let
         ass =
-            t |> Zipper.zipper |> Helper.assumptions
+            t |> Zipper.zipper |> assumptions
 
         ( premises, conclusions ) =
             List.partition
@@ -905,7 +904,7 @@ verdict config t =
 
 textVerdict : Config -> Zipper -> String
 textVerdict config t =
-    case Helper.isClosed config t of
+    case Validation.isClosed config t of
         Ok True ->
             "proves"
 
