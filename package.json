@@ -1,6 +1,6 @@
 {
   "name": "@fmfi-uk-1-ain-412/tableaueditor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "lib/dist/AppComponent.js",
   "types": "lib/types/types.d.ts",
   "author": "",
