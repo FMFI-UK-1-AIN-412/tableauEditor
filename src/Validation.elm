@@ -9,9 +9,11 @@ import Helpers.Parser
 import Parser
 import Set
 import Tableau exposing (..)
+import Tableau.Branch as Branch exposing (Branch)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Validation.Rules.Alpha
+import Validation.Rules.Assumption
 import Validation.Rules.Beta
 import Validation.Rules.Cut
 import Validation.Rules.DS
@@ -32,7 +34,6 @@ import Validation.Rules.ModusTolens
 import Validation.Rules.NCS
 import Validation.Rules.Reflexivity
 import Zipper
-import Validation.Rules.Assumption
 
 
 
@@ -76,9 +77,13 @@ isCorrectNode config z =
     isValidNode z
         |> Result.andThen
             (\_ ->
-                Errors.merge2 second
+                -- Errors.merge2 second
+                --     (isCorrectRule config z)
+                --     (areCorrectCloseRefs z)
+                Errors.merge3 (always3 z)
                     (isCorrectRule config z)
                     (areCorrectCloseRefs z)
+                    (isBranchOpenComplete z)
             )
 
 
@@ -220,6 +225,46 @@ areCloseRefsComplementary r1 r2 z =
         (checkReffedFormula "First close" r1 z)
         (checkReffedFormula "Second close" r2 z)
         |> Result.andThen (resultFromBool z (semanticsProblem z "Closing formulas are not complementary."))
+
+
+isBranchOpenComplete :
+    Zipper.Zipper
+    -> Result (List Problem) Zipper.Zipper
+isBranchOpenComplete z =
+    case (Zipper.zTableau z).ext of
+        OpenComplete ->
+            Result.mapError
+                (\_ ->
+                    semanticsProblem z "Branch formulas have syntax errors"
+                )
+                (Branch.fromZipper z)
+            |> Result.andThen
+                (\b -> Errors.merge2 (always2 z)
+                    (isBranchOpen b z)
+                    (isBranchComplete b z)
+                )
+        _ ->
+            Ok z
+
+
+isBranchOpen : Branch -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isBranchOpen b z =
+    resultFromBool z
+        (semanticsProblem z "Branch is not open")
+        (Branch.isOpen b)
+
+
+isBranchComplete : Branch -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper
+isBranchComplete b z =
+    resultFromBool b
+        (semanticsProblem z
+            "Completeness of branches with gamma or delta formulas cannot be checked yet")
+        (Branch.canCheckCompleteness b)
+    |> Result.andThen
+        (\_ -> resultFromBool z
+            (semanticsProblem z "Branch is not complete")
+            (Branch.isComplete b)
+        )
 
 
 validateUnary : UnaryExtType -> Zipper.Zipper -> Result (List Problem) Zipper.Zipper

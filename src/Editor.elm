@@ -1,4 +1,4 @@
-port module Editor exposing (init, update, view, viewEmbeddable, subscriptions, Msg, Model, top, topRenumbered)
+port module Editor exposing (init, update, view, viewEmbeddable, subscriptions, Msg, Model)
 
 --, FileReaderPortData, fileContentRead, fileSelected
 
@@ -29,6 +29,7 @@ import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
+import FontAwesome exposing (iconWithOptions)
 
 
 type JsonImport
@@ -94,6 +95,7 @@ type Msg
     | MakeClosed Zipper.Zipper
     | SetClosed Int Zipper.Zipper String
     | MakeOpen Zipper.Zipper
+    | MakeOpenComplete Zipper.Zipper
     | ExpandUnary Tableau.UnaryExtType Zipper.Zipper
     | ExpandUnaryWithSubst Tableau.UnaryWithSubstExtType Zipper.Zipper
     | ExpandBinary Tableau.BinaryExtType Zipper.Zipper
@@ -304,6 +306,9 @@ simpleUpdate msg model =
 
             MakeOpen z ->
                 { model | tableau = z |> Zipper.makeOpen |> top }
+
+            MakeOpenComplete z ->
+                { model | tableau = z |> Zipper.makeOpenComplete |> top }
 
             ChangeSubst z newSubst ->
                 { model | tableau = z |> Zipper.setSubstitution newSubst |> top }
@@ -530,6 +535,9 @@ viewRuleType z =
             Closed _ _ ->
                 text "C"
 
+            OpenComplete ->
+                text "OC"
+
             Unary extType _ ->
                 text (unaryExtTypeToString extType)
 
@@ -544,6 +552,9 @@ viewButtonsAppearanceControlls : Zipper.Zipper -> Html Msg
 viewButtonsAppearanceControlls z =
     case (Zipper.zTableau z).ext of
         Closed _ _ ->
+            div [] []
+
+        OpenComplete ->
             div [] []
 
         _ ->
@@ -564,10 +575,13 @@ viewChildren : Config -> Zipper.Zipper -> Html Msg
 viewChildren config z =
     case (Zipper.zTableau z).ext of
         Open ->
-            viewOpen z
+            viewLeaf
 
         Closed r1 r2 ->
-            viewClosed z
+            viewLeaf
+
+        OpenComplete ->
+            viewLeaf
 
         Unary _ _ ->
             viewUnary config z
@@ -597,13 +611,8 @@ viewBinary config z =
         ]
 
 
-viewOpen : Zipper.Zipper -> Html Msg
-viewOpen z =
-    div [] []
-
-
-viewClosed : Zipper.Zipper -> Html Msg
-viewClosed z =
+viewLeaf : Html Msg
+viewLeaf =
     div [] []
 
 
@@ -611,31 +620,11 @@ viewControls : Config -> Zipper.Zipper -> Html Msg
 viewControls config (( t, _ ) as z) =
     div [ class "expandControls" ]
         (case t.ext of
-            Tableau.Closed r1 r2 ->
-                let
-                    compl =
-                        Errors.errors <| Validation.areCloseRefsComplementary r1 r2 z
+            Closed r1 r2 ->
+                controlsClosed r1 r2 z
 
-                    ref1Cls =
-                        problemsClass <| Validation.validateRef "Invalid close ref. #1" r1 z ++ compl
-
-                    ref2Cls =
-                        problemsClass <| Validation.validateRef "Invalid close ref. #2" r2 z ++ compl
-                in
-                [ text "* "
-                , autoSizeInput r1.str
-                    [ class ("closed " ++ ref1Cls)
-                    , placeholder "Ref"
-                    , onInput <| SetClosed 0 z
-                    ]
-                , text "\u{00A0}"
-                , autoSizeInput r2.str
-                    [ class ("closed " ++ ref2Cls)
-                    , placeholder "Ref"
-                    , onInput <| SetClosed 1 z
-                    ]
-                , button [ class "button", onClick (MakeOpen z) ] [ text "Open" ]
-                ]
+            OpenComplete ->
+                controlsOpenComplete z
 
             _ ->
                 let
@@ -704,12 +693,66 @@ viewControls config (( t, _ ) as z) =
                         )
                     :: button [ class "button", onClick (MakeClosed z) ]
                         [ text "Close" ]
+                    :: button
+                        [ class "button"
+                        , onClick (MakeOpenComplete z)
+                        , title "Mark branch as open and complete"
+                        ]
+                        [ text "O&C" ]
                     :: switchBetasButton
                     )
 
                 else
                     []
         )
+
+
+controlsClosed : Ref -> Ref -> Zipper.Zipper -> List (Html Msg)
+controlsClosed r1 r2 z =
+    let
+        compl =
+            Errors.errors <| Validation.areCloseRefsComplementary r1 r2 z
+
+        ref1Cls =
+            problemsClass <| Validation.validateRef "Invalid close ref. #1" r1 z ++ compl
+
+        ref2Cls =
+            problemsClass <| Validation.validateRef "Invalid close ref. #2" r2 z ++ compl
+    in
+    [ text "* "
+    , autoSizeInput r1.str
+        [ class ("closed " ++ ref1Cls)
+        , placeholder "Ref"
+        , onInput <| SetClosed 0 z
+        ]
+    , text "\u{00A0}"
+    , autoSizeInput r2.str
+        [ class ("closed " ++ ref2Cls)
+        , placeholder "Ref"
+        , onInput <| SetClosed 1 z
+        ]
+    , makeOpenButton "closed" z
+    ]
+
+
+controlsOpenComplete : Zipper.Zipper -> List (Html Msg)
+controlsOpenComplete z =
+    let
+        cls =
+            problemsClass <| Errors.errors <| Validation.isBranchOpenComplete z
+    in
+    [ span [ class cls ] [ text "O&C\u{00A0}" ]
+    , makeOpenButton "open and complete" z
+    ]
+
+
+makeOpenButton : String -> Zipper.Zipper -> Html Msg
+makeOpenButton currentState z =
+    button
+        [ class "button"
+        , onClick (MakeOpen z)
+        , title ("Unmark as " ++ currentState) ]
+        [ text "×" ]
 
 
 singleNodeProblems : Config -> Zipper -> Html Msg

@@ -77,6 +77,10 @@ jsonTblList tableau =
                      )
                    ]
 
+        OpenComplete ->
+            [ ( "type", string "openComplete" ) ]
+                ++ jsonNodeList tableau.node
+
         Unary extType t ->
             encodeUnaryRule tableau (unaryExtTypeJsonStr extType) t
 

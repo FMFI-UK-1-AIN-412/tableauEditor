@@ -169,6 +169,9 @@ zWalkPost f (( t, bs ) as z) =
         Closed _ _ ->
             f z
 
+        OpenComplete ->
+            f z
+
         Binary _ _ _ ->
             z |> left |> zWalkPost f |> up |> right |> zWalkPost f |> up |> f
 
@@ -238,13 +241,16 @@ renumber tableau =
 renumber2 : Tableau -> Int -> ( Tableau, Int )
 renumber2 tableau num =
     let
+        node =
+            tableau.node
+
+        ext =
+            tableau.ext
+
         renumberUnary extWithType subT =
             let
                 ( new_tableau, num1 ) =
                     renumber2 subT (num + 1)
-
-                node =
-                    tableau.node
             in
             ( Tableau { node | id = num + 1 } (extWithType new_tableau), num1 )
 
@@ -255,31 +261,17 @@ renumber2 tableau num =
 
                 ( new_right, num2 ) =
                     renumber2 rt num1
-
-                node =
-                    tableau.node
             in
             ( Tableau { node | id = num + 1 } (extWithType new_left new_right), num2 )
     in
     case tableau.ext of
         Open ->
-            let
-                node =
-                    tableau.node
-
-                ext =
-                    tableau.ext
-            in
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-        Closed r1 r2 ->
-            let
-                node =
-                    tableau.node
+        Closed _ _ ->
+            ( Tableau { node | id = num + 1 } ext, num + 1 )
 
-                ext =
-                    tableau.ext
-            in
+        OpenComplete ->
             ( Tableau { node | id = num + 1 } ext, num + 1 )
 
         Unary extType subT ->
@@ -402,6 +394,9 @@ renumberJusts tableau f lengthOfPathFromFather =
             renumberJustsBinary (Binary extType) lt rt
 
         Open ->
+            tableau
+
+        OpenComplete ->
             tableau
 
         Closed r1 r2 ->
@@ -566,7 +561,10 @@ deleteMe (( t, fatherbs ) as zip) =
                     Open ->
                         Tableau defNode Open
 
-                    Closed r1 r2 ->
+                    Closed _ _ ->
+                        Tableau defNode Open
+
+                    OpenComplete ->
                         Tableau defNode Open
 
                     Binary _ lt rt ->
@@ -615,7 +613,10 @@ deleteMe (( t, fatherbs ) as zip) =
                             Open ->
                                 tableau
 
-                            Closed r1 r2 ->
+                            Closed _ _ ->
+                                Tableau tableau.node Open
+
+                            OpenComplete ->
                                 Tableau tableau.node Open
 
                             Binary _ _ _ ->
@@ -631,9 +632,7 @@ makeClosed : Zipper -> Zipper
 makeClosed z =
     modifyNode
         (\tableau ->
-            case tableau.ext of
-                _ ->
-                    Tableau tableau.node (Closed defRef defRef)
+            Tableau tableau.node (Closed defRef defRef)
         )
         z
 
@@ -660,12 +659,32 @@ makeOpen : Zipper -> Zipper
 makeOpen z =
     modifyNode
         (\tableau ->
+            let
+                origNode = tableau.node
+                origGui = origNode.gui
+                openTableauWithControlsShown =
+                    Tableau
+                        { origNode | gui = { origGui | controlsShown = True } }
+                        Open
+            in
             case tableau.ext of
                 Closed _ _ ->
-                    Tableau tableau.node Open
+                    openTableauWithControlsShown
+
+                OpenComplete ->
+                    openTableauWithControlsShown
 
                 _ ->
                     tableau
+        )
+        z
+
+
+makeOpenComplete : Zipper -> Zipper
+makeOpenComplete z =
+    modifyNode
+        (\tableau ->
+            Tableau (tableau.node) OpenComplete
         )
         z
 
@@ -720,6 +739,9 @@ changeRule extWithType z =
                         tableau
 
                     Closed _ _ ->
+                        tableau
+
+                    OpenComplete ->
                         tableau
 
                     _ ->
@@ -801,5 +823,8 @@ prettify t =
 
                     Closed r1 r2 ->
                         Tableau (tableau.node |> prettifyNode) (Closed r1 r2)
+
+                    OpenComplete ->
+                        Tableau (tableau.node |> prettifyNode) OpenComplete
             )
         |> zTableau

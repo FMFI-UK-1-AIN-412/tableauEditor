@@ -72,6 +72,7 @@ type BinaryExtType
 type Extension
     = Open
     | Closed Ref Ref
+    | OpenComplete
     | Unary UnaryExtType Tableau
     | UnaryWithSubst UnaryWithSubstExtType Tableau Substitution
     | Binary BinaryExtType Tableau Tableau
@@ -109,6 +110,9 @@ leftSubtree t =
             Tableau defNode Open
 
         Closed _ _ ->
+            Tableau defNode Open
+
+        OpenComplete ->
             Tableau defNode Open
 
         Unary _ subT ->

@@ -84,6 +84,13 @@ closed =
         (map2 Tableau.Closed (map Tuple.first (field "closed" closedRefs)) (map Tuple.second (field "closed" closedRefs)))
 
 
+openComplete : Decoder Tableau.Tableau
+openComplete =
+    map2 Tableau.Tableau
+        (field "node" node)
+        (succeed Tableau.OpenComplete)
+
+
 unaryRule : Tableau.UnaryExtType -> Decoder Tableau.Tableau
 unaryRule extType =
     map2
@@ -115,6 +122,9 @@ tblTypeDecoder typ =
 
         "closed" ->
             closed
+
+        "openComplete" ->
+            openComplete
 
         "assumption" ->
             unaryRule Tableau.Assumption

@@ -94,6 +94,9 @@ isClosed config z =
         Closed r1 r2 ->
             Validation.isCorrectNode config z |> Result.map (always True)
 
+        OpenComplete ->
+            Validation.isCorrectNode config z |> Result.map (always False)
+
 
 assumptions : Zipper.Zipper -> List (Signed Formula)
 assumptions z =
