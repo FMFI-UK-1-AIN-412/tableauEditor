@@ -24,8 +24,8 @@ fromZipper : Zipper -> Result (List Parser.DeadEnd) Branch
 fromZipper z =
     Result.map2 (::)
         (Zipper.zNode z).formula
-        (case z of
-            (_, []) ->
+        (case z.breadcrumbs of
+            [] ->
                 Ok []
 
             _ ->

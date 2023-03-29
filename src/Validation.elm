@@ -310,7 +310,7 @@ validateUnary extType =
             Validation.Rules.ESTT.validate
 
 
-validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper -> Result (List Problem) Zipper
 validateUnaryWithSubst extType =
     case extType of
         Gamma ->
@@ -352,10 +352,10 @@ validateRule rule validator config =
 
 isCorrectRule :
     Config.Config
-    -> ( Tableau, Zipper.BreadCrumbs )
-    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
-isCorrectRule config (( t, bs ) as z) =
-    case bs of
+    -> Zipper
+    -> Result (List Problem) Zipper
+isCorrectRule config z =
+    case z.breadcrumbs of
         (Zipper.UnaryCrumb Alpha _) :: _ ->
             validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
 

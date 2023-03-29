@@ -12,8 +12,8 @@ import Zipper exposing (Zipper)
 
 
 isDelta : Zipper -> Bool
-isDelta ( t, bs ) =
-    case bs of
+isDelta { breadcrumbs } =
+    case breadcrumbs of
         (Zipper.UnaryCrumbWithSubst extType _ _) :: _ ->
             case extType of
                 Delta ->

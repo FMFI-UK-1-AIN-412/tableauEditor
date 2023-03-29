@@ -616,9 +616,9 @@ viewLeaf =
 
 
 viewControls : Config -> Zipper -> Html Msg
-viewControls config (( t, _ ) as z) =
+viewControls config ({ tableau } as z) =
     div [ class "expandControls" ]
-        (case t.ext of
+        (case z.tableau.ext of
             Closed r1 r2 ->
                 controlsClosed r1 r2 z
 
@@ -638,9 +638,9 @@ viewControls config (( t, _ ) as z) =
                         if (z |> Zipper.up) /= z then
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
                                 Binary _ _ _ ->
-                                    case t.node.value of
+                                    case tableau.node.value of
                                         "" ->
-                                            case t.ext of
+                                            case tableau.ext of
                                                 Open ->
                                                     addDeleteMeItem items
 
@@ -654,7 +654,7 @@ viewControls config (( t, _ ) as z) =
                                     addDeleteMeItem items
 
                         else
-                            case t.ext of
+                            case tableau.ext of
                                 Unary Alpha _ ->
                                     addDeleteMeItem items
 
@@ -665,7 +665,7 @@ viewControls config (( t, _ ) as z) =
                                     items
 
                     switchBetasButton =
-                        case t.ext of
+                        case tableau.ext of
                             Binary _ _ _ ->
                                 [
                                     button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
@@ -674,7 +674,7 @@ viewControls config (( t, _ ) as z) =
                             _ ->
                                 []
                 in
-                if t.node.gui.controlsShown then
+                if tableau.node.gui.controlsShown then
                     ( button
                         [ class "button"
                         , onClick (ExpandUnary Assumption z) ]

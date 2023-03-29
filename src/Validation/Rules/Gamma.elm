@@ -13,7 +13,7 @@ import Zipper exposing (Zipper)
 
 validate :
     Zipper
-    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
+    -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 1)
