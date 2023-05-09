@@ -22,7 +22,7 @@ function cmd(command) {
     // compile react component
     await cmd("npx babel --extensions '.jsx' src --out-dir lib/dist");
     // isolate css files
-    await cmd("npx isolate-css-cli -p tableaueditor-Obry4K9MqH -c -o lib/dist/static/css -u 2 src/static");
+    await cmd("npx isolate-css-cli -r -p tableaueditor-Obry4K9MqH -c -o lib/dist/static/css -u 2 src/static");
     // copy font files used by isolated css
     await cmd("npx copyfiles -u 3 src/static/webfonts/* lib/dist/static/webfonts");
 })()
