@@ -4,6 +4,7 @@ import Formula exposing (Formula)
 import Formula.Parser
 import Formula.Signed exposing (Signed)
 import Tableau exposing (..)
+import LogicContext exposing (LogicContext)
 
 
 
@@ -20,21 +21,20 @@ type Crumb
 type alias BreadCrumbs =
     List Crumb
 
-
-
---type alias Zipper =
---    ( Tableau, BreadCrumbs, Maybe LogicContext )
-
-
 type alias Zipper =
     { tableau : Tableau
     , breadcrumbs : BreadCrumbs
+    , logicContext : Result String LogicContext
     }
 
 
 zipper : Tableau -> Zipper
 zipper t =
-    Zipper t []
+    Zipper t [] (Err "not-loaded")
+
+zipperOld : Tableau -> BreadCrumbs -> Zipper
+zipperOld t bs =
+    Zipper t bs (Err "not-loaded")
 
 
 children : Zipper -> List Zipper

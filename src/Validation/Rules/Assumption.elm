@@ -3,7 +3,8 @@ module Validation.Rules.Assumption exposing (..)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Parser
-import Formula.Signed exposing (Signed(..))
+import Formula.Signed exposing (Signed(..), getFormula)
+import LogicContext exposing (ValidationResult(..), contextFindFormula)
 import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
@@ -71,11 +72,44 @@ checkFreeVarsUsedInDeltaAbove f z =
         Err (semanticsProblem z <| usedInDeltaErrStr <| Set.toList varsUsedInDeltaAbove)
 
 
+contextAssumptionCheck : Zipper -> Signed Formula -> Result (List Problem) (Signed Formula)
+contextAssumptionCheck z sf =
+    case z.logicContext of
+        Ok ctx ->
+            let
+                ctxFormula =
+                    contextFindFormula ctx (getFormula sf)
+            in
+            case sf of
+                T _ ->
+                    case ctxFormula of
+                        IsAxiom ->
+                            Ok sf
+
+                        IsProovedTheorem ->
+                            Ok sf
+
+                        _ ->
+                            Err <| semanticsProblem z "True assumption must be axiom or prooved theorem"
+
+                F _ ->
+                    case ctxFormula of
+                        IsNewTheorem ->
+                            Ok sf
+
+                        _ ->
+                            Err <| semanticsProblem z "False assumption must be theorem that is being prooved"
+
+        Err _ ->
+            Ok sf
+
+
 validate : Zipper -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 0)
             (semanticsProblem z "Assumption can't have any references")
         |> Result.andThen (\z1 -> checkFormula "Formula" z1)
+        |> Result.andThen (contextAssumptionCheck z)
         |> Result.andThen (\f -> checkFreeVarsUsedInDeltaAbove f z)
         |> Result.map (always z)

@@ -340,7 +340,7 @@ suiteCheckSubsts =
 
 
 zipperWithEqsAndLeibnitz =
-    Zipper
+    zipperOld
         { node =
             { id = 3
             , value = ""

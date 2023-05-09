@@ -74,11 +74,11 @@ tableauWithAlpha =
 
 
 zipperWithAlpha =
-    Zipper tableauWithAlpha [] Nothing
+    Zipper tableauWithAlpha [] (Err "not-loaded")
 
 
 zipperWithAplhaDown =
-    Zipper
+    zipperOld
         { node =
             { id = 1
             , value = ""
@@ -99,7 +99,7 @@ zipperWithAplhaDown =
 
 
 zipperWithAlphaDownBetaLeft =
-    Zipper
+    zipperOld
         { node =
             { id = 1
             , value = ""
@@ -136,7 +136,7 @@ zipperWithAlphaDownBetaLeft =
 
 
 zipperOnlyAlphaOfRightBeta =
-    Zipper
+    zipperOld
         { node =
             { id = 1
             , value = ""
@@ -214,7 +214,7 @@ onlyAlphaOfRightBetaRenumbered =
 
 
 zipperOnlyAlphaOfRightBetaRenumbered =
-    Zipper onlyAlphaOfRightBetaRenumbered []
+    zipperOld onlyAlphaOfRightBetaRenumbered []
 
 
 zipperZWalkPostExample =
