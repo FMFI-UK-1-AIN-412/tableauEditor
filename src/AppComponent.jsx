@@ -36,8 +36,10 @@ function prepare(initialState) {
 function AppComponent({instance, onStateChange, isEdited, proof, updateProofVerdict}) {
   const setupPorts = (ports) => {
     ports.onChange.subscribe( ({proofVerdict, initial}) => {
-      // console.log("Tableau editor has changed");
-      instance.updateProofVerdict(proofVerdict)
+      console.log("Tableau editor has changed ", proofVerdict, initial);
+      if (instance.updateProofVerdict !== undefined) {
+        instance.updateProofVerdict(proofVerdict)
+      }
       if (!initial) {
         // initial onChange call only checks proof verdict 
         instance.onStateChange();
@@ -66,6 +68,7 @@ function AppComponent({instance, onStateChange, isEdited, proof, updateProofVerd
         proovedTheorems: proof.theorems.filter(f => f.prooved).map(f => f.formula),
         newTheorem: proof.newTheorem.formula,
       }
+      console.log('Sending proof', contextData)
       instance.ports.updateContext.send(contextData)
     }
   }, [proof, instance.ports])
