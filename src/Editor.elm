@@ -1,4 +1,4 @@
-port module Editor exposing (init, update, view, viewEmbeddable, subscriptions, Msg, Model)
+port module Editor exposing (init, update, top, topRenumbered, view, viewEmbeddable, subscriptions, Msg, Model)
 
 --, FileReaderPortData, fileContentRead, fileSelected
 
