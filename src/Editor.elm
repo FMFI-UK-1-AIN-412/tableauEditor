@@ -314,7 +314,7 @@ doUpdate msg ({ undoList } as model) =
             )
 
         UpdateContext ctx ->
-            ( { model | logicContext = createContext ctx }, Just <| Cmd.none )
+            ( { model | logicContext = createContext ctx }, Nothing )
 
         _ ->
             let
