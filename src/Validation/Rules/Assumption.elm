@@ -4,7 +4,7 @@ import Dict
 import Formula exposing (Formula(..))
 import Formula.Parser
 import Formula.Signed exposing (Signed(..), getFormula)
-import LogicContext exposing (ValidationResult(..), contextFindFormula)
+import LogicContext exposing (FormulaCategory(..), contextFormulaCategories)
 import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
@@ -77,28 +77,26 @@ contextAssumptionCheck z sf =
     case z.logicContext of
         Ok ctx ->
             let
-                ctxFormula =
-                    contextFindFormula ctx (getFormula sf)
+                categories =
+                    contextFormulaCategories ctx (getFormula sf)
             in
             case sf of
                 T _ ->
-                    case ctxFormula of
-                        IsAxiom ->
-                            Ok sf
+                    if List.member Axiom categories then
+                        Ok sf
 
-                        IsProovedTheorem ->
-                            Ok sf
+                    else if List.member ProovedTheorem categories then
+                        Ok sf
 
-                        _ ->
-                            Err <| semanticsProblem z "True assumption must be axiom or prooved theorem"
+                    else
+                        Err <| semanticsProblem z "True assumption must be axiom or prooved theorem"
 
                 F _ ->
-                    case ctxFormula of
-                        IsNewTheorem ->
-                            Ok sf
+                    if List.member NewTheorem categories then
+                        Ok sf
 
-                        _ ->
-                            Err <| semanticsProblem z "False assumption must be theorem that is being prooved"
+                    else
+                        Err <| semanticsProblem z "False assumption must be theorem that is being prooved"
 
         Err _ ->
             Ok sf

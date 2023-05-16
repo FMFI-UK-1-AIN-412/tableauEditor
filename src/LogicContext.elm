@@ -6,6 +6,7 @@ import List exposing (map)
 import Parser exposing (deadEndsToString)
 import Result.Extra exposing (combine)
 import Set exposing (Set)
+import List exposing (filter)
 
 
 type alias ContextData =
@@ -22,11 +23,10 @@ type alias LogicContext =
     }
 
 
-type ValidationResult
-    = IsAxiom
-    | IsNewTheorem
-    | IsProovedTheorem
-    | Unknown
+type FormulaCategory
+    = Axiom
+    | NewTheorem
+    | ProovedTheorem
 
 
 processFormula : String -> Result String String
@@ -36,17 +36,19 @@ processFormula formula =
             Ok <| toString f
 
         Err e ->
-            Err ("Formula parsing failed (Invalid formula: " ++ deadEndsToString e ++ ")")
+            Err ("Formula parsing failed (Formula:" ++ formula ++ ", Error: " ++ deadEndsToString e ++ ")")
+
+
 
 
 processFormulas : List String -> Result String (Set String)
 processFormulas axioms =
-    case combine (map parse axioms) of
+    case combine (map processFormula axioms) of
         Ok formulas ->
-            Ok <| Set.fromList (map toString formulas)
+            Ok <| Set.fromList formulas
 
         Err e ->
-            Err <| "Formula parsing failed (Invalid formula: " ++ deadEndsToString e ++ ")"
+            Err <| "Axiom parsing failed. (" ++ e ++ ")"
 
 
 createContext : ContextData -> Result String LogicContext
@@ -62,8 +64,8 @@ createContext d =
         (processFormulas d.proovedTheorems)
 
 
-contextFindFormula : LogicContext -> Formula -> ValidationResult
-contextFindFormula ctx f =
+contextFormulaCategories : LogicContext -> Formula -> List FormulaCategory
+contextFormulaCategories ctx f =
     let
         isAxiom =
             Set.member (toString f) ctx.axiomsLookup
@@ -73,15 +75,7 @@ contextFindFormula ctx f =
 
         isProovedTheorem =
             Set.member (toString f) ctx.proovedTheoremsLookup
+
+        results = [(isAxiom, Axiom), (isNewTheorem, NewTheorem), (isProovedTheorem, ProovedTheorem)]
     in
-    if isAxiom then
-        IsAxiom
-
-    else if isNewTheorem then
-        IsNewTheorem
-
-    else if isProovedTheorem then
-        IsProovedTheorem
-
-    else
-        Unknown
+    map (\(_, r) -> r) <| filter (\(b,_) -> b) results
