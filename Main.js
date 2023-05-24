@@ -12541,13 +12541,13 @@ var $author$project$Validation$Common$validateRight = F2(
 				$author$project$Zipper$up(z)));
 	});
 var $author$project$Validation$validateRule = F3(
-	function (rule, validator, config) {
+	function (ruleName, validator, config) {
 		return A2(
 			$elm$core$Set$member,
-			rule,
+			ruleName,
 			$author$project$Config$getRuleSet(config)) ? validator : function (z) {
 			return $elm$core$Result$Err(
-				A2($author$project$Validation$Common$semanticsProblem, z, rule + ' rule is forbidden in current configuration'));
+				A2($author$project$Validation$Common$semanticsProblem, z, ruleName + ' rule is forbidden in current configuration'));
 		};
 	});
 var $author$project$Validation$Common$getReffedId = F2(
@@ -13337,36 +13337,18 @@ var $author$project$Validation$Rules$Leibnitz$applyFunToSigned = F2(
 			var formula = sf.a;
 			return A2(
 				$elm$core$Result$map,
-				function (f) {
-					return $FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$T(f);
-				},
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$T,
 				_function(formula));
 		} else {
 			var formula = sf.a;
 			return A2(
 				$elm$core$Result$map,
-				function (f) {
-					return $FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$F(f);
-				},
+				$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$F,
 				_function(formula));
 		}
 	});
-var $elm$core$String$replace = F3(
-	function (before, after, string) {
-		return A2(
-			$elm$core$String$join,
-			after,
-			A2($elm$core$String$split, before, string));
-	});
-var $author$project$Validation$Rules$Leibnitz$mapNotSubstitutableError = F2(
-	function (err, z) {
-		return A2(
-			$author$project$Validation$Common$semanticsProblem,
-			z,
-			A3($elm$core$String$replace, '[]', '[] in 2nd referenced formula', err));
-	});
-var $author$project$Validation$Rules$Leibnitz$checkSubst = F4(
-	function (σ, replaced, currentF, z) {
+var $author$project$Validation$Rules$Leibnitz$checkSubst = F5(
+	function (σ, mapErr, replaced, currentF, z) {
 		if (replaced.$ === 1) {
 			var problem = replaced.a;
 			return $elm$core$Result$Err(problem);
@@ -13385,272 +13367,324 @@ var $author$project$Validation$Rules$Leibnitz$checkSubst = F4(
 						A2($author$project$Validation$Common$semanticsProblem, z, 'Substitution invalid')),
 					A2(
 						$elm$core$Result$mapError,
-						function (err) {
-							return A2($author$project$Validation$Rules$Leibnitz$mapNotSubstitutableError, err, z);
-						},
+						mapErr,
 						A2(
 							$author$project$Validation$Rules$Leibnitz$applyFunToSigned,
 							$FMFI_UK_1_AIN_412$elm_formula$Formula$substitute(σ),
 							repl))));
 		}
 	});
-var $author$project$Validation$Rules$Leibnitz$templateVar = $FMFI_UK_1_AIN_412$elm_formula$Term$Var('[]');
-var $author$project$Validation$Rules$Leibnitz$commonTermTemplate = F2(
+var $author$project$Validation$Rules$Leibnitz$differentArgsCount = 'Arguments count mismatch';
+var $author$project$Validation$Rules$Leibnitz$differentArgsCountTo = F2(
+	function (replacementMsg, msg) {
+		return _Utils_eq(msg, $author$project$Validation$Rules$Leibnitz$differentArgsCount) ? replacementMsg : msg;
+	});
+var $author$project$Validation$Rules$Leibnitz$differentTermStructure = F2(
 	function (refTerm, currentTerm) {
-		if (!refTerm.$) {
-			var refStr = refTerm.a;
-			if (!currentTerm.$) {
-				var currentStr = currentTerm.a;
-				return (!_Utils_eq(refStr, currentStr)) ? $author$project$Validation$Rules$Leibnitz$templateVar : $FMFI_UK_1_AIN_412$elm_formula$Term$Var(refStr);
-			} else {
-				return $author$project$Validation$Rules$Leibnitz$templateVar;
-			}
-		} else {
-			var refStr = refTerm.a;
-			var refTerms = refTerm.b;
-			if (currentTerm.$ === 1) {
-				var currentStr = currentTerm.a;
-				var currentTerms = currentTerm.b;
-				return ((!_Utils_eq(refStr, currentStr)) || (!_Utils_eq(
-					$elm$core$List$length(refTerms),
-					$elm$core$List$length(currentTerms)))) ? $author$project$Validation$Rules$Leibnitz$templateVar : A2(
-					$FMFI_UK_1_AIN_412$elm_formula$Term$Fun,
-					refStr,
-					A2($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, refTerms, currentTerms));
-			} else {
-				return $author$project$Validation$Rules$Leibnitz$templateVar;
-			}
-		}
+		return 'The 2nd referenced formula and current formula contain non-matching subterms at corresponding locations (' + ($FMFI_UK_1_AIN_412$elm_formula$Term$toString(refTerm) + (' vs. ' + ($FMFI_UK_1_AIN_412$elm_formula$Term$toString(currentTerm) + ')')));
 	});
-var $author$project$Validation$Rules$Leibnitz$commonTermsTemplate = F2(
-	function (refTerms, currentTerms) {
-		if (!refTerms.b) {
-			if (!currentTerms.b) {
-				return _List_Nil;
-			} else {
-				return A2(
-					$elm$core$List$map,
-					$elm$core$Basics$always($author$project$Validation$Rules$Leibnitz$templateVar),
-					currentTerms);
-			}
+var $author$project$Validation$Rules$Leibnitz$templateVar = $FMFI_UK_1_AIN_412$elm_formula$Term$Var('[]');
+var $author$project$Validation$Rules$Leibnitz$commonTermTemplate = F4(
+	function (lTerm, rTerm, refTerm, currentTerm) {
+		if (_Utils_eq(refTerm, lTerm) && _Utils_eq(currentTerm, rTerm)) {
+			return $elm$core$Result$Ok($author$project$Validation$Rules$Leibnitz$templateVar);
 		} else {
-			var refTerm = refTerms.a;
-			var rts = refTerms.b;
-			if (!currentTerms.b) {
-				return A2(
-					$elm$core$List$map,
-					$elm$core$Basics$always($author$project$Validation$Rules$Leibnitz$templateVar),
-					refTerms);
-			} else {
-				var currentTerm = currentTerms.a;
-				var cts = currentTerms.b;
-				return A2(
-					$elm$core$List$cons,
-					A2($author$project$Validation$Rules$Leibnitz$commonTermTemplate, refTerm, currentTerm),
-					A2($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, rts, cts));
-			}
-		}
-	});
-var $author$project$Validation$Rules$Leibnitz$differentStructureError = $elm$core$Result$Err('The 2nd referenced formula and current formula have different structure');
-var $author$project$Validation$Rules$Leibnitz$commonFormulaTemplate = F2(
-	function (refF, currentF) {
-		switch (refF.$) {
-			case 0:
-				var refStr = refF.a;
-				var refTerms = refF.b;
-				if (!currentF.$) {
-					var currentStr = currentF.a;
-					var currentTerms = currentF.b;
-					return $elm$core$Result$Ok(
-						A2(
-							$FMFI_UK_1_AIN_412$elm_formula$Formula$PredAtom,
-							refStr,
-							A2($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, refTerms, currentTerms)));
+			var _v3 = _Utils_Tuple2(refTerm, currentTerm);
+			_v3$2:
+			while (true) {
+				if (!_v3.a.$) {
+					if (!_v3.b.$) {
+						var refVSym = _v3.a.a;
+						var currentVSym = _v3.b.a;
+						return _Utils_eq(refVSym, currentVSym) ? $elm$core$Result$Ok(
+							$FMFI_UK_1_AIN_412$elm_formula$Term$Var(refVSym)) : $elm$core$Result$Err(
+							A2($author$project$Validation$Rules$Leibnitz$differentTermStructure, refTerm, currentTerm));
+					} else {
+						break _v3$2;
+					}
 				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
+					if (_v3.b.$ === 1) {
+						var _v4 = _v3.a;
+						var refFSym = _v4.a;
+						var refTerms = _v4.b;
+						var _v5 = _v3.b;
+						var currentFSym = _v5.a;
+						var currentTerms = _v5.b;
+						return (_Utils_eq(refFSym, currentFSym) && _Utils_eq(
+							$elm$core$List$length(refTerms),
+							$elm$core$List$length(currentTerms))) ? A2(
+							$elm$core$Result$mapError,
+							$author$project$Validation$Rules$Leibnitz$differentArgsCountTo(
+								A2($author$project$Validation$Rules$Leibnitz$differentTermStructure, refTerm, currentTerm)),
+							A2(
+								$elm$core$Result$map,
+								$FMFI_UK_1_AIN_412$elm_formula$Term$Fun(refFSym),
+								A4($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, lTerm, rTerm, refTerms, currentTerms))) : $elm$core$Result$Err(
+							A2($author$project$Validation$Rules$Leibnitz$differentTermStructure, refTerm, currentTerm));
+					} else {
+						break _v3$2;
+					}
 				}
-			case 1:
-				var refLt = refF.a;
-				var refRt = refF.b;
-				if (currentF.$ === 1) {
-					var currentLt = currentF.a;
-					var currentRt = currentF.b;
-					return $elm$core$Result$Ok(
-						A2(
+			}
+			return $elm$core$Result$Err(
+				A2($author$project$Validation$Rules$Leibnitz$differentTermStructure, refTerm, currentTerm));
+		}
+	});
+var $author$project$Validation$Rules$Leibnitz$commonTermsTemplate = F4(
+	function (lTerm, rTerm, refTerms, currentTerms) {
+		var _v0 = _Utils_Tuple2(refTerms, currentTerms);
+		_v0$2:
+		while (true) {
+			if (_v0.a.b) {
+				if (_v0.b.b) {
+					var _v1 = _v0.a;
+					var refTerm = _v1.a;
+					var rts = _v1.b;
+					var _v2 = _v0.b;
+					var currentTerm = _v2.a;
+					var cts = _v2.b;
+					return A3(
+						$elm$core$Result$map2,
+						$elm$core$List$cons,
+						A4($author$project$Validation$Rules$Leibnitz$commonTermTemplate, lTerm, rTerm, refTerm, currentTerm),
+						A4($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, lTerm, rTerm, rts, cts));
+				} else {
+					break _v0$2;
+				}
+			} else {
+				if (!_v0.b.b) {
+					return $elm$core$Result$Ok(_List_Nil);
+				} else {
+					break _v0$2;
+				}
+			}
+		}
+		return $elm$core$Result$Err($author$project$Validation$Rules$Leibnitz$differentArgsCount);
+	});
+var $author$project$Validation$Rules$Leibnitz$differentFormulaStructure = F2(
+	function (refF, currentF) {
+		return 'The 2nd referenced formula and current formula have different structure (' + ($FMFI_UK_1_AIN_412$elm_formula$Formula$toString(refF) + (' vs. ' + ($FMFI_UK_1_AIN_412$elm_formula$Formula$toString(currentF) + ')')));
+	});
+var $author$project$Validation$Rules$Leibnitz$commonFormulaTemplate = F4(
+	function (lTerm, rTerm, refF, currentF) {
+		var _v0 = _Utils_Tuple2(refF, currentF);
+		_v0$9:
+		while (true) {
+			switch (_v0.a.$) {
+				case 0:
+					if (!_v0.b.$) {
+						var _v1 = _v0.a;
+						var refPSym = _v1.a;
+						var refTerms = _v1.b;
+						var _v2 = _v0.b;
+						var currentPSym = _v2.a;
+						var currentTerms = _v2.b;
+						return (_Utils_eq(refPSym, currentPSym) && _Utils_eq(
+							$elm$core$List$length(refTerms),
+							$elm$core$List$length(currentTerms))) ? A2(
+							$elm$core$Result$mapError,
+							$author$project$Validation$Rules$Leibnitz$differentArgsCountTo(
+								A2($author$project$Validation$Rules$Leibnitz$differentFormulaStructure, refF, currentF)),
+							A2(
+								$elm$core$Result$map,
+								$FMFI_UK_1_AIN_412$elm_formula$Formula$PredAtom(refPSym),
+								A4($author$project$Validation$Rules$Leibnitz$commonTermsTemplate, lTerm, rTerm, refTerms, currentTerms))) : $elm$core$Result$Err(
+							A2($author$project$Validation$Rules$Leibnitz$differentFormulaStructure, refF, currentF));
+					} else {
+						break _v0$9;
+					}
+				case 1:
+					if (_v0.b.$ === 1) {
+						var _v3 = _v0.a;
+						var refLt = _v3.a;
+						var refRt = _v3.b;
+						var _v4 = _v0.b;
+						var currentLt = _v4.a;
+						var currentRt = _v4.b;
+						return A3(
+							$elm$core$Result$map2,
 							$FMFI_UK_1_AIN_412$elm_formula$Formula$EqAtom,
-							A2($author$project$Validation$Rules$Leibnitz$commonTermTemplate, refLt, currentLt),
-							A2($author$project$Validation$Rules$Leibnitz$commonTermTemplate, refRt, currentRt)));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 2:
-				var refSf = refF.a;
-				if (currentF.$ === 2) {
-					var currentSf = currentF.a;
-					return A2(
-						$elm$core$Result$map,
-						function (f) {
-							return $FMFI_UK_1_AIN_412$elm_formula$Formula$Neg(f);
-						},
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf, currentSf));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 4:
-				var refSf1 = refF.a;
-				var refSf2 = refF.b;
-				if (currentF.$ === 4) {
-					var currentSf1 = currentF.a;
-					var currentSf2 = currentF.b;
-					return A3(
-						$elm$core$Result$map2,
-						F2(
-							function (f1, f2) {
-								return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Conj, f1, f2);
-							}),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf1, currentSf1),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf2, currentSf2));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 3:
-				var refSf1 = refF.a;
-				var refSf2 = refF.b;
-				if (currentF.$ === 3) {
-					var currentSf1 = currentF.a;
-					var currentSf2 = currentF.b;
-					return A3(
-						$elm$core$Result$map2,
-						F2(
-							function (f1, f2) {
-								return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Disj, f1, f2);
-							}),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf1, currentSf1),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf2, currentSf2));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 5:
-				var refSf1 = refF.a;
-				var refSf2 = refF.b;
-				if (currentF.$ === 5) {
-					var currentSf1 = currentF.a;
-					var currentSf2 = currentF.b;
-					return A3(
-						$elm$core$Result$map2,
-						F2(
-							function (f1, f2) {
-								return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Impl, f1, f2);
-							}),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf1, currentSf1),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf2, currentSf2));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 6:
-				var refSf1 = refF.a;
-				var refSf2 = refF.b;
-				if (currentF.$ === 6) {
-					var currentSf1 = currentF.a;
-					var currentSf2 = currentF.b;
-					return A3(
-						$elm$core$Result$map2,
-						F2(
-							function (f1, f2) {
-								return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Equiv, f1, f2);
-							}),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf1, currentSf1),
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf2, currentSf2));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 7:
-				var refX = refF.a;
-				var refSf = refF.b;
-				if (currentF.$ === 7) {
-					var currentX = currentF.a;
-					var currentSf = currentF.b;
-					return A2(
-						$elm$core$Result$map,
-						function (f) {
-							return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll, refX, f);
-						},
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf, currentSf));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			case 8:
-				var refX = refF.a;
-				var refSf = refF.b;
-				if (currentF.$ === 8) {
-					var currentX = currentF.a;
-					var currentSf = currentF.b;
-					return A2(
-						$elm$core$Result$map,
-						function (f) {
-							return A2($FMFI_UK_1_AIN_412$elm_formula$Formula$Exists, refX, f);
-						},
-						A2($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, refSf, currentSf));
-				} else {
-					return $author$project$Validation$Rules$Leibnitz$differentStructureError;
-				}
-			default:
-				return $elm$core$Result$Err('wrong formula type');
+							A4($author$project$Validation$Rules$Leibnitz$commonTermTemplate, lTerm, rTerm, refLt, currentLt),
+							A4($author$project$Validation$Rules$Leibnitz$commonTermTemplate, lTerm, rTerm, refRt, currentRt));
+					} else {
+						break _v0$9;
+					}
+				case 2:
+					if (_v0.b.$ === 2) {
+						var refSf = _v0.a.a;
+						var currentSf = _v0.b.a;
+						return A2(
+							$elm$core$Result$map,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Neg,
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf, currentSf));
+					} else {
+						break _v0$9;
+					}
+				case 4:
+					if (_v0.b.$ === 4) {
+						var _v5 = _v0.a;
+						var refSf1 = _v5.a;
+						var refSf2 = _v5.b;
+						var _v6 = _v0.b;
+						var currentSf1 = _v6.a;
+						var currentSf2 = _v6.b;
+						return A3(
+							$elm$core$Result$map2,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Conj,
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf1, currentSf1),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf2, currentSf2));
+					} else {
+						break _v0$9;
+					}
+				case 3:
+					if (_v0.b.$ === 3) {
+						var _v7 = _v0.a;
+						var refSf1 = _v7.a;
+						var refSf2 = _v7.b;
+						var _v8 = _v0.b;
+						var currentSf1 = _v8.a;
+						var currentSf2 = _v8.b;
+						return A3(
+							$elm$core$Result$map2,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Disj,
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf1, currentSf1),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf2, currentSf2));
+					} else {
+						break _v0$9;
+					}
+				case 5:
+					if (_v0.b.$ === 5) {
+						var _v9 = _v0.a;
+						var refSf1 = _v9.a;
+						var refSf2 = _v9.b;
+						var _v10 = _v0.b;
+						var currentSf1 = _v10.a;
+						var currentSf2 = _v10.b;
+						return A3(
+							$elm$core$Result$map2,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Impl,
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf1, currentSf1),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf2, currentSf2));
+					} else {
+						break _v0$9;
+					}
+				case 6:
+					if (_v0.b.$ === 6) {
+						var _v11 = _v0.a;
+						var refSf1 = _v11.a;
+						var refSf2 = _v11.b;
+						var _v12 = _v0.b;
+						var currentSf1 = _v12.a;
+						var currentSf2 = _v12.b;
+						return A3(
+							$elm$core$Result$map2,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Equiv,
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf1, currentSf1),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf2, currentSf2));
+					} else {
+						break _v0$9;
+					}
+				case 7:
+					if (_v0.b.$ === 7) {
+						var _v13 = _v0.a;
+						var refX = _v13.a;
+						var refSf = _v13.b;
+						var _v14 = _v0.b;
+						var currentX = _v14.a;
+						var currentSf = _v14.b;
+						return _Utils_eq(refX, currentX) ? A2(
+							$elm$core$Result$map,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$ForAll(refX),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf, currentSf)) : $elm$core$Result$Err(
+							A2($author$project$Validation$Rules$Leibnitz$differentFormulaStructure, refF, currentF));
+					} else {
+						break _v0$9;
+					}
+				case 8:
+					if (_v0.b.$ === 8) {
+						var _v15 = _v0.a;
+						var refX = _v15.a;
+						var refSf = _v15.b;
+						var _v16 = _v0.b;
+						var currentX = _v16.a;
+						var currentSf = _v16.b;
+						return _Utils_eq(refX, currentX) ? A2(
+							$elm$core$Result$map,
+							$FMFI_UK_1_AIN_412$elm_formula$Formula$Exists(refX),
+							A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refSf, currentSf)) : $elm$core$Result$Err(
+							A2($author$project$Validation$Rules$Leibnitz$differentFormulaStructure, refF, currentF));
+					} else {
+						break _v0$9;
+					}
+				default:
+					break _v0$9;
+			}
 		}
+		return $elm$core$Result$Err(
+			A2($author$project$Validation$Rules$Leibnitz$differentFormulaStructure, refF, currentF));
 	});
-var $author$project$Validation$Rules$Leibnitz$differentSignError = $elm$core$Result$Err('The 2nd referenced formula and current formula have different sign');
-var $author$project$Validation$Rules$Leibnitz$commonSignedTemplate = F2(
-	function (refF, currentF) {
-		if (!refF.$) {
-			var f = refF.a;
-			if (currentF.$ === 1) {
-				var f1 = currentF.a;
-				return $author$project$Validation$Rules$Leibnitz$differentSignError;
+var $author$project$Validation$Rules$Leibnitz$differentSign = 'The 2nd referenced formula and current formula have different sign';
+var $author$project$Validation$Rules$Leibnitz$commonSignedTemplate = F4(
+	function (lTerm, rTerm, refSF, currentSF) {
+		var _v0 = _Utils_Tuple2(refSF, currentSF);
+		_v0$2:
+		while (true) {
+			if (!_v0.a.$) {
+				if (!_v0.b.$) {
+					var refF = _v0.a.a;
+					var currentF = _v0.b.a;
+					return A2(
+						$elm$core$Result$map,
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$T,
+						A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refF, currentF));
+				} else {
+					break _v0$2;
+				}
 			} else {
-				var f1 = currentF.a;
-				return A2(
-					$elm$core$Result$map,
-					function (a) {
-						return $FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$T(a);
-					},
-					A2(
-						$author$project$Validation$Rules$Leibnitz$commonFormulaTemplate,
-						f,
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$getFormula(currentF)));
-			}
-		} else {
-			var f = refF.a;
-			if (currentF.$ === 1) {
-				var f1 = currentF.a;
-				return A2(
-					$elm$core$Result$map,
-					function (a) {
-						return $FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$F(a);
-					},
-					A2(
-						$author$project$Validation$Rules$Leibnitz$commonFormulaTemplate,
-						f,
-						$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$getFormula(currentF)));
-			} else {
-				var f1 = currentF.a;
-				return $author$project$Validation$Rules$Leibnitz$differentSignError;
+				if (_v0.b.$ === 1) {
+					var refF = _v0.a.a;
+					var currentF = _v0.b.a;
+					return A2(
+						$elm$core$Result$map,
+						$FMFI_UK_1_AIN_412$elm_formula$Formula$Signed$F,
+						A4($author$project$Validation$Rules$Leibnitz$commonFormulaTemplate, lTerm, rTerm, refF, currentF));
+				} else {
+					break _v0$2;
+				}
 			}
 		}
+		return $elm$core$Result$Err($author$project$Validation$Rules$Leibnitz$differentSign);
 	});
 var $author$project$Validation$Rules$Leibnitz$leftEqTerm = function (f) {
 	if ((!f.$) && (f.a.$ === 1)) {
 		var _v1 = f.a;
 		var lt = _v1.a;
-		var rt = _v1.b;
 		return lt;
 	} else {
 		return A2($FMFI_UK_1_AIN_412$elm_formula$Term$Fun, 'default', _List_Nil);
 	}
 };
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $author$project$Validation$Rules$Leibnitz$mapNotSubstitutableError = F5(
+	function (substitutedT, lhsT, rhsT, z, err) {
+		return A2(
+			$author$project$Validation$Common$semanticsProblem,
+			z,
+			A3(
+				$elm$core$String$replace,
+				$FMFI_UK_1_AIN_412$elm_formula$Term$toString(substitutedT) + ' for []',
+				$FMFI_UK_1_AIN_412$elm_formula$Term$toString(lhsT) + (' with ' + ($FMFI_UK_1_AIN_412$elm_formula$Term$toString(rhsT) + ' in the 2nd referenced formula')),
+				err));
+	});
 var $author$project$Validation$Rules$Leibnitz$rightEqTerm = function (f) {
 	if ((!f.$) && (f.a.$ === 1)) {
 		var _v1 = f.a;
-		var lt = _v1.a;
 		var rt = _v1.b;
 		return rt;
 	} else {
@@ -13666,6 +13700,8 @@ var $author$project$Validation$Rules$Leibnitz$checkSubsts = F3(
 					_Utils_Tuple2('[]', rt)
 				]));
 		var lt = $author$project$Validation$Rules$Leibnitz$leftEqTerm(refEq);
+		var mapErr1 = A4($author$project$Validation$Rules$Leibnitz$mapNotSubstitutableError, lt, lt, rt, z);
+		var mapErr2 = A4($author$project$Validation$Rules$Leibnitz$mapNotSubstitutableError, rt, lt, rt, z);
 		var σ1 = $elm$core$Dict$fromList(
 			_List_fromArray(
 				[
@@ -13681,17 +13717,15 @@ var $author$project$Validation$Rules$Leibnitz$checkSubsts = F3(
 			function (err) {
 				return A2($author$project$Validation$Common$semanticsProblem, z, err);
 			},
-			A2($author$project$Validation$Rules$Leibnitz$commonSignedTemplate, refF, currentF));
+			A4($author$project$Validation$Rules$Leibnitz$commonSignedTemplate, lt, rt, refF, currentF));
 		return A2(
 			$elm$core$Result$andThen,
-			A3($author$project$Validation$Rules$Leibnitz$checkSubst, σ2, replaced, currentF),
-			A4($author$project$Validation$Rules$Leibnitz$checkSubst, σ1, replaced, refF, z));
+			A4($author$project$Validation$Rules$Leibnitz$checkSubst, σ2, mapErr2, replaced, currentF),
+			A5($author$project$Validation$Rules$Leibnitz$checkSubst, σ1, mapErr1, replaced, refF, z));
 	});
 var $author$project$Validation$Rules$Leibnitz$isEquality = function (f) {
 	if ((!f.$) && (f.a.$ === 1)) {
 		var _v1 = f.a;
-		var lt = _v1.a;
-		var rt = _v1.b;
 		return true;
 	} else {
 		return false;
@@ -14518,33 +14552,21 @@ var $author$project$Validation$validateUnaryWithSubst = function (extType) {
 };
 var $author$project$Validation$isCorrectRule = F2(
 	function (config, z) {
-		var t = z.a;
 		var bs = z.b;
 		if (bs.b) {
 			switch (bs.a.$) {
 				case 0:
-					if (bs.a.a === 1) {
-						var _v1 = bs.a;
-						var _v2 = _v1.a;
-						return A4(
-							$author$project$Validation$validateRule,
-							$author$project$Tableau$unaryExtTypeToString(1),
-							$author$project$Validation$validateUnary(1),
-							config,
-							z);
-					} else {
-						var _v3 = bs.a;
-						var extType = _v3.a;
-						return A4(
-							$author$project$Validation$validateRule,
-							$author$project$Tableau$unaryExtTypeToString(extType),
-							$author$project$Validation$validateUnary(extType),
-							config,
-							z);
-					}
+					var _v1 = bs.a;
+					var extType = _v1.a;
+					return A4(
+						$author$project$Validation$validateRule,
+						$author$project$Tableau$unaryExtTypeToString(extType),
+						$author$project$Validation$validateUnary(extType),
+						config,
+						z);
 				case 1:
-					var _v4 = bs.a;
-					var extType = _v4.a;
+					var _v2 = bs.a;
+					var extType = _v2.a;
 					return A4(
 						$author$project$Validation$validateRule,
 						$author$project$Tableau$unaryWithSubstExtTypeToString(extType),
@@ -14552,8 +14574,8 @@ var $author$project$Validation$isCorrectRule = F2(
 						config,
 						z);
 				case 2:
-					var _v5 = bs.a;
-					var extType = _v5.a;
+					var _v3 = bs.a;
+					var extType = _v3.a;
 					return A4(
 						$author$project$Validation$validateRule,
 						$author$project$Tableau$binaryExtTypeToString(extType),
@@ -14562,8 +14584,8 @@ var $author$project$Validation$isCorrectRule = F2(
 						config,
 						z);
 				default:
-					var _v6 = bs.a;
-					var extType = _v6.a;
+					var _v4 = bs.a;
+					var extType = _v4.a;
 					return A4(
 						$author$project$Validation$validateRule,
 						$author$project$Tableau$binaryExtTypeToString(extType),
@@ -14573,7 +14595,12 @@ var $author$project$Validation$isCorrectRule = F2(
 						z);
 			}
 		} else {
-			return $elm$core$Result$Ok(z);
+			return A4(
+				$author$project$Validation$validateRule,
+				$author$project$Tableau$unaryExtTypeToString(0),
+				$author$project$Validation$validateUnary(0),
+				config,
+				z);
 		}
 	});
 var $author$project$Validation$Common$always4 = F5(
@@ -15275,8 +15302,6 @@ var $author$project$Validation$isClosed = F2(
 					$elm$core$Basics$always(false),
 					A2($author$project$Validation$isCorrectNode, config, z));
 			case 1:
-				var r1 = _v0.a;
-				var r2 = _v0.b;
 				return A2(
 					$elm$core$Result$map,
 					$elm$core$Basics$always(true),
