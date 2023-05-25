@@ -85,18 +85,18 @@ contextAssumptionCheck z sf =
                     if List.member Axiom categories then
                         Ok sf
 
-                    else if List.member ProovedTheorem categories then
+                    else if List.member ProvedTheorem categories then
                         Ok sf
 
                     else
-                        Err <| semanticsProblem z "True assumption must be axiom or prooved theorem"
+                        Err <| semanticsProblem z "True assumption must be axiom or proved theorem"
 
                 F _ ->
                     if List.member NewTheorem categories then
                         Ok sf
 
                     else
-                        Err <| semanticsProblem z "False assumption must be theorem that is being prooved"
+                        Err <| semanticsProblem z "False assumption must be theorem that is being proved"
 
         Err _ ->
             Ok sf

@@ -11,7 +11,7 @@ import List exposing (filter)
 
 type alias ContextData =
     { axioms : List String
-    , proovedTheorems : List String
+    , provedTheorems : List String
     , newTheorem : String
     }
 
@@ -19,14 +19,14 @@ type alias ContextData =
 type alias LogicContext =
     { newTheorem : String
     , axiomsLookup : Set String
-    , proovedTheoremsLookup : Set String
+    , provedTheoremsLookup : Set String
     }
 
 
 type FormulaCategory
     = Axiom
     | NewTheorem
-    | ProovedTheorem
+    | ProvedTheorem
 
 
 processFormula : String -> Result String String
@@ -61,7 +61,7 @@ createContext d =
         )
         (processFormula d.newTheorem)
         (processFormulas d.axioms)
-        (processFormulas d.proovedTheorems)
+        (processFormulas d.provedTheorems)
 
 
 contextFormulaCategories : LogicContext -> Formula -> List FormulaCategory
@@ -73,9 +73,9 @@ contextFormulaCategories ctx f =
         isNewTheorem =
             ctx.newTheorem == toString f
 
-        isProovedTheorem =
-            Set.member (toString f) ctx.proovedTheoremsLookup
+        isProvedTheorem =
+            Set.member (toString f) ctx.provedTheoremsLookup
 
-        results = [(isAxiom, Axiom), (isNewTheorem, NewTheorem), (isProovedTheorem, ProovedTheorem)]
+        results = [(isAxiom, Axiom), (isNewTheorem, NewTheorem), (isProvedTheorem, ProvedTheorem)]
     in
     map (\(_, r) -> r) <| filter (\(b,_) -> b) results
