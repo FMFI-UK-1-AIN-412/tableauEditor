@@ -83,7 +83,7 @@ init mtv =
             }
         )
         (Err "not-loaded")
-    , onChange { proofVerdict = contextVerdict initCfg initT, initial = True }
+    , onChange { proofVerdict = contextVerdict initCfg (Zipper initT [] <| Err "not-loaded"), initial = True }
     )
 
 
@@ -157,7 +157,7 @@ update msg model =
         ( newModel, Nothing ) ->
             ( newModel
             , onChange
-                { proofVerdict = contextVerdict newModel.undoList.present.config newModel.undoList.present.tableau
+                { proofVerdict = contextVerdict newModel.undoList.present.config (Zipper newModel.undoList.present.tableau [] newModel.logicContext)
                 , initial = False
                 }
             )
@@ -451,6 +451,10 @@ view model =
 
 viewEmbeddable : Model -> Html Msg
 viewEmbeddable ({ undoList, logicContext } as model) =
+  let
+      z = Zipper undoList.present.tableau [] logicContext 
+  in
+  
     div [ class "tableauEditor" ]
         [ div [ class "actions" ]
             [ configMenu undoList.present.config
@@ -464,9 +468,9 @@ viewEmbeddable ({ undoList, logicContext } as model) =
         , jsonImportError undoList.present.jsonImport
         , contextError logicContext
         , div [ class "tableau" ]
-            [ viewNode undoList.present.config (Zipper undoList.present.tableau [] logicContext) ]
-        , verdict undoList.present.config undoList.present.tableau
-        , problems undoList.present.config undoList.present.tableau
+            [ viewNode undoList.present.config z ]
+        , verdict undoList.present.config z
+        , problems undoList.present.config z
         , Rules.help undoList.present.config
         ]
 
@@ -863,11 +867,11 @@ singleNodeProblems config z =
             )
 
 
-problems : Config -> Tableau -> Html Msg
-problems config t =
+problems : Config -> Zipper -> Html Msg
+problems config z =
     let
         errors =
-            Errors.errors <| Validation.isCorrectTableau config <| Zipper.zipper <| t
+            Errors.errors <| Validation.isCorrectTableau config <| z
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
@@ -960,17 +964,17 @@ jsonImportError jsonImport =
             div [] []
 
 
-contextVerdict : Config -> Tableau -> Bool
-contextVerdict config t =
+contextVerdict : Config -> Zipper -> Bool
+contextVerdict config z =
     let
         ass =
-            t |> Zipper.zipper |> assumptions
+            z |> assumptions
     in
     if List.isEmpty ass then
         False
 
     else
-        case Validation.isClosed config (Zipper.zipper t) of
+        case Validation.isClosed config z of
             Ok True ->
                 True
 
@@ -978,11 +982,11 @@ contextVerdict config t =
                 False
 
 
-verdict : Config -> Tableau -> Html msg
-verdict config t =
+verdict : Config -> Zipper -> Html msg
+verdict config z =
     let
         ass =
-            t |> Zipper.zipper |> assumptions
+            z |> assumptions
 
         ( premises, conclusions ) =
             List.partition
@@ -1003,7 +1007,7 @@ verdict config t =
         div [ class "verdict" ]
             [ p []
                 [ text "This tableau "
-                , text (textVerdict config <| Zipper.zipper t)
+                , text (textVerdict config z)
                 , text ":"
                 ]
             , p []
@@ -1015,8 +1019,8 @@ verdict config t =
 
 
 textVerdict : Config -> Zipper -> String
-textVerdict config t =
-    case Validation.isClosed config t of
+textVerdict config z =
+    case Validation.isClosed config z of
         Ok True ->
             "proves"
 
