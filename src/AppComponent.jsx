@@ -65,7 +65,7 @@ function AppComponent({instance, onStateChange, isEdited, proof, updateProofVerd
     if (instance.ports !== undefined && proof !== undefined) {
       const contextData = {
         axioms: proof.axioms.map(f => f.formula),
-        proovedTheorems: proof.theorems.filter(f => f.prooved).map(f => f.formula),
+        provedTheorems: proof.theorems.filter(f => f.prooved).map(f => f.formula),
         newTheorem: proof.newTheorem.formula,
       }
       console.log('Sending proof', contextData)
