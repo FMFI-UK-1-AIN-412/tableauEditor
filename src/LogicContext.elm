@@ -1,12 +1,17 @@
-module LogicContext exposing (..)
+module LogicContext exposing
+    ( ContextData
+    , LogicContext
+    , FormulaCategory(..)
+    , contextFormulaCategories
+    , createContext
+    )
 
 import Formula exposing (Formula, toString)
 import Formula.Parser exposing (parse)
-import List exposing (map)
+import List exposing (filter, map)
 import Parser exposing (deadEndsToString)
 import Result.Extra exposing (combine)
 import Set exposing (Set)
-import List exposing (filter)
 
 
 type alias ContextData =
@@ -29,26 +34,24 @@ type FormulaCategory
     | ProvedTheorem
 
 
-processFormula : String -> Result String String
-processFormula formula =
+processFormula : String -> String -> Result String String
+processFormula kind formula =
     case parse formula of
         Ok f ->
             Ok <| toString f
 
         Err e ->
-            Err ("Formula parsing failed (Formula:" ++ formula ++ ", Error: " ++ deadEndsToString e ++ ")")
+            Err ("Failed to parse " ++ kind ++ ": “" ++ formula ++ "”. Error: " ++ deadEndsToString e)
 
 
-
-
-processFormulas : List String -> Result String (Set String)
-processFormulas axioms =
-    case combine (map processFormula axioms) of
+processFormulas : String -> List String -> Result String (Set String)
+processFormulas kind axioms =
+    case combine (map (processFormula kind) axioms) of
         Ok formulas ->
             Ok <| Set.fromList formulas
 
         Err e ->
-            Err <| "Axiom parsing failed. (" ++ e ++ ")"
+            Err e
 
 
 createContext : ContextData -> Result String LogicContext
@@ -59,9 +62,9 @@ createContext d =
                 \theoremsLookup ->
                     LogicContext newTheorem axiomsLookup theoremsLookup
         )
-        (processFormula d.newTheorem)
-        (processFormulas d.axioms)
-        (processFormulas d.provedTheorems)
+        (processFormula "theorem to be proved" d.newTheorem)
+        (processFormulas "axiom" d.axioms)
+        (processFormulas "theorem" d.provedTheorems)
 
 
 contextFormulaCategories : LogicContext -> Formula -> List FormulaCategory

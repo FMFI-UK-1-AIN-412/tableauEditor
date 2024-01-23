@@ -89,7 +89,7 @@ contextAssumptionCheck z sf =
                         Ok sf
 
                     else
-                        Err <| semanticsProblem z "True assumption must be axiom or proved theorem"
+                        Err <| semanticsProblem z "True assumption must be an axiom or a proved theorem"
 
                 F _ ->
                     if List.member NewTheorem categories then

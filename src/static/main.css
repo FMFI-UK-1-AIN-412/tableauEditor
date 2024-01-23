@@ -357,14 +357,8 @@ button.delete {
 .semanticsProblem.textInput {
 	border-bottom-color: #c82;
 }
-  
-.jsonImportError {
-	color: #ff8c31;
-	font-size: 14px;
-	display: flex;
-	justify-content: center;
-}
 
+.jsonImportError,
 .contextLoadError {
 	color: #ff8c31;
 	font-size: 14px;

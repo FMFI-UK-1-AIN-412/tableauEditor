@@ -707,7 +707,7 @@ viewLeaf =
 viewControls : Config -> Zipper -> Html Msg
 viewControls config ({ tableau } as z) =
     div [ class "expandControls" ]
-        (case z.tableau.ext of
+        (case tableau.ext of
             Closed r1 r2 ->
                 controlsClosed r1 r2 z
 
