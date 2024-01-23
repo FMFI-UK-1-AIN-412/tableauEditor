@@ -3,29 +3,54 @@ module Validation.Rules.Leibnitz exposing (checkSubsts, commonSignedTemplate, va
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Signed exposing (Signed(..))
-import Helpers.Rules exposing (signedMap)
 import Tableau exposing (..)
 import Term exposing (Term(..))
 import Validation.Common exposing (..)
 import Zipper exposing (Zipper)
 
 
+templateVar : Term
 templateVar =
     Var "[]"
 
 
-differentStructureError =
-    Err "The 2nd referenced formula and current formula have different structure"
+differentFormulaStructure : Formula -> Formula -> String
+differentFormulaStructure refF currentF =
+    "The 2nd referenced formula and current formula have different structure ("
+    ++ Formula.toString refF ++ " vs. "
+    ++ Formula.toString currentF ++ ")"
 
 
-differentSignError =
-    Err "The 2nd referenced formula and current formula have different sign"
+differentTermStructure : Term -> Term -> String
+differentTermStructure refTerm currentTerm =
+    "The 2nd referenced formula and current formula contain non-matching subterms at corresponding locations ("
+    ++ Term.toString refTerm ++ " vs. "
+    ++ Term.toString currentTerm ++ ")"
+
+
+differentArgsCount : String
+differentArgsCount =
+    "Arguments count mismatch"
+
+
+differentArgsCountTo : String -> String -> String
+differentArgsCountTo replacementMsg msg =
+    if msg == differentArgsCount then
+        replacementMsg
+
+    else
+        msg
+
+
+differentSign : String
+differentSign =
+    "The 2nd referenced formula and current formula have different sign"
 
 
 isEquality : Signed Formula -> Bool
 isEquality f =
     case f of
-        T (EqAtom lt rt) ->
+        T (EqAtom _ _) ->
             True
 
         _ ->
@@ -35,7 +60,7 @@ isEquality f =
 leftEqTerm : Signed Formula -> Term
 leftEqTerm f =
     case f of
-        T (EqAtom lt rt) ->
+        T (EqAtom lt _) ->
             lt
 
         _ ->
@@ -45,211 +70,172 @@ leftEqTerm f =
 rightEqTerm : Signed Formula -> Term
 rightEqTerm f =
     case f of
-        T (EqAtom lt rt) ->
+        T (EqAtom _ rt) ->
             rt
 
         _ ->
             Fun "default" []
 
 
-commonTermsTemplate : List Term -> List Term -> List Term
-commonTermsTemplate refTerms currentTerms =
-    case refTerms of
-        [] ->
-            case currentTerms of
-                [] ->
-                    []
+commonTermsTemplate : Term -> Term -> List Term -> List Term -> Result String (List Term)
+commonTermsTemplate lTerm rTerm refTerms currentTerms =
+    case (refTerms, currentTerms) of
+        (refTerm :: rts, currentTerm :: cts) ->
+            Result.map2 (::)
+                (commonTermTemplate lTerm rTerm refTerm currentTerm)
+                (commonTermsTemplate lTerm rTerm rts cts)
 
-                _ ->
-                    List.map (always templateVar) currentTerms
-
-        refTerm :: rts ->
-            case currentTerms of
-                [] ->
-                    List.map (always templateVar) refTerms
-
-                currentTerm :: cts ->
-                    commonTermTemplate refTerm currentTerm
-                        :: commonTermsTemplate rts cts
-
-
-commonTermTemplate : Term -> Term -> Term
-commonTermTemplate refTerm currentTerm =
-    case refTerm of
-        Var refStr ->
-            case currentTerm of
-                Var currentStr ->
-                    if refStr /= currentStr then
-                        templateVar
-
-                    else
-                        Var refStr
-
-                Fun _ _ ->
-                    templateVar
-
-        Fun refStr refTerms ->
-            case currentTerm of
-                Fun currentStr currentTerms ->
-                    if refStr /= currentStr || List.length refTerms /= List.length currentTerms then
-                        templateVar
-
-                    else
-                        Fun refStr (commonTermsTemplate refTerms currentTerms)
-
-                Var _ ->
-                    templateVar
-
-
-commonFormulaTemplate : Formula -> Formula -> Result String Formula
-commonFormulaTemplate refF currentF =
-    case refF of
-        PredAtom refStr refTerms ->
-            case currentF of
-                PredAtom currentStr currentTerms ->
-                    Ok
-                        (PredAtom refStr
-                            (commonTermsTemplate refTerms currentTerms)
-                        )
-
-                _ ->
-                    differentStructureError
-
-        EqAtom refLt refRt ->
-            case currentF of
-                EqAtom currentLt currentRt ->
-                    Ok
-                        (EqAtom
-                            (commonTermTemplate refLt currentLt)
-                            (commonTermTemplate refRt currentRt)
-                        )
-
-                _ ->
-                    differentStructureError
-
-        Neg refSf ->
-            case currentF of
-                Neg currentSf ->
-                    Result.map (\f -> Neg f)
-                        (commonFormulaTemplate refSf currentSf)
-
-                _ ->
-                    differentStructureError
-
-        Conj refSf1 refSf2 ->
-            case currentF of
-                Conj currentSf1 currentSf2 ->
-                    Result.map2 (\f1 f2 -> Conj f1 f2)
-                        (commonFormulaTemplate refSf1 currentSf1)
-                        (commonFormulaTemplate refSf2 currentSf2)
-
-                _ ->
-                    differentStructureError
-
-        Disj refSf1 refSf2 ->
-            case currentF of
-                Disj currentSf1 currentSf2 ->
-                    Result.map2 (\f1 f2 -> Disj f1 f2)
-                        (commonFormulaTemplate refSf1 currentSf1)
-                        (commonFormulaTemplate refSf2 currentSf2)
-
-                _ ->
-                    differentStructureError
-
-        Impl refSf1 refSf2 ->
-            case currentF of
-                Impl currentSf1 currentSf2 ->
-                    Result.map2 (\f1 f2 -> Impl f1 f2)
-                        (commonFormulaTemplate refSf1 currentSf1)
-                        (commonFormulaTemplate refSf2 currentSf2)
-
-                _ ->
-                    differentStructureError
-
-        Equiv refSf1 refSf2 ->
-            case currentF of
-                Equiv currentSf1 currentSf2 ->
-                    Result.map2 (\f1 f2 -> Equiv f1 f2)
-                        (commonFormulaTemplate refSf1 currentSf1)
-                        (commonFormulaTemplate refSf2 currentSf2)
-
-                _ ->
-                    differentStructureError
-
-        ForAll refX refSf ->
-            case currentF of
-                ForAll currentX currentSf ->
-                    Result.map (\f -> ForAll refX f)
-                        (commonFormulaTemplate refSf currentSf)
-
-                _ ->
-                    differentStructureError
-
-        Exists refX refSf ->
-            case currentF of
-                Exists currentX currentSf ->
-                    Result.map (\f -> Exists refX f)
-                        (commonFormulaTemplate refSf currentSf)
-
-                _ ->
-                    differentStructureError
+        ([], []) ->
+            Ok <| []
 
         _ ->
-            Err "wrong formula type"
+            Err differentArgsCount
 
 
-commonSignedTemplate : Signed Formula -> Signed Formula -> Result String (Signed Formula)
-commonSignedTemplate refF currentF =
-    case refF of
-        T f ->
-            case currentF of
-                F f1 ->
-                    differentSignError
+commonTermTemplate : Term -> Term -> Term -> Term -> Result String Term
+commonTermTemplate lTerm rTerm refTerm currentTerm =
+    if refTerm == lTerm && currentTerm == rTerm then
+        Ok templateVar
+    else
+        case (refTerm, currentTerm) of
+            (Var refVSym, Var currentVSym) ->
+                if refVSym == currentVSym then
+                    Ok <| Var refVSym
 
-                T f1 ->
-                    commonFormulaTemplate f (Formula.Signed.getFormula currentF)
-                        |> Result.map (\a -> T a)
+                else
+                    Err <| differentTermStructure refTerm currentTerm
 
-        F f ->
-            case currentF of
-                F f1 ->
-                    commonFormulaTemplate f (Formula.Signed.getFormula currentF)
-                        |> Result.map (\a -> F a)
+            (Fun refFSym refTerms, Fun currentFSym currentTerms) ->
+                if refFSym == currentFSym
+                && List.length refTerms == List.length currentTerms then
+                    commonTermsTemplate lTerm rTerm refTerms currentTerms
+                        |> Result.map (Fun refFSym)
+                        |> Result.mapError
+                            (differentArgsCountTo <|
+                                differentTermStructure refTerm currentTerm)
 
-                T f1 ->
-                    differentSignError
+                else
+                    Err <| differentTermStructure refTerm currentTerm
+
+            _ ->
+                Err <| differentTermStructure refTerm currentTerm
+
+
+commonFormulaTemplate : Term -> Term -> Formula -> Formula -> Result String Formula
+commonFormulaTemplate lTerm rTerm refF currentF =
+    case (refF, currentF) of
+        (PredAtom refPSym refTerms, PredAtom currentPSym currentTerms) ->
+            if refPSym == currentPSym
+            && List.length refTerms == List.length currentTerms then
+                commonTermsTemplate lTerm rTerm refTerms currentTerms
+                    |> Result.map (PredAtom refPSym)
+                    |> Result.mapError
+                        (differentArgsCountTo <|
+                            differentFormulaStructure refF currentF)
+
+            else
+                Err <| differentFormulaStructure refF currentF
+
+        (EqAtom refLt refRt, EqAtom currentLt currentRt) ->
+            Result.map2 EqAtom
+                (commonTermTemplate lTerm rTerm refLt currentLt)
+                (commonTermTemplate lTerm rTerm refRt currentRt)
+
+        (Neg refSf, Neg currentSf) ->
+            Result.map Neg
+                (commonFormulaTemplate lTerm rTerm refSf currentSf)
+
+        (Conj refSf1 refSf2, Conj currentSf1 currentSf2) ->
+            Result.map2 Conj
+                (commonFormulaTemplate lTerm rTerm refSf1 currentSf1)
+                (commonFormulaTemplate lTerm rTerm refSf2 currentSf2)
+
+        (Disj refSf1 refSf2, Disj currentSf1 currentSf2) ->
+            Result.map2 Disj
+                (commonFormulaTemplate lTerm rTerm refSf1 currentSf1)
+                (commonFormulaTemplate lTerm rTerm refSf2 currentSf2)
+
+        (Impl refSf1 refSf2, Impl currentSf1 currentSf2) ->
+            Result.map2 Impl
+                (commonFormulaTemplate lTerm rTerm refSf1 currentSf1)
+                (commonFormulaTemplate lTerm rTerm refSf2 currentSf2)
+
+        (Equiv refSf1 refSf2, Equiv currentSf1 currentSf2) ->
+            Result.map2 Equiv
+                (commonFormulaTemplate lTerm rTerm refSf1 currentSf1)
+                (commonFormulaTemplate lTerm rTerm refSf2 currentSf2)
+
+        (ForAll refX refSf, ForAll currentX currentSf) ->
+            if refX == currentX then
+                Result.map (ForAll refX)
+                    (commonFormulaTemplate lTerm rTerm refSf currentSf)
+
+            else
+                Err <| differentFormulaStructure refF currentF
+
+        (Exists refX refSf, Exists currentX currentSf) ->
+            if refX == currentX then
+                Result.map (Exists refX)
+                    (commonFormulaTemplate lTerm rTerm refSf currentSf)
+
+            else
+                Err <| differentFormulaStructure refF currentF
+
+        _ ->
+            Err <| differentFormulaStructure refF currentF
+
+
+commonSignedTemplate : Term -> Term -> Signed Formula -> Signed Formula -> Result String (Signed Formula)
+commonSignedTemplate lTerm rTerm refSF currentSF =
+    case (refSF, currentSF) of
+        (T refF, T currentF) ->
+            Result.map T
+                <| commonFormulaTemplate lTerm rTerm refF currentF
+
+        (F refF, F currentF) ->
+            Result.map F
+                <| commonFormulaTemplate lTerm rTerm refF currentF
+
+        _ ->
+            Err <| differentSign
 
 
 applyFunToSigned : (a -> Result e a) -> Signed a -> Result e (Signed a)
 applyFunToSigned function sf =
     case sf of
         T formula ->
-            function formula |> Result.map (\f -> T f)
+            Result.map T <| function formula
 
         F formula ->
-            function formula |> Result.map (\f -> F f)
+            Result.map F <| function formula
 
 
-mapNotSubstitutableError : String -> Zipper -> List Problem
-mapNotSubstitutableError err z =
+mapNotSubstitutableError : Term -> Term -> Term -> Zipper -> String -> List Problem
+mapNotSubstitutableError substitutedT lhsT rhsT z err =
     semanticsProblem z
-        (String.replace "[]" "[] in 2nd referenced formula" err)
+        <| String.replace
+            (Term.toString substitutedT ++ " for []")
+            (Term.toString lhsT ++ " with "
+            ++ Term.toString rhsT
+            ++ " in the 2nd referenced formula")
+            err
 
 
 checkSubst :
     Term.Substitution
+    -> (String -> List Problem)
     -> Result (List Problem) (Signed Formula)
     -> Signed Formula
     -> Zipper
     -> Result (List Problem) Zipper
-checkSubst σ replaced currentF z =
+checkSubst σ mapErr replaced currentF z =
     case replaced of
         Err problem ->
             Err problem
 
         Ok repl ->
             applyFunToSigned (Formula.substitute σ) repl
-                |> Result.mapError (\err -> mapNotSubstitutableError err z)
+                |> Result.mapError mapErr
                 |> Result.andThen
                     (checkPredicate (\f -> f == currentF)
                         (semanticsProblem z "Substitution invalid")
@@ -274,17 +260,24 @@ checkSubsts refEq refF z =
             (Zipper.zNode z).formula |> Result.withDefault (T (PredAtom "default" []))
 
         replaced =
-            commonSignedTemplate refF currentF |> Result.mapError (\err -> semanticsProblem z err)
+            commonSignedTemplate lt rt refF currentF |> Result.mapError (\err -> semanticsProblem z err)
 
         σ1 =
             Dict.fromList [ ( "[]", lt ) ]
 
+        mapErr1 =
+            mapNotSubstitutableError lt lt rt z
+
         σ2 =
             Dict.fromList [ ( "[]", rt ) ]
+
+        mapErr2 =
+            mapNotSubstitutableError rt lt rt z
+
     in
     z
-        |> checkSubst σ1 replaced refF
-        |> Result.andThen (checkSubst σ2 replaced currentF)
+        |> checkSubst σ1 mapErr1 replaced refF
+        |> Result.andThen (checkSubst σ2 mapErr2 replaced currentF)
 
 
 validate : Zipper -> Result (List Problem) Zipper
