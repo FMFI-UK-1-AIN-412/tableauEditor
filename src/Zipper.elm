@@ -32,8 +32,8 @@ zipper : Tableau -> Zipper
 zipper t =
     Zipper t [] (Err "not-loaded")
 
-zipperOld : Tableau -> BreadCrumbs -> Zipper
-zipperOld t bs =
+zipperFromTableauBreadCrumbs : Tableau -> BreadCrumbs -> Zipper
+zipperFromTableauBreadCrumbs t bs =
     Zipper t bs (Err "not-loaded")
 
 

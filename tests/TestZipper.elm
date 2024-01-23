@@ -78,7 +78,7 @@ zipperWithAlpha =
 
 
 zipperWithAplhaDown =
-    zipperOld
+    zipperFromTableauBreadCrumbs
         { node =
             { id = 1
             , value = ""
@@ -99,7 +99,7 @@ zipperWithAplhaDown =
 
 
 zipperWithAlphaDownBetaLeft =
-    zipperOld
+    zipperFromTableauBreadCrumbs
         { node =
             { id = 1
             , value = ""
@@ -136,7 +136,7 @@ zipperWithAlphaDownBetaLeft =
 
 
 zipperOnlyAlphaOfRightBeta =
-    zipperOld
+    zipperFromTableauBreadCrumbs
         { node =
             { id = 1
             , value = ""
@@ -214,7 +214,7 @@ onlyAlphaOfRightBetaRenumbered =
 
 
 zipperOnlyAlphaOfRightBetaRenumbered =
-    zipperOld onlyAlphaOfRightBetaRenumbered []
+    zipperFromTableauBreadCrumbs onlyAlphaOfRightBetaRenumbered []
 
 
 zipperZWalkPostExample =
