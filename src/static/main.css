@@ -365,6 +365,13 @@ button.delete {
 	justify-content: center;
 }
 
+.contextLoadError {
+	color: #ff8c31;
+	font-size: 14px;
+	display: flex;
+	justify-content: center;
+}
+
 .rulesHelp {
 	font-size: 0.875rem;
 }

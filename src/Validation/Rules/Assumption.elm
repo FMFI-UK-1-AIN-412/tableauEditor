@@ -3,7 +3,8 @@ module Validation.Rules.Assumption exposing (..)
 import Dict
 import Formula exposing (Formula(..))
 import Formula.Parser
-import Formula.Signed exposing (Signed(..))
+import Formula.Signed exposing (Signed(..), getFormula)
+import LogicContext exposing (FormulaCategory(..), contextFormulaCategories)
 import Set
 import Tableau exposing (..)
 import Term exposing (Term(..))
@@ -12,8 +13,8 @@ import Zipper exposing (Zipper)
 
 
 isDelta : Zipper -> Bool
-isDelta ( t, bs ) =
-    case bs of
+isDelta { breadcrumbs } =
+    case breadcrumbs of
         (Zipper.UnaryCrumbWithSubst extType _ _) :: _ ->
             case extType of
                 Delta ->
@@ -71,11 +72,42 @@ checkFreeVarsUsedInDeltaAbove f z =
         Err (semanticsProblem z <| usedInDeltaErrStr <| Set.toList varsUsedInDeltaAbove)
 
 
+contextAssumptionCheck : Zipper -> Signed Formula -> Result (List Problem) (Signed Formula)
+contextAssumptionCheck z sf =
+    case z.logicContext of
+        Ok ctx ->
+            let
+                categories =
+                    contextFormulaCategories ctx (getFormula sf)
+            in
+            case sf of
+                T _ ->
+                    if List.member Axiom categories then
+                        Ok sf
+
+                    else if List.member ProvedTheorem categories then
+                        Ok sf
+
+                    else
+                        Err <| semanticsProblem z "True assumption must be axiom or proved theorem"
+
+                F _ ->
+                    if List.member NewTheorem categories then
+                        Ok sf
+
+                    else
+                        Err <| semanticsProblem z "False assumption must be theorem that is being proved"
+
+        Err _ ->
+            Ok sf
+
+
 validate : Zipper -> Result (List Problem) Zipper
 validate z =
     z
         |> checkPredicate (hasNumberOfRefs 0)
             (semanticsProblem z "Assumption can't have any references")
         |> Result.andThen (\z1 -> checkFormula "Formula" z1)
+        |> Result.andThen (contextAssumptionCheck z)
         |> Result.andThen (\f -> checkFreeVarsUsedInDeltaAbove f z)
         |> Result.map (always z)

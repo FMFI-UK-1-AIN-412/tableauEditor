@@ -1,4 +1,4 @@
-port module Editor exposing (init, update, view, viewEmbeddable, subscriptions, Msg, Model)
+port module Editor exposing (Model, Msg, init, subscriptions, update, view, viewEmbeddable)
 
 --, FileReaderPortData, fileContentRead, fileSelected
 
@@ -9,7 +9,7 @@ import Errors
 import File exposing (File)
 import File.Download as Download
 import File.Select as Select
-import FontAwesome exposing (ellipsisHorizontal, exchangeAlt, icon)
+import FontAwesome exposing (ellipsisHorizontal, exchangeAlt, icon, iconWithOptions)
 import Formula exposing (Formula(..))
 import Formula.Parser
 import Formula.Signed exposing (Signed(..))
@@ -21,6 +21,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
 import Json.Encode exposing (set)
+import LogicContext exposing (ContextData, LogicContext, createContext)
 import Set
 import Tableau exposing (..)
 import Task
@@ -28,7 +29,6 @@ import UndoList exposing (UndoList)
 import Validation
 import Validation.Common exposing (Problem, ProblemType(..))
 import Zipper exposing (..)
-import FontAwesome exposing (iconWithOptions)
 
 
 type JsonImport
@@ -45,7 +45,9 @@ type alias State =
 
 
 type alias Model =
-    UndoList State
+    { undoList : UndoList State
+    , logicContext : Result String LogicContext
+    }
 
 
 init : Maybe Json.Decode.Value -> ( Model, Cmd msg )
@@ -62,28 +64,32 @@ init mtv =
             , ext = Open
             }
 
-        (initCfg, initT) =
+        ( initCfg, initT ) =
             case mtv of
                 Nothing ->
-                    (Config.default, emptyT)
+                    ( Config.default, emptyT )
 
                 Just tv ->
                     Helpers.Exporting.Json.Decode.decodeValue tv
-                    |> (\(cfg, t) -> 
-                        (cfg |> Result.withDefault Config.default, t |> Result.withDefault emptyT))
+                        |> (\( cfg, t ) ->
+                                ( cfg |> Result.withDefault Config.default, t |> Result.withDefault emptyT )
+                           )
     in
-    ( UndoList.fresh
-        { tableau = initT
-        , jsonImport = None
-        , config = initCfg
-        }
-    , Cmd.none
+    ( Model
+        (UndoList.fresh
+            { tableau = initT
+            , jsonImport = None
+            , config = initCfg
+            }
+        )
+        (Err "not-loaded")
+    , onChange { proofVerdict = contextVerdict initCfg (Zipper initT [] <| Err "not-loaded"), initial = True }
     )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    storeTrigger (\_ -> Store)
+    Sub.batch [ storeTrigger (\_ -> Store), updateContext UpdateContext ]
 
 
 type Msg
@@ -114,6 +120,7 @@ type Msg
     | Export
     | Print
     | Store
+    | UpdateContext ContextData
 
 
 port onPrint : () -> Cmd msg
@@ -122,10 +129,16 @@ port onPrint : () -> Cmd msg
 port onStore : Json.Encode.Value -> Cmd msg
 
 
-port onChange : () -> Cmd msg
+port onChange : { proofVerdict : Bool, initial : Bool } -> Cmd msg
 
 
 port storeTrigger : (() -> msg) -> Sub msg
+
+
+port updateContext : (ContextData -> msg) -> Sub msg
+
+
+port onProofVerdict : Bool -> Cmd msg
 
 
 top : Zipper -> Tableau
@@ -139,21 +152,43 @@ topRenumbered =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ present } as model) =
+update msg model =
+    case doUpdate msg model of
+        ( newModel, Nothing ) ->
+            ( newModel
+            , onChange
+                { proofVerdict = contextVerdict newModel.undoList.present.config (Zipper newModel.undoList.present.tableau [] newModel.logicContext)
+                , initial = False
+                }
+            )
+
+        ( newModel, Just cmd ) ->
+            ( newModel, cmd )
+
+
+doUpdate : Msg -> Model -> ( Model, Maybe (Cmd Msg) )
+doUpdate msg ({ undoList } as model) =
+    let
+        present =
+            undoList.present
+    in
     case msg of
         JsonSelect ->
             ( model
-            , Select.file [ "application/json" ] JsonSelected
+            , Just <| Select.file [ "application/json" ] JsonSelected
             )
 
         JsonSelected file ->
             ( { model
-                | present =
-                    { present
-                        | jsonImport = InProgress (File.name file)
+                | undoList =
+                    { undoList
+                        | present =
+                            { present
+                                | jsonImport = InProgress (File.name file)
+                            }
                     }
               }
-            , Task.perform JsonRead (File.toString file)
+            , Just <| Task.perform JsonRead (File.toString file)
             )
 
         JsonRead contents ->
@@ -161,228 +196,282 @@ update msg ({ present } as model) =
                 Ok value ->
                     case value |> Helpers.Exporting.Json.Decode.decodeValue of
                         ( Ok cfg, Ok t ) ->
-                            ( UndoList.new
-                                { present
-                                | jsonImport = None
-                                , config = cfg
-                                , tableau = t }
-                                model
-                            , onChange ()
+                            ( { model
+                                | undoList =
+                                    UndoList.new
+                                        { present
+                                            | jsonImport = None
+                                            , config = cfg
+                                            , tableau = t
+                                        }
+                                        undoList
+                              }
+                            , Nothing
                             )
 
                         ( Err cfgErr, Ok t ) ->
-                            ( UndoList.new
-                                { present
-                                | jsonImport =
-                                    ImportErr
-                                        ("Failed to import rule set configuration. "
-                                            ++ "Keeping the last one.")
-                                        [ cfgErr ]
-                                , tableau = t
-                                }
-                                model
-                            , onChange ()
+                            ( { model
+                                | undoList =
+                                    UndoList.new
+                                        { present
+                                            | jsonImport =
+                                                ImportErr
+                                                    ("Failed to import rule set configuration. "
+                                                        ++ "Keeping the last one."
+                                                    )
+                                                    [ cfgErr ]
+                                            , tableau = t
+                                        }
+                                        undoList
+                              }
+                            , Nothing
                             )
 
                         ( Ok _, Err tErr ) ->
                             ( { model
-                                | present =
-                                    { present
-                                    | jsonImport =
-                                        ImportErr
-                                            "Failed to import tableau"
-                                            [ tErr ]
+                                | undoList =
+                                    { undoList
+                                        | present =
+                                            { present
+                                                | jsonImport =
+                                                    ImportErr
+                                                        "Failed to import tableau"
+                                                        [ tErr ]
+                                            }
                                     }
-                            }
-                            , Cmd.none
+                              }
+                            , Just <| Cmd.none
                             )
 
                         ( Err cfgErr, Err tErr ) ->
                             ( { model
-                                | present =
-                                    { present
-                                    | jsonImport =
-                                        ImportErr
-                                            ("Failed to import tableau and " ++
-                                                "rule set configuration")
-                                            [ tErr, cfgErr ]
+                                | undoList =
+                                    { undoList
+                                        | present =
+                                            { present
+                                                | jsonImport =
+                                                    ImportErr
+                                                        ("Failed to import tableau and "
+                                                            ++ "rule set configuration"
+                                                        )
+                                                        [ tErr, cfgErr ]
+                                            }
                                     }
-                            }
-                            , Cmd.none
+                              }
+                            , Just <| Cmd.none
                             )
 
                 Err err ->
                     ( { model
-                        | present =
-                            { present
-                            | jsonImport =
-                                ImportErr
-                                    ("Failed to import file, " ++
-                                        "its content is not valid JSON")
-                                    [ err ]
+                        | undoList =
+                            { undoList
+                                | present =
+                                    { present
+                                        | jsonImport =
+                                            ImportErr
+                                                ("Failed to import file, "
+                                                    ++ "its content is not valid JSON"
+                                                )
+                                                [ err ]
+                                    }
                             }
-                    }
-                    , Cmd.none
+                      }
+                    , Just <| Cmd.none
                     )
 
         Export ->
             ( model
-            , Download.string
-                "tableau.json"
-                "application/json"
-              <|
-                Helpers.Exporting.Json.Encode.encodeString 2 present.config present.tableau
+            , Just <|
+                Download.string
+                    "tableau.json"
+                    "application/json"
+                <|
+                    Helpers.Exporting.Json.Encode.encodeString 2 present.config present.tableau
             )
 
         Undo ->
-            ( UndoList.undo
-                { model | present = { present | jsonImport = None } }
-            , onChange ()
+            ( { model
+                | undoList =
+                    UndoList.undo
+                        { undoList | present = { present | jsonImport = None } }
+              }
+            , Nothing
             )
 
         Redo ->
-            ( UndoList.redo model, Cmd.none )
+            ( { model | undoList = UndoList.redo undoList }, Nothing )
 
         Print ->
-            ( model, onPrint () )
+            ( model, Just <| onPrint () )
 
         Store ->
             ( model
-            , onStore <| Helpers.Exporting.Json.Encode.encodeValue
-                model.present.config
-                model.present.tableau
+            , Just <|
+                onStore <|
+                    Helpers.Exporting.Json.Encode.encodeValue
+                        undoList.present.config
+                        undoList.present.tableau
             )
+
+        UpdateContext ctx ->
+            ( { model | logicContext = createContext ctx }, Nothing )
 
         _ ->
             let
                 presentWithoutImport =
                     { present | jsonImport = None }
             in
-            ( UndoList.new
-                (simpleUpdate msg presentWithoutImport)
-                { model | present = presentWithoutImport }
-            , onChange ()
+            ( { model
+                | undoList =
+                    UndoList.new
+                        (simpleUpdate msg presentWithoutImport)
+                        { undoList | present = presentWithoutImport }
+              }
+            , Nothing
             )
 
 
 simpleUpdate : Msg -> State -> State
 simpleUpdate msg model =
-        (case msg of
-            ChangeText z new ->
-                { model | tableau = z |> Zipper.setFormula new |> top }
+    case msg of
+        ChangeText z new ->
+            { model | tableau = z |> Zipper.setFormula new |> top }
 
-            ExpandUnary extType z ->
-                { model | tableau = z |> Zipper.extendUnary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+        ExpandUnary extType z ->
+            { model | tableau = z |> Zipper.extendUnary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandUnaryWithSubst extType z ->
-                { model | tableau = z |> Zipper.extendUnaryWithSubst extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+        ExpandUnaryWithSubst extType z ->
+            { model | tableau = z |> Zipper.extendUnaryWithSubst extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ExpandBinary extType z ->
-                { model | tableau = z |> Zipper.extendBinary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
+        ExpandBinary extType z ->
+            { model | tableau = z |> Zipper.extendBinary extType |> renumberJustInReferences Zipper.renumberJustInRefWhenExpanding |> topRenumbered }
 
-            ChangeRef z new ->
-                { model | tableau = z |> Zipper.setRefs new |> top }
+        ChangeRef z new ->
+            { model | tableau = z |> Zipper.setRefs new |> top }
 
-            Delete z ->
-                { model | tableau = z |> Zipper.delete |> topRenumbered }
+        Delete z ->
+            { model | tableau = z |> Zipper.delete |> topRenumbered }
 
-            DeleteMe z ->
-                let
-                    newZipp =
-                        z |> Zipper.deleteMe
-                in
-                if newZipp /= (z |> up) then
-                    { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences Zipper.renumberJustInRefWhenDeleting |> topRenumbered }
+        DeleteMe z ->
+            let
+                newZipp =
+                    z |> Zipper.deleteMe
+            in
+            if newZipp /= (z |> up) then
+                { model | tableau = z |> Zipper.deleteMe |> renumberJustInReferences Zipper.renumberJustInRefWhenDeleting |> topRenumbered }
 
-                else
-                    { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
+            else
+                { model | tableau = z |> Zipper.deleteMe |> topRenumbered }
 
-            MakeClosed z ->
-                { model | tableau = z |> Zipper.makeClosed |> top }
+        MakeClosed z ->
+            { model | tableau = z |> Zipper.makeClosed |> top }
 
-            SetClosed which z ref ->
-                { model | tableau = z |> Zipper.setClosed which ref |> top }
+        SetClosed which z ref ->
+            { model | tableau = z |> Zipper.setClosed which ref |> top }
 
-            MakeOpen z ->
-                { model | tableau = z |> Zipper.makeOpen |> top }
+        MakeOpen z ->
+            { model | tableau = z |> Zipper.makeOpen |> top }
 
-            MakeOpenComplete z ->
-                { model | tableau = z |> Zipper.makeOpenComplete |> top }
+        MakeOpenComplete z ->
+            { model | tableau = z |> Zipper.makeOpenComplete |> top }
 
-            ChangeSubst z newSubst ->
-                { model | tableau = z |> Zipper.setSubstitution newSubst |> top }
+        ChangeSubst z newSubst ->
+            { model | tableau = z |> Zipper.setSubstitution newSubst |> top }
 
-            SwitchBetas z ->
-                { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
+        SwitchBetas z ->
+            { model | tableau = z |> Zipper.switchBetas |> topRenumbered }
 
-            ChangeToUnary extType z ->
-                { model | tableau = z |> Zipper.changeToUnaryRule extType |> topRenumbered }
+        ChangeToUnary extType z ->
+            { model | tableau = z |> Zipper.changeToUnaryRule extType |> topRenumbered }
 
-            ChangeToUnaryWithSubst extType z ->
-                { model | tableau = z |> Zipper.changeToUnaryRuleWithSubst extType |> topRenumbered }
+        ChangeToUnaryWithSubst extType z ->
+            { model | tableau = z |> Zipper.changeToUnaryRuleWithSubst extType |> topRenumbered }
 
-            ChangeToBinary extType z ->
-                { model | tableau = z |> Zipper.changeToBinaryRule extType |> topRenumbered }
+        ChangeToBinary extType z ->
+            { model | tableau = z |> Zipper.changeToBinaryRule extType |> topRenumbered }
 
-            ChangeButtonsAppearance z ->
-                { model | tableau = z |> Zipper.changeButtonAppearance |> top }
+        ChangeButtonsAppearance z ->
+            { model | tableau = z |> Zipper.changeButtonAppearance |> top }
 
-            SetConfig new ->
-                { model | config = new }
+        SetConfig new ->
+            { model | config = new }
 
-            Prettify ->
-                { model | tableau = Zipper.prettify model.tableau }
+        Prettify ->
+            { model | tableau = Zipper.prettify model.tableau }
 
-            JsonSelect ->
-                model
+        JsonSelect ->
+            model
 
-            JsonSelected _ ->
-                model
+        JsonSelected _ ->
+            model
 
-            Undo ->
-                model
+        Undo ->
+            model
 
-            Redo ->
-                model
+        Redo ->
+            model
 
-            JsonRead _ ->
-                model
+        JsonRead _ ->
+            model
 
-            Export ->
-                model
+        Export ->
+            model
 
-            Print ->
-                model
+        Print ->
+            model
 
-            Store ->
-                model
-        )
+        Store ->
+            model
+
+        UpdateContext _ ->
+            model
+
+
+contextError : Result String LogicContext -> Html msg
+contextError rctx =
+    case rctx of
+        Ok _ ->
+            div [] []
+
+        Err e ->
+            case e of
+                "not-loaded" ->
+                    div [] []
+
+                _ ->
+                    div [ class "contextLoadError" ] [ text ("Context load error: " ++ e) ]
 
 
 view : Model -> Browser.Document Msg
-view (model) =
+view model =
     { title = "Tableau Editor"
     , body = [ viewEmbeddable model ]
     }
 
+
 viewEmbeddable : Model -> Html Msg
-viewEmbeddable ({ present }) =
+viewEmbeddable ({ undoList, logicContext } as model) =
+  let
+      z = Zipper undoList.present.tableau [] logicContext 
+  in
+  
     div [ class "tableauEditor" ]
         [ div [ class "actions" ]
-            [ configMenu present.config
+            [ configMenu undoList.present.config
             , button [ class "button", onClick Prettify ] [ text "Prettify formulas" ]
             , button [ class "button", onClick Print ] [ text "Print" ]
-            , jsonExportControl present.tableau
-            , jsonImportControl present.jsonImport
+            , jsonExportControl undoList.present.tableau
+            , jsonImportControl undoList.present.jsonImport
             , button [ class "button", onClick Undo ] [ text "Undo" ]
             , button [ class "button", onClick Redo ] [ text "Redo" ]
             ]
-        , jsonImportError present.jsonImport
+        , jsonImportError undoList.present.jsonImport
+        , contextError logicContext
         , div [ class "tableau" ]
-            [ viewNode present.config (Zipper.zipper present.tableau) ]
-        , verdict present.config present.tableau
-        , problems present.config present.tableau
-        , Rules.help present.config
+            [ viewNode undoList.present.config z ]
+        , verdict undoList.present.config z
+        , problems undoList.present.config z
+        , Rules.help undoList.present.config
         ]
 
 
@@ -616,9 +705,9 @@ viewLeaf =
 
 
 viewControls : Config -> Zipper -> Html Msg
-viewControls config (( t, _ ) as z) =
+viewControls config ({ tableau } as z) =
     div [ class "expandControls" ]
-        (case t.ext of
+        (case z.tableau.ext of
             Closed r1 r2 ->
                 controlsClosed r1 r2 z
 
@@ -628,19 +717,19 @@ viewControls config (( t, _ ) as z) =
             _ ->
                 let
                     addDeleteMeItem items =
-                        li [] [
-                            button [ onClick (DeleteMe z) ]
+                        li []
+                            [ button [ onClick (DeleteMe z) ]
                                 [ text "Delete node" ]
-                        ]
-                        :: items
+                            ]
+                            :: items
 
                     addOptionalDeleteMeItem items =
                         if (z |> Zipper.up) /= z then
                             case z |> Zipper.up |> Zipper.zTableau |> .ext of
                                 Binary _ _ _ ->
-                                    case t.node.value of
+                                    case tableau.node.value of
                                         "" ->
-                                            case t.ext of
+                                            case tableau.ext of
                                                 Open ->
                                                     addDeleteMeItem items
 
@@ -654,7 +743,7 @@ viewControls config (( t, _ ) as z) =
                                     addDeleteMeItem items
 
                         else
-                            case t.ext of
+                            case tableau.ext of
                                 Unary Alpha _ ->
                                     addDeleteMeItem items
 
@@ -665,41 +754,47 @@ viewControls config (( t, _ ) as z) =
                                     items
 
                     switchBetasButton =
-                        case t.ext of
+                        case tableau.ext of
                             Binary _ _ _ ->
-                                [
-                                    button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
+                                [ button [ class "button", onClick (SwitchBetas z), title "Swap branches" ] [ icon exchangeAlt ]
                                 ]
 
                             _ ->
                                 []
                 in
-                if t.node.gui.controlsShown then
-                    ( button
+                if tableau.node.gui.controlsShown then
+                    button
                         [ class "button"
-                        , onClick (ExpandUnary Assumption z) ]
-                        [ text "Add assumption" ]
-                    :: ruleMenu
-                        ExpandUnary ExpandUnaryWithSubst ExpandBinary
-                        (text "Add") "Add" "add" config z
-                    :: menu "del" (text "Delete")
-                        (addOptionalDeleteMeItem
-                            [ li []
-                                [ button [ onClick (Delete z) ]
-                                    [ text "Delete subtree" ]
-                                ]
-                            ]
-                        )
-                    :: button [ class "button", onClick (MakeClosed z) ]
-                        [ text "Close" ]
-                    :: button
-                        [ class "button"
-                        , onClick (MakeOpenComplete z)
-                        , title "Mark branch as open and complete"
+                        , onClick (ExpandUnary Assumption z)
                         ]
-                        [ text "O&C" ]
-                    :: switchBetasButton
-                    )
+                        [ text "Add assumption" ]
+                        :: ruleMenu
+                            ExpandUnary
+                            ExpandUnaryWithSubst
+                            ExpandBinary
+                            (text "Add")
+                            "Add"
+                            "add"
+                            config
+                            z
+                        :: menu "del"
+                            (text "Delete")
+                            (addOptionalDeleteMeItem
+                                [ li []
+                                    [ button [ onClick (Delete z) ]
+                                        [ text "Delete subtree" ]
+                                    ]
+                                ]
+                            )
+                        :: button [ class "button", onClick (MakeClosed z) ]
+                            [ text "Close" ]
+                        :: button
+                            [ class "button"
+                            , onClick (MakeOpenComplete z)
+                            , title "Mark branch as open and complete"
+                            ]
+                            [ text "O&C" ]
+                        :: switchBetasButton
 
                 else
                     []
@@ -750,7 +845,8 @@ makeOpenButton currentState z =
     button
         [ class "button"
         , onClick (MakeOpen z)
-        , title ("Unmark as " ++ currentState) ]
+        , title ("Unmark as " ++ currentState)
+        ]
         [ text "×" ]
 
 
@@ -771,11 +867,11 @@ singleNodeProblems config z =
             )
 
 
-problems : Config -> Tableau -> Html Msg
-problems config t =
+problems : Config -> Zipper -> Html Msg
+problems config z =
     let
         errors =
-            Errors.errors <| Validation.isCorrectTableau config <| Zipper.zipper <| t
+            Errors.errors <| Validation.isCorrectTableau config <| z
     in
     if List.isEmpty errors then
         div [ class "problems" ] []
@@ -848,29 +944,49 @@ jsonImportError : JsonImport -> Html msg
 jsonImportError jsonImport =
     case jsonImport of
         ImportErr msg ds ->
-            div [ class "jsonImportError" ]
-                <| List.singleton <| div []
-                    [ p [] [text <| "Import error: " ++ msg ]
-                    , details []
-                        ( summary [] [text "Error details"]
-                        :: List.map
-                            (p []
-                                << List.singleton
-                                << text
-                                << Json.Decode.errorToString)
-                            ds
-                        )
-                    ]
+            div [ class "jsonImportError" ] <|
+                List.singleton <|
+                    div []
+                        [ p [] [ text <| "Import error: " ++ msg ]
+                        , details []
+                            (summary [] [ text "Error details" ]
+                                :: List.map
+                                    (p []
+                                        << List.singleton
+                                        << text
+                                        << Json.Decode.errorToString
+                                    )
+                                    ds
+                            )
+                        ]
 
         _ ->
             div [] []
 
 
-verdict : Config -> Tableau -> Html msg
-verdict config t =
+contextVerdict : Config -> Zipper -> Bool
+contextVerdict config z =
     let
         ass =
-            t |> Zipper.zipper |> assumptions
+            z |> assumptions
+    in
+    if List.isEmpty ass then
+        False
+
+    else
+        case Validation.isClosed config z of
+            Ok True ->
+                True
+
+            _ ->
+                False
+
+
+verdict : Config -> Zipper -> Html msg
+verdict config z =
+    let
+        ass =
+            z |> assumptions
 
         ( premises, conclusions ) =
             List.partition
@@ -891,7 +1007,7 @@ verdict config t =
         div [ class "verdict" ]
             [ p []
                 [ text "This tableau "
-                , text (textVerdict config <| Zipper.zipper t)
+                , text (textVerdict config z)
                 , text ":"
                 ]
             , p []
@@ -903,8 +1019,8 @@ verdict config t =
 
 
 textVerdict : Config -> Zipper -> String
-textVerdict config t =
-    case Validation.isClosed config t of
+textVerdict config z =
+    case Validation.isClosed config z of
         Ok True ->
             "proves"
 

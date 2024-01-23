@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import ElmComponent from 'react-elm-components'
 import './static/css/main.iso.css';
 import './static/css/all.iso.css';
@@ -33,12 +33,17 @@ function prepare(initialState) {
   }
 }
 
-function AppComponent(props) {
-  const instance = props.instance;
+function AppComponent({instance, onStateChange, isEdited, proof, updateProofVerdict}) {
   const setupPorts = (ports) => {
-    ports.onChange.subscribe( () => {
-      // console.log("Tableau editor has changed");
-      props.onStateChange();
+    ports.onChange.subscribe( ({proofVerdict, initial}) => {
+      console.log("Tableau editor has changed ", proofVerdict, initial);
+      if (instance.updateProofVerdict !== undefined) {
+        instance.updateProofVerdict(proofVerdict)
+      }
+      if (!initial) {
+        // initial onChange call only checks proof verdict 
+        instance.onStateChange();
+      }
     });
     ports.onStore.subscribe( (state) => {
       // console.log("Tableau editor sent state to store");
@@ -46,10 +51,31 @@ function AppComponent(props) {
     })
     instance.triggerStateUpdate = () =>
       ports.storeTrigger.send(null);
+
+    instance.ports = ports;
   };
+
+  // Functions updateProofVerdict and onChange may change on rerenders,
+  // so its values are stored inside instance, so port subscribe handler 
+  // above, which is just called only once, calls up-to-date versions
+  instance.updateProofVerdict = updateProofVerdict;
+  instance.onStateChange = onStateChange;
+
+  useMemo(() => {
+    if (instance.ports !== undefined && proof !== undefined) {
+      const contextData = {
+        axioms: proof.axioms.map(f => f.formula),
+        provedTheorems: proof.theorems.filter(f => f.prooved).map(f => f.formula),
+        newTheorem: proof.newTheorem.formula,
+      }
+      console.log('Sending proof', contextData)
+      instance.ports.updateContext.send(contextData)
+    }
+  }, [proof, instance.ports])
+
   return (
     <div className='tableaueditor-Obry4K9MqH'>
-      <div className={props.isEdited ? '' : 'viewMode'}>
+      <div className={isEdited ? '' : 'viewMode'}>
         <ElmComponent src={Elm.MainEmbeddable} flags={instance.initialState} ports={setupPorts}/>
       </div>
     </div>

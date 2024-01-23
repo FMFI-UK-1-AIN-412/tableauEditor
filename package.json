@@ -42,16 +42,18 @@
     "predeploy": "make build",
     "deploy": "make ghpublish",
     "build-module": "node buildModule.js",
+    "dev-module": "nodemon --ext jsx,css,elm --watch src --exec npm run build-module -- dev",
     "prepare": "npm run build-module"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
     "@babel/preset-react": "^7.16.5",
-    "@fmfi-uk-1-ain-412/isolate-css": "^0.1.0",
+    "@fmfi-uk-1-ain-412/isolate-css": "^0.1.1",
     "copyfiles": "^2.4.1",
     "elm": "^0.19.1-5",
     "elm-live": "^4.0.2",
-    "gh-pages": "^3.2.3"
+    "gh-pages": "^3.2.3",
+    "nodemon": "^2.0.22"
   },
   "dependencies": {
     "react-elm-components": "^1.1.0"

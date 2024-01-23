@@ -310,7 +310,7 @@ validateUnary extType =
             Validation.Rules.ESTT.validate
 
 
-validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
+validateUnaryWithSubst : UnaryWithSubstExtType -> Zipper -> Result (List Problem) Zipper
 validateUnaryWithSubst extType =
     case extType of
         Gamma ->
@@ -342,37 +342,55 @@ validateBinary extType =
             Validation.Rules.ECDT.validate
 
 
-validateRule rule validator config =
-    if Set.member rule <| Config.getRuleSet config then
+validateRule :
+    String
+    -> (Zipper -> Result (List Problem) Zipper)
+    -> Config.Config
+    -> Zipper
+    -> Result (List Problem) Zipper
+validateRule ruleName validator config =
+    if Set.member ruleName <| Config.getRuleSet config then
         validator
 
     else
-        \z -> Err <| semanticsProblem z <| rule ++ " rule is forbidden in current configuration"
+        \z -> Err <| semanticsProblem z <| ruleName ++ " rule is forbidden in current configuration"
 
 
 isCorrectRule :
     Config.Config
-    -> ( Tableau, Zipper.BreadCrumbs )
-    -> Result (List Problem) ( Tableau, Zipper.BreadCrumbs )
-isCorrectRule config (( t, bs ) as z) =
-    case bs of
-        (Zipper.UnaryCrumb Alpha _) :: _ ->
-            validateRule (unaryExtTypeToString Alpha) (validateUnary Alpha) config z
-
+    -> Zipper
+    -> Result (List Problem) Zipper
+isCorrectRule config ({ breadcrumbs } as z) =
+    case breadcrumbs of
         (Zipper.UnaryCrumb extType _) :: _ ->
-            validateRule (unaryExtTypeToString extType) (validateUnary extType) config z
+            validateRule
+                (unaryExtTypeToString extType)
+                (validateUnary extType)
+                config z
 
         (Zipper.UnaryCrumbWithSubst extType _ _) :: _ ->
-            validateRule (unaryWithSubstExtTypeToString extType) (validateUnaryWithSubst extType) config z
+            validateRule
+                (unaryWithSubstExtTypeToString extType)
+                (validateUnaryWithSubst extType)
+                config z
 
         (Zipper.BinaryLeftCrumb extType _ _) :: _ ->
-            validateRule (binaryExtTypeToString extType) (validateLeft (validateBinary extType)) config z
+            validateRule
+                (binaryExtTypeToString extType)
+                (validateLeft (validateBinary extType))
+                config z
 
         (Zipper.BinaryRightCrumb extType _ _) :: _ ->
-            validateRule (binaryExtTypeToString extType) (validateRight (validateBinary extType)) config z
+            validateRule
+                (binaryExtTypeToString extType)
+                (validateRight (validateBinary extType))
+                config z
 
-        [] ->
-            Ok z
+        [] -> -- the root formula is always an assumption
+            validateRule
+                (unaryExtTypeToString Assumption)
+                (validateUnary Assumption)
+                config z
 
 
 isClosed : Config -> Zipper -> Result (List Problem) Bool
@@ -397,7 +415,7 @@ isClosed config z =
         Open ->
             isCorrectNode config z |> Result.map (always False)
 
-        Closed r1 r2 ->
+        Closed _ _ ->
             isCorrectNode config z |> Result.map (always True)
 
         OpenComplete ->

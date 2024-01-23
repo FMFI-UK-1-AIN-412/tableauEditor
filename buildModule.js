@@ -18,11 +18,11 @@ function cmd(command) {
         recursive: true,
     });
     // compile elm app
-    await cmd("npx elm make src/MainEmbeddable.elm --optimize --output lib/dist/elm-editor.js");
+    await cmd(`npx elm make src/MainEmbeddable.elm ${process.argv[2] === 'dev' ? '' : '--optimize '}--output lib/dist/elm-editor.js`);
     // compile react component
     await cmd("npx babel --extensions '.jsx' src --out-dir lib/dist");
     // isolate css files
-    await cmd("npx isolate-css-cli -p tableaueditor-Obry4K9MqH -c -o lib/dist/static/css -u 2 src/static");
+    await cmd("npx isolate-css-cli -r -p tableaueditor-Obry4K9MqH -c -o lib/dist/static/css -u 2 src/static");
     // copy font files used by isolated css
     await cmd("npx copyfiles -u 3 src/static/webfonts/* lib/dist/static/webfonts");
 })()

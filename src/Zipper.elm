@@ -4,6 +4,7 @@ import Formula exposing (Formula)
 import Formula.Parser
 import Formula.Signed exposing (Signed)
 import Tableau exposing (..)
+import LogicContext exposing (LogicContext)
 
 
 
@@ -20,23 +21,25 @@ type Crumb
 type alias BreadCrumbs =
     List Crumb
 
-
 type alias Zipper =
-    ( Tableau, BreadCrumbs )
+    { tableau : Tableau
+    , breadcrumbs : BreadCrumbs
+    , logicContext : Result String LogicContext
+    }
 
 
 zipper : Tableau -> Zipper
 zipper t =
-    ( t, [] )
+    Zipper t [] (Err "not-loaded")
+
+zipperOld : Tableau -> BreadCrumbs -> Zipper
+zipperOld t bs =
+    Zipper t bs (Err "not-loaded")
 
 
 children : Zipper -> List Zipper
 children z =
-    let
-        ( t, bs ) =
-            z
-    in
-    case t.ext of
+    case z.tableau.ext of
         Unary _ _ ->
             [ down z ]
 
@@ -51,26 +54,35 @@ children z =
 
 
 down : Zipper -> Zipper
-down ( t, bs ) =
-    case t.ext of
+down z =
+    case z.tableau.ext of
         Unary extType subT ->
-            ( subT, UnaryCrumb extType t.node :: bs )
+            { z
+                | tableau = subT
+                , breadcrumbs = UnaryCrumb extType z.tableau.node :: z.breadcrumbs
+            }
 
         UnaryWithSubst extType subT subst ->
-            ( subT, UnaryCrumbWithSubst extType t.node subst :: bs )
+            { z
+                | tableau = subT
+                , breadcrumbs = UnaryCrumbWithSubst extType z.tableau.node subst :: z.breadcrumbs
+            }
 
         _ ->
-            ( t, bs )
+            z
 
 
 right : Zipper -> Zipper
-right ( t, bs ) =
-    case t.ext of
+right z =
+    case z.tableau.ext of
         Binary extType lt rt ->
-            ( rt, BinaryRightCrumb extType t.node lt :: bs )
+            { z
+                | tableau = rt
+                , breadcrumbs = BinaryRightCrumb extType z.tableau.node lt :: z.breadcrumbs
+            }
 
         _ ->
-            ( t, bs )
+            z
 
 
 
@@ -78,42 +90,57 @@ right ( t, bs ) =
 
 
 left : Zipper -> Zipper
-left ( t, bs ) =
-    case t.ext of
+left z =
+    case z.tableau.ext of
         Binary extType lt rt ->
-            ( lt, BinaryLeftCrumb extType t.node rt :: bs )
+            { z
+                | tableau = lt
+                , breadcrumbs = BinaryLeftCrumb extType z.tableau.node rt :: z.breadcrumbs
+            }
 
         _ ->
-            ( t, bs )
+            z
 
 
 up : Zipper -> Zipper
-up ( t, bs ) =
-    case bs of
+up z =
+    case z.breadcrumbs of
         (UnaryCrumb extType n) :: bss ->
-            ( Tableau n (Unary extType t), bss )
+            { z
+                | tableau = Tableau n (Unary extType z.tableau)
+                , breadcrumbs = bss
+            }
 
         (UnaryCrumbWithSubst extType n subst) :: bss ->
-            ( Tableau n (UnaryWithSubst extType t subst), bss )
+            { z
+                | tableau = Tableau n (UnaryWithSubst extType z.tableau subst)
+                , breadcrumbs = bss
+            }
 
         (BinaryLeftCrumb extType n rt) :: bss ->
-            ( Tableau n (Binary extType t rt), bss )
+            { z
+                | tableau = Tableau n (Binary extType z.tableau rt)
+                , breadcrumbs = bss
+            }
 
         (BinaryRightCrumb extType n lt) :: bss ->
-            ( Tableau n (Binary extType lt t), bss )
+            { z
+                | tableau = Tableau n (Binary extType lt z.tableau)
+                , breadcrumbs = bss
+            }
 
         [] ->
-            ( t, bs )
+            z
 
 
 top : Zipper -> Zipper
-top ( t, bs ) =
-    case bs of
+top z =
+    case z.breadcrumbs of
         [] ->
-            ( t, bs )
+            z
 
         _ ->
-            top (up ( t, bs ))
+            top (up z)
 
 
 above : Int -> Zipper -> Zipper
@@ -131,13 +158,16 @@ above n z =
 
 
 modifyNode : (Tableau -> Tableau) -> Zipper -> Zipper
-modifyNode f ( tableau, bs ) =
-    ( f tableau, bs )
+modifyNode f z =
+    { z
+        | tableau = f z.tableau
+        , breadcrumbs = z.breadcrumbs
+    }
 
 
 zTableau : Zipper -> Tableau
-zTableau ( t, bs ) =
-    t
+zTableau z =
+    z.tableau
 
 
 zNode : Zipper -> Node
@@ -146,8 +176,8 @@ zNode z =
 
 
 zSubstitution : Zipper -> Maybe Tableau.Substitution
-zSubstitution (( t, bs ) as z) =
-    case t.ext of
+zSubstitution z =
+    case z.tableau.ext of
         UnaryWithSubst _ _ subst ->
             Just subst
 
@@ -175,7 +205,8 @@ assumptions z =
     (Maybe.map2 (\_ y -> y)
         (if z |> isAssumption then
             Just ()
-        else
+
+         else
             Nothing
         )
         (z
@@ -186,15 +217,16 @@ assumptions z =
         |> Maybe.map List.singleton
         |> Maybe.withDefault []
     )
-    ++ (List.concatMap assumptions (children z))
+        ++ List.concatMap assumptions (children z)
+
 
 
 -- "Aplikuje" funkciu f na kazdy vrchol v zipperi
 
 
 zWalkPost : (Zipper -> Zipper) -> Zipper -> Zipper
-zWalkPost f (( t, bs ) as z) =
-    case t.ext of
+zWalkPost f z =
+    case z.tableau.ext of
         Open ->
             f z
 
@@ -326,18 +358,18 @@ modifyRef refs z =
 
 
 findAbove : Int -> Zipper -> Maybe Int
-findAbove ref ( tableau, bs ) =
+findAbove ref z =
     let
         node =
-            tableau.node
+            z.tableau.node
     in
     if node.id == ref then
         Just 0
 
     else
-        case bs of
+        case z.breadcrumbs of
             a :: bbs ->
-                Maybe.map ((+) 1) (( tableau, bs ) |> up |> findAbove ref)
+                Maybe.map ((+) 1) (z |> up |> findAbove ref)
 
             [] ->
                 Nothing
@@ -574,7 +606,7 @@ delete z =
 
 
 deleteMe : Zipper -> Zipper
-deleteMe (( t, fatherbs ) as zip) =
+deleteMe zip =
     if (zip |> up) == zip then
         let
             tableauToKeep currentT leftT rightT =
@@ -630,7 +662,7 @@ deleteMe (( t, fatherbs ) as zip) =
                     )
                     (zip |> up)
         in
-        case fatherbs of
+        case zip.breadcrumbs of
             (BinaryLeftCrumb _ farherNode rt) :: bss ->
                 chooseSubTableau tryToKeepRightSubT
 
@@ -692,8 +724,12 @@ makeOpen z =
     modifyNode
         (\tableau ->
             let
-                origNode = tableau.node
-                origGui = origNode.gui
+                origNode =
+                    tableau.node
+
+                origGui =
+                    origNode.gui
+
                 openTableauWithControlsShown =
                     Tableau
                         { origNode | gui = { origGui | controlsShown = True } }
@@ -716,7 +752,7 @@ makeOpenComplete : Zipper -> Zipper
 makeOpenComplete z =
     modifyNode
         (\tableau ->
-            Tableau (tableau.node) OpenComplete
+            Tableau tableau.node OpenComplete
         )
         z
 
